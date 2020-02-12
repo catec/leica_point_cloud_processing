@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <launch>
 
-  <arg name="spawn_stringer" default="true" doc="whether or not spawn stringer"/>
+  <arg name="spawn_stringer" default="false" doc="whether or not spawn stringer"/>
+  <arg name="spawn_assembly" default="false" doc="whether or not spawn assembly"/>
+  <arg name="spawn_assembly_big" default="true" doc="whether or not spawn assembly"/>
+  <arg name="z_camera"       default="2" />
 
   <!-- Start Gazebo -->
   <env name="GAZEBO_RESOURCE_PATH" value="$(find leica_scanstation)/meshes" />
@@ -11,17 +14,29 @@
 
   <!-- spawn camera in gazebo -->
   <param command="$(find xacro)/xacro -i $(find leica_scanstation)/urdf/camera.urdf.xacro" name="camera_param"/>
-  <node args="-urdf -param camera_param -model camera -x 1.5 -Y 3.1415"
+  <node args="-urdf -param camera_param -model camera -x 1.5 -z $(arg z_camera) -Y 3.1415"
         name="spawn_camera" pkg="gazebo_ros" type="spawn_model" output="screen"/>
 
   <!-- Tf camera_link to world -->
-  <node pkg="tf" type="static_transform_publisher" name="camera_tf"  args="1.5 0 0 -0.5 -0.5 0.5 0.5 world camera_link 100" />
+  <node pkg="tf" type="static_transform_publisher" name="camera_tf"  args="1.5 0 $(arg z_camera) -0.5 -0.5 0.5 0.5 world camera_link 100" />
                                                                                 <!-- P:-pi/2 + Y:pi/2 -->
 
   <!-- spawn stringer system in gazebo -->
   <param command="$(find xacro)/xacro -i $(find leica_scanstation)/urdf/stringer.xacro" name="stringer_param"/>
   <node if="$(arg spawn_stringer)"
         args="-urdf -param stringer_param -model stringer -x 2.2 -y -4 -z 0.2 -Y -1.57"
+        name="spawn_urdf"   pkg="gazebo_ros" type="spawn_model" output="screen"/>
+
+  <!-- spawn assembly system in gazebo -->
+  <param command="$(find xacro)/xacro -i $(find leica_scanstation)/urdf/assembly.xacro" name="assembly_param"/>
+  <node if="$(arg spawn_assembly)"
+        args="-urdf -param assembly_param -model assembly -x 1 -y 4 -z 2 -Y -1.57"
+        name="spawn_urdf"   pkg="gazebo_ros" type="spawn_model" output="screen"/>
+
+  <!-- spawn assembly big system in gazebo -->
+  <param command="$(find xacro)/xacro -i $(find leica_scanstation)/urdf/assembly_big.xacro" name="assembly_big_param"/>
+  <node if="$(arg spawn_assembly_big)"
+        args="-urdf -param assembly_big_param -model assembly -y -4 -z 2.5 -R -1.57 -Y -1.57"
         name="spawn_urdf"   pkg="gazebo_ros" type="spawn_model" output="screen"/>
 
 </launch>
