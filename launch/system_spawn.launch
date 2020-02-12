@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="spawn_stringer" default="true" doc="whether or not spawn stringer"/>
+
+  <!-- Start Gazebo -->
+  <env name="GAZEBO_RESOURCE_PATH" value="$(find leica_scanstation)/meshes" />
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="paused"     value="true"/>
+  </include>
+
+  <!-- spawn camera in gazebo -->
+  <param command="$(find xacro)/xacro -i $(find leica_scanstation)/urdf/camera.urdf.xacro" name="camera_param"/>
+  <node args="-urdf -param camera_param -model camera -x 1.5 -Y 3.1415"
+        name="spawn_camera" pkg="gazebo_ros" type="spawn_model" output="screen"/>
+
+  <!-- Tf camera_link to world -->
+  <node pkg="tf" type="static_transform_publisher" name="camera_tf"  args="1.5 0 0 -0.5 -0.5 0.5 0.5 world camera_link 100" />
+                                                                                <!-- P:-pi/2 + Y:pi/2 -->
+
+  <!-- spawn stringer system in gazebo -->
+  <param command="$(find xacro)/xacro -i $(find leica_scanstation)/urdf/stringer.xacro" name="stringer_param"/>
+  <node if="$(arg spawn_stringer)"
+        args="-urdf -param stringer_param -model stringer -x 2.2 -y -4 -z 0.2 -Y -1.57"
+        name="spawn_urdf"   pkg="gazebo_ros" type="spawn_model" output="screen"/>
+
+</launch>

@@ -8,6 +8,11 @@ This is involved in a ROSIN project.
 * Clone
 * Compile
 
+## Usage ##
+
+    roslaunch leica_scanstation system_spawn.launch
+
+
 ## Help ##
 Ines M. Lara - imlara@catec.aero
 Other community or team contact
