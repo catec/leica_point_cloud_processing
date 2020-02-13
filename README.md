@@ -14,10 +14,12 @@ Meshes and pointclouds are not updated online because they are confidential.
 
     roslaunch leica_scanstation system_spawn.launch
 
+    roslaunch leica_scanstation clustering.launch
+
     rosrun leica_scanstation downsample_pc.py
     
     rosrun leica_scanstation segment_pc.py
-    
+
     rosrun leica_scanstation segment_and_publish_pcs.py
 
 ## Hacks ##

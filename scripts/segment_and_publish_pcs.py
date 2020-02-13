@@ -18,7 +18,7 @@ def recolorize_pointcloud(point_cloud, is_rgb, color):
     return colorized_point_cloud
 
 def pointcloudCb(msg):
-    print "cb"
+    rospy.loginfo("cb")
     pc = ros_to_pcl(msg)
 
     # Use cylinder segmentation to separate skin from stringers
@@ -55,7 +55,8 @@ if __name__ == '__main__':
     rospack = rospkg.RosPack()
     pc_path = rospack.get_path("leica_scanstation") + "/pointclouds/"
     print(pc_path)
+    rospy.loginfo("main 2")
 
-    pc_sub = rospy.Subscriber("/camera/depth/points",PointCloud2,pointcloudCb,queue_size = 1)
+    pc_sub = rospy.Subscriber("/point_cloud",PointCloud2,pointcloudCb,queue_size = 1)
 
     rospy.spin()

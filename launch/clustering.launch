@@ -1,0 +1,11 @@
+<launch>
+
+  <!-- cloud transformer-->
+  <node name="cloud_transformer" pkg="sensor_stick" type="cloud_transformer" output="screen">
+  </node>
+
+  <!-- Launch clustering -->
+  <!-- <node name="clustering" pkg="sensor_stick" type="clustering.py" respawn="false"/> -->
+  <node name="clustering" pkg="leica_scanstation" type="segment_and_publish_pcs.py" output="screen"/>
+
+</launch>
