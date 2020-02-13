@@ -1,3 +1,4 @@
 *.pyc
 .vscode/
 meshes/*
+pointclouds/*
