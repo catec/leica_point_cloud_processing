@@ -7,6 +7,7 @@ import pcl
 from pcl import pcl_visualization
 from pcl_helper import *
 
+stringers_publisher = rospy.Publisher("/pc_stringers", PointCloud2, queue_size=1)
 
 def recolorize_pointcloud(point_cloud, is_rgb, color):
     if is_rgb:
@@ -16,25 +17,12 @@ def recolorize_pointcloud(point_cloud, is_rgb, color):
     colorized_point_cloud = XYZ_to_XYZRGB(point_cloud, color)
     return colorized_point_cloud
 
-
-if __name__ == '__main__':
-    rospy.init_node('downsample_pointcloud')
-
-    rospack = rospkg.RosPack()
-    pc_path = rospack.get_path("leica_scanstation") + "/pointclouds/"
-    print(pc_path)
-
-    skin_publisher = rospy.Publisher("/pc_skin", PointCloud2, queue_size=1)
-    stringers_publisher = rospy.Publisher(
-        "/pc_stringers", PointCloud2, queue_size=1)
-
-    # Load point cloud
-    pc = pcl.load_XYZRGB(pc_path + "assembly_downsampled.pcd")
-    # pc = pcl.load_XYZRGB(pc_path + "assembly.pcd")
+def pointcloudCb(msg):
+    print "cb"
+    pc = ros_to_pcl(msg)
 
     # Use cylinder segmentation to separate skin from stringers
     segmenter = pc.make_segmenter_normals(ksearch=50)
-
     segmenter.set_optimize_coefficients(True)
     segmenter.set_model_type(pcl.SACMODEL_CYLINDER)
     # segmenter.set_normal_distance_weight(0.1)
@@ -49,16 +37,25 @@ if __name__ == '__main__':
     # extract separated objects from pointcloud
     skin_pc = pc.extract(inlier_indices, False)
     stringers_pc = pc.extract(inlier_indices, True)
-    print("Separated")
 
     # Colorize stringers
-    coloured_stringers_pc = recolorize_pointcloud(
-        stringers_pc, True, [0, 0, 255])
+    coloured_stringers_pc = recolorize_pointcloud(stringers_pc, True, [0, 0, 255])
 
     # publish point clouds
-    ros_skin_pc = pcl_to_ros(skin_pc)
+    # ros_skin_pc = pcl_to_ros(skin_pc)
     ros_stringer_pc = pcl_to_ros(coloured_stringers_pc)
 
-    while not rospy.is_shutdown():
-        skin_publisher.publish(ros_skin_pc)
-        stringers_publisher.publish(ros_stringer_pc)
+    # skin_publisher.publish(ros_skin_pc)
+    stringers_publisher.publish(ros_stringer_pc)
+
+
+if __name__ == '__main__':
+    rospy.init_node('publish_segmented_pointcloud')
+
+    rospack = rospkg.RosPack()
+    pc_path = rospack.get_path("leica_scanstation") + "/pointclouds/"
+    print(pc_path)
+
+    pc_sub = rospy.Subscriber("/camera/depth/points",PointCloud2,pointcloudCb,queue_size = 1)
+
+    rospy.spin()

@@ -7,7 +7,7 @@ import pcl
 from pcl import pcl_visualization
 
 if __name__ == '__main__':
-    rospy.init_node('downsample_pointcloud')
+    rospy.init_node('segment_pointcloud')
 
     rospack = rospkg.RosPack()
     pc_path = rospack.get_path("leica_scanstation") + "/pointclouds/"
