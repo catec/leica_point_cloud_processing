@@ -36,7 +36,7 @@
   <!-- spawn assembly big system in gazebo -->
   <param command="$(find xacro)/xacro -i $(find leica_scanstation)/urdf/assembly_big.xacro" name="assembly_big_param"/>
   <node if="$(arg spawn_assembly_big)"
-        args="-urdf -param assembly_big_param -model assembly -y -4 -z 2.5 -R -1.57 -Y -1.57"
+        args="-urdf -param assembly_big_param -model assembly -y -2 -z 2 -R -1.57 -Y -1.57"
         name="spawn_urdf"   pkg="gazebo_ros" type="spawn_model" output="screen"/>
 
 </launch>
