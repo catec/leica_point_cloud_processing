@@ -2,8 +2,8 @@
 #include <tf/transform_listener.h>
 #include <laser_geometry/laser_geometry.h>
 #include "pcl_conversions/pcl_conversions.h"
-#include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
+#include <pcl_ros/point_cloud.h>
 
 class My_Filter {
      public:
@@ -30,11 +30,11 @@ void My_Filter::scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan){
 
     projector_.transformLaserScanToPointCloud("/world", *scan, cloud, tfListener_);
     
-    pcl::fromROSMsg(cloud, *cloud_pcl);
-    total_cloud_ += *cloud_pcl;
+    // pcl::fromROSMsg(cloud, *cloud_pcl);
+    // total_cloud_ += *cloud_pcl;
     
-    pcl::toROSMsg(total_cloud_,total_cloud_msg);
-    point_cloud_publisher_.publish(total_cloud_msg);
+    // pcl::toROSMsg(total_cloud_,total_cloud_msg);
+    point_cloud_publisher_.publish(cloud);
 }
 
 My_Filter::My_Filter(){
