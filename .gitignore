@@ -1,5 +1,7 @@
 *.pyc
 *.pts
+*.ptx
+*.pcd
 .vscode/
 meshes/*
 pointclouds/*

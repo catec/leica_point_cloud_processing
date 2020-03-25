@@ -20,7 +20,7 @@
         <collision>
             <origin xyz="$(arg x) $(arg y) $(arg z)"/>
             <geometry>
-                <mesh filename="file:///$(find gazebo_simulation)/meshes/asus_xtion.dae"/>
+                <mesh filename="file:///$(find leica_scanstation)/meshes/asus_xtion.dae"/>
             </geometry>
         </collision>
     </link>
