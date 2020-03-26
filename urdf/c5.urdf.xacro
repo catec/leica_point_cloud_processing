@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="c5_xacro">
+    <xacro:arg name="x" default="0"/>
+    <xacro:arg name="y" default="0"/>
+    <xacro:arg name="z" default="0"/>
+    
+    <link name="c5_link">
+        <inertial>
+            <origin xyz="$(arg x) $(arg y) $(arg z)" />
+            <mass value="3.2" /> 
+            <inertia  ixx="0.0" ixy="0.0"  ixz="0.0"  iyy="0.0"  iyz="0.0"  izz="0.0" />
+        </inertial>
+        <visual>
+            <origin xyz="$(arg x) $(arg y) $(arg z)"/>
+            <geometry>
+                <cylinder length="0.25" radius="0.15"/>
+            </geometry>
+            <material name="black">
+                <color rgba="0 0 0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="$(arg x) $(arg y) $(arg z)"/>
+            <geometry>
+                <cylinder length="0.25" radius="0.15"/>     
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- <gazebo>
+        <static>1</static>
+    </gazebo> -->
+
+    <gazebo reference="c5_link">
+        <sensor type="gpu_ray" name="head_hokuyo_sensor">
+            <pose>0 0 0 1.57 0 0</pose>
+            <visualize>true</visualize>
+            <update_rate>40</update_rate>
+            <ray>
+                <scan>
+                    <horizontal>
+                        <samples>600</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-1.57</min_angle>
+                        <max_angle>1.57</max_angle>
+                    </horizontal>
+                    <!-- <vertical>
+                        <samples>20</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-1.57</min_angle>
+                        <max_angle>1.57</max_angle>
+                    </vertical> -->
+                </scan>
+                <range>
+                    <min>0.35</min>
+                    <max>50.0</max>
+                    <resolution>0.01</resolution>
+                </range>
+                <noise>
+                    <type>gaussian</type>
+                    <mean>0.0</mean>
+                    <stddev>0.01</stddev>
+                </noise>
+            </ray>
+            <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_gpu_laser.so">
+                <topicName>/c5/laser/scan</topicName>
+                <frameName>c5_link</frameName>
+            </plugin>
+        </sensor>
+    </gazebo> 
+
+</robot>
