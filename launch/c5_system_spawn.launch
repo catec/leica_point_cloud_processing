@@ -15,7 +15,7 @@
 
   <!-- spawn c5 in gazebo -->
   <param command="$(find xacro)/xacro -i $(find leica_scanstation)/urdf/c5.urdf.xacro" name="c5_param"/>
-  <node args="-urdf -param c5_param -model c5 -x 0 -z $(arg z_c5) -Y 0"
+  <node args="-urdf -param c5_param -model c5 -x 0 -z $(arg z_c5) -R 1.57"
         name="spawn_c5" pkg="gazebo_ros" type="spawn_model" output="screen"/>
 
   <!-- Tf c5_link to world -->
