@@ -4,7 +4,8 @@
   <arg name="spawn_stringer" default="false" doc="whether or not spawn stringer"/>
   <arg name="spawn_assembly" default="false" doc="whether or not spawn assembly"/>
   <arg name="spawn_assembly_big" default="false" doc="whether or not spawn assembly"/>
-  <arg name="z_c5"       default="0.5" />
+  <arg name="publish_tf" default="true" doc="whether or not publish tf data for c5"/>
+  <arg name="z_c5"       default="0.125" />
 
   <!-- Start Gazebo -->
   <env name="GAZEBO_RESOURCE_PATH" value="$(find leica_scanstation)/meshes" />
@@ -18,8 +19,8 @@
         name="spawn_c5" pkg="gazebo_ros" type="spawn_model" output="screen"/>
 
   <!-- Tf c5_link to world -->
-  <!-- <node pkg="tf" type="static_transform_publisher" name="c5_tf"  args="0 0 $(arg z_c5) -0.5 -0.5 0.5 0.5 world c5_link 100" /> -->
-                                                                                <!-- P:-pi/2 + Y:pi/2 -->
+  <node if="$(arg publish_tf)"
+        name="tf_broadcaster" pkg="leica_scanstation" type="publish_tf.py" output="screen"/>
 
   <!-- spawn stringer system in gazebo -->
   <param command="$(find xacro)/xacro -i $(find leica_scanstation)/urdf/stringer.xacro" name="stringer_param"/>
