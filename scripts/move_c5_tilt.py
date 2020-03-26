@@ -64,9 +64,9 @@ def main():
     while not rospy.is_shutdown():
 
         # update rotation value
-        yaw = 0 if yaw>(2*pi) else yaw+0.01
-        # print("setting yaw: {}".format(yaw))
-        state_msg.pose.orientation = get_next_orientation(init_model_state.pose.orientation,0,0,yaw)
+        # yaw = 0 if yaw>(2*pi) else yaw+0.01
+        yaw_inc = 0.01
+        state_msg.pose.orientation = get_next_orientation(state_msg.pose.orientation,0,0,yaw_inc)
 
         # move model
         try:
