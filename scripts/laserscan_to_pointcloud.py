@@ -1,10 +1,12 @@
 #! /usr/bin/env python
 
-import sensor_msgs.point_cloud2 as pc2
 import rospy
-from sensor_msgs.msg import PointCloud2, LaserScan
-import laser_geometry.laser_geometry as lg
 import math
+import laser_geometry.laser_geometry as lg
+import sensor_msgs.point_cloud2 as pc2
+from sensor_msgs.msg import PointCloud2, LaserScan
+import pcl_helper
+
 
 pc_pub = rospy.Publisher("/point_cloud", PointCloud2, queue_size=1)
 
@@ -13,8 +15,8 @@ def scan_cb(msg):
 
     # convert the message of type LaserScan to a PointCloud2
     pc2_msg = lp.projectLaser(msg)
-
-    # publish it
+    
+    # publish 
     pc_pub.publish(pc2_msg)
 
 if __name__ == '__main__':
