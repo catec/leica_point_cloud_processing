@@ -8,6 +8,8 @@ from geometry_msgs.msg import Pose
 from gazebo_msgs.msg import ModelState 
 from gazebo_msgs.srv import SetModelState, GetModelState
 
+YAW_INCREMENT = 0.001
+
 def orientation_to_quaternion(orientation):
     quaternion = (  orientation.x,
                     orientation.y,
@@ -26,7 +28,7 @@ def quaternion_to_orientation(quaternion):
 def get_next_orientation(current_orientation,roll, pitch, yaw):
     current_rotation = orientation_to_quaternion(current_orientation)
     euler_angle = tf.transformations.euler_from_quaternion(current_rotation)
-
+    # update with angles increments
     r = euler_angle[0] + roll
     p = euler_angle[1] + pitch
     y = euler_angle[2] + yaw
@@ -46,7 +48,7 @@ def get_init_pose():
 
 def main():
     rospy.init_node('move_c5_tilt')
-    r = rospy.Rate(5)
+    r = rospy.Rate(10)
 
     init_model_state = get_init_pose()
 
@@ -54,19 +56,12 @@ def main():
     state_msg.model_name = 'c5'
     state_msg.pose = init_model_state.pose
 
-    print("Posicion inicial: ")
-    print(state_msg.pose)
-
     rospy.wait_for_service('/gazebo/set_model_state')
-
-    yaw = 0
 
     while not rospy.is_shutdown():
 
         # update rotation value
-        # yaw = 0 if yaw>(2*pi) else yaw+0.01
-        yaw_inc = 0.01
-        state_msg.pose.orientation = get_next_orientation(state_msg.pose.orientation,0,0,yaw_inc)
+        state_msg.pose.orientation = get_next_orientation(state_msg.pose.orientation,0,0,YAW_INCREMENT)
 
         # move model
         try:
