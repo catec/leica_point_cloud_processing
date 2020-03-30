@@ -22,14 +22,6 @@ Meshes and pointclouds are not updated online because they are confidential.
 
     rosrun leica_scanstation segment_and_publish_pcs.py
 
-LEICA SCANSTATION C5 SIMULATOR
-
-    roslaunch leica_scanstation c5_system_spawn.launch
-
-    roslaunch leica_scanstation laserscan_to_pointcloud.launch
-
-    rosrun leica_scanstation move_c5_tilt.py 
-
 ## Hacks ##
 
     rosrun pcl_ros bag_to_pcd /media/catec/Datos/Bags/rosin_leica/assembly.bag /camera/depth/points /home/catec/catkin_ws/src/leica_scanstation/pointclouds

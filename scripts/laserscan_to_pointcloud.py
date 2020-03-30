@@ -25,5 +25,3 @@ if __name__ == '__main__':
 
     rospy.Subscriber("/c5/laser/scan", LaserScan, scan_cb, queue_size=1)
     rospy.spin()
-
-
