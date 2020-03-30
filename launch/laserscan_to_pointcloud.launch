@@ -1,5 +1,8 @@
 <launch>
 
-  <node name="laserscan_to_pointcloud_node" pkg="leica_scanstation" type="laserscan_to_pointcloud" output="screen"/>
+  <arg name="namespace" default="leica"/>
+
+  <node name="laserscan_to_pointcloud_node" pkg="leica_scanstation" type="laserscan_to_pointcloud" ns="$(arg namespace)" 
+        output="screen"/>
 
 </launch>

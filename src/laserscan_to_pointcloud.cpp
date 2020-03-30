@@ -57,8 +57,8 @@ void ScanToPointCloud::scanCb(const sensor_msgs::LaserScan::ConstPtr& scan){
 }
 
 ScanToPointCloud::ScanToPointCloud(){
-        _sub = _node.subscribe<sensor_msgs::LaserScan> ("/c5/laser/scan", 100, &ScanToPointCloud::scanCb, this);
-        _pub = _node.advertise<sensor_msgs::PointCloud2> ("/cloud", 100, false);
+        _sub = _node.subscribe<sensor_msgs::LaserScan> ("laser/scan", 100, &ScanToPointCloud::scanCb, this);
+        _pub = _node.advertise<sensor_msgs::PointCloud2> ("cloud", 100, false);
         // _tfListener.setExtrapolationLimit(ros::Duration(0.1));
 }
 
