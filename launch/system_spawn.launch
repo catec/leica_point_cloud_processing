@@ -2,19 +2,21 @@
 <launch>
 
   <arg name="spawn_stringer" default="false" doc="whether or not spawn stringer"/>
-  <arg name="spawn_assembly" default="false" doc="whether or not spawn assembly"/>
-  <arg name="spawn_assembly_big" default="true" doc="whether or not spawn assembly"/>
+  <arg name="spawn_assembly" default="true" doc="whether or not spawn assembly"/>
+  <arg name="spawn_assembly_big" default="false" doc="whether or not spawn assembly"/>
+  <arg name="spawn_camera"   default="false" doc="whether or not spawn assembly"/>
   <arg name="z_camera"       default="2" />
 
   <!-- Start Gazebo -->
-  <env name="GAZEBO_RESOURCE_PATH" value="$(find leica_scanstation)/meshes" />
+  <!-- <env name="GAZEBO_RESOURCE_PATH" value="$(find leica_scanstation)/meshes" />
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="paused"     value="true"/>
-  </include>
+  </include> -->
 
   <!-- spawn camera in gazebo -->
   <param command="$(find xacro)/xacro -i $(find leica_scanstation)/urdf/camera.urdf.xacro" name="camera_param"/>
-  <node args="-urdf -param camera_param -model camera -x 1.5 -z $(arg z_camera) -Y 3.1415"
+  <node if="$(arg spawn_camera)"
+        args="-urdf -param camera_param -model camera -x 1.5 -z $(arg z_camera) -Y 3.1415"
         name="spawn_camera" pkg="gazebo_ros" type="spawn_model" output="screen"/>
 
   <!-- Tf camera_link to world -->
@@ -30,7 +32,7 @@
   <!-- spawn assembly system in gazebo -->
   <param command="$(find xacro)/xacro -i $(find leica_scanstation)/urdf/assembly.xacro" name="assembly_param"/>
   <node if="$(arg spawn_assembly)"
-        args="-urdf -param assembly_param -model assembly -x 1 -y 4 -z 2 -Y -1.57"
+        args="-urdf -param assembly_param -model assembly -x 4 -y 4 -z 2 -Y -1.57"
         name="spawn_urdf"   pkg="gazebo_ros" type="spawn_model" output="screen"/>
 
   <!-- spawn assembly big system in gazebo -->

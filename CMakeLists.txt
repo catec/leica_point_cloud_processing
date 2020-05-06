@@ -28,7 +28,7 @@ include_directories(
 )
 
 
-add_executable(laserscan_to_pointcloud src/laserscan_to_pointcloud.cpp)
-target_link_libraries(laserscan_to_pointcloud
-  ${catkin_LIBRARIES}
-)
+# add_executable(laserscan_to_pointcloud src/laserscan_to_pointcloud.cpp)
+# target_link_libraries(laserscan_to_pointcloud
+#   ${catkin_LIBRARIES}
+# )
