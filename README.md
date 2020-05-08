@@ -59,11 +59,12 @@ Meshes and pointclouds are not updated online because they are confidential.
     5. PCL y PCL-ROS
 
         sudo apt-get install ros-kinetic-pcl-*
+        sudo apt-get install pcl-tools
 
         wget https://github.com/PointCloudLibrary/pcl/archive/pcl-1.8.0.tar.gz
         tar -xf pcl-1.8.0.tar.gz
         cd pcl-pcl-1.8.0 && mkdir build && cd build
-        cmake ..
+        cmake .. -DBUILD_tools=ON
         make
         sudo make install
 

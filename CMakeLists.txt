@@ -9,9 +9,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   tf
-  laser_geometry
   pcl_conversions
-  pcl_conversions
+  # pcl_conversions
   pcl_ros
   sensor_msgs
 )
@@ -27,6 +26,10 @@ include_directories(
   # ${PCL_INCLUDE_DIRS}
 )
 
+add_executable(cad_to_pointcloud src/cad_to_pointcloud.cpp)
+target_link_libraries(cad_to_pointcloud
+  ${catkin_LIBRARIES}
+)
 
 # add_executable(laserscan_to_pointcloud src/laserscan_to_pointcloud.cpp)
 # target_link_libraries(laserscan_to_pointcloud
