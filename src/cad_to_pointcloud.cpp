@@ -8,25 +8,27 @@
 #include <pcl/visualization/pcl_visualizer.h>
 // #include <pcl/tools/mesh2pcd.h>
 // #include <pcl/filters/voxel_grid.h>
-#include <pcl/io/
 
 
 class CADToPointCloud {
     public:
         CADToPointCloud();
-
-        pcl::PointCloud<pcl::PointXYZ> _cloud, _mesh_cloud;
-        // sensor_msgs::PointCloud2 _mesh_cloud_msg; 
-        std::string _hello,_pc_path;
-        void testing(std::string filename);
+    
+        pcl::PolygonMesh _CAD_mesh;
+        pcl::PointCloud<pcl::PointXYZ> _CAD_cloud;
+        sensor_msgs::PointCloud2 _CAD_cloud_msg; 
+        std::string _pc_path;
+        void CADToMesh(std::string filename);
+        void MeshToPointCloud(pcl::PolygonMesh mesh);
+        void MeshToROSPointCloud(pcl::PolygonMesh mesh);
         void visualizeMesh(pcl::PolygonMesh mesh);
         void visualizePointCloud(pcl::PointCloud<pcl::PointXYZ> pc);
         std::string getPCpath();
 };
 
 
-CADToPointCloud::CADToPointCloud(){
-    _hello = "Helloworld";
+CADToPointCloud::CADToPointCloud()
+{
     _pc_path = getPCpath();
 }
 
@@ -59,16 +61,26 @@ void CADToPointCloud::visualizePointCloud(pcl::PointCloud<pcl::PointXYZ> pc)
 }
 
 
-void CADToPointCloud::testing(std::string filename)
+void CADToPointCloud::CADToMesh(std::string filename)
 {
     pcl::PolygonMesh mesh;
     pcl::io::loadPolygonFile(_pc_path+filename,mesh);
 
-    pcl::fromPCLPointCloud2(mesh.cloud,_mesh_cloud);
+    _CAD_mesh = mesh;
 
-    visualizePointCloud(_mesh_cloud);
+    visualizeMesh(_CAD_mesh);
+}
 
-    // pcl_conversions::fromPCL( mesh.cloud, _mesh_cloud_msg );
+void CADToPointCloud::MeshToPointCloud(pcl::PolygonMesh mesh)
+{
+    pcl::fromPCLPointCloud2(mesh.cloud,_CAD_cloud);
+
+    visualizePointCloud(_CAD_cloud);
+}
+
+void CADToPointCloud::MeshToROSPointCloud(pcl::PolygonMesh mesh)
+{
+    pcl_conversions::fromPCL( mesh.cloud, _CAD_cloud_msg);
 }
 
 
@@ -87,9 +99,8 @@ int main(int argc, char** argv)
 
     CADToPointCloud cad_to_pointcloud;
 
-    ROS_INFO(cad_to_pointcloud._hello.c_str());
-
-    cad_to_pointcloud.testing("untitled.obj");
+    cad_to_pointcloud.CADToMesh("untitled.obj");
+    cad_to_pointcloud.MeshToPointCloud(cad_to_pointcloud._CAD_mesh);
 
     ros::spin();
 
