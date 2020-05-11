@@ -46,7 +46,10 @@ def process_line(line, transform):
     vals = np.array(map(float, str(line).split(" ")[:3]) + [1])
     # print "vals:", vals
     # print "tf:", transform
-    pos = vals.dot(transform)
+    vals2 = np.squeeze(np.asarray(vals))
+    transform2 = np.squeeze(np.asarray(transform))
+
+    pos = vals2.dot(transform2)
     return "{0} {1} {2}".format(pos[0], pos[1], pos[2])
 
 

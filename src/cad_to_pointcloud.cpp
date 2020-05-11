@@ -8,6 +8,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 // #include <pcl/tools/mesh2pcd.h>
 // #include <pcl/filters/voxel_grid.h>
+#include <pcl/io/
 
 
 class CADToPointCloud {

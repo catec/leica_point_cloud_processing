@@ -17,10 +17,10 @@ if __name__ == '__main__':
     pc_sub = rospy.Publisher("/point_cloud", PointCloud2, queue_size=1)
 
     # Load point cloud
-    pc = pcl.load_XYZRGB(pc_path + "Prueba1.pcd")
+    pc = pcl.load_XYZRGB(pc_path + "linux0.ptx.pcd")
 
     # print "viewer"
-    # os.system("pcl_viewer " + pc_path + "Prueba1.pcd")
+    os.system("pcl_viewer " + pc_path + "linux0.ptx.pcd")
 
     # Convert to ros
     ros_pc = pcl_to_ros(pc)
