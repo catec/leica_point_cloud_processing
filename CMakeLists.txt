@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(leica_scanstation)
 
+set(CMAKE_CXX_STANDARD 11)
+add_compile_options(-std=c++11)
+
 find_package(Eigen3 REQUIRED)
 # find_package(PCL REQUIRED)
 
@@ -28,6 +31,11 @@ include_directories(
 
 add_executable(cad_to_pointcloud src/cad_to_pointcloud.cpp)
 target_link_libraries(cad_to_pointcloud
+  ${catkin_LIBRARIES}
+)
+
+add_executable(3dscan_to_cad_align src/3dscan_to_cad_align.cpp)
+target_link_libraries(3dscan_to_cad_align
   ${catkin_LIBRARIES}
 )
 
