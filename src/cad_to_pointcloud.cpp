@@ -1,33 +1,4 @@
-#include "ros/ros.h"
-#include "ros/package.h"
-// #include <tf/transform_listener.h>
-#include "pcl_conversions/pcl_conversions.h"
-// #include <pcl/point_types.h>
-#include <pcl_ros/point_cloud.h> 
-#include <pcl/io/vtk_lib_io.h>
-#include <pcl/visualization/pcl_visualizer.h>
-// #include <pcl/tools/mesh2pcd.h>
-// #include <pcl/filters/voxel_grid.h>
-
-
-class CADToPointCloud {
-    public:
-        CADToPointCloud();
-        CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ> &pointcloud);
-        ~CADToPointCloud() {};
-
-    
-        pcl::PolygonMesh _CAD_mesh;
-        pcl::PointCloud<pcl::PointXYZ> _CAD_cloud;
-        sensor_msgs::PointCloud2 _CAD_cloud_msg; 
-        std::string _pc_path;
-        void CADToMesh(std::string filename);
-        void MeshToPointCloud(pcl::PolygonMesh mesh);
-        void MeshToROSPointCloud(pcl::PolygonMesh mesh);
-        void visualizeMesh(pcl::PolygonMesh mesh);
-        void visualizePointCloud(pcl::PointCloud<pcl::PointXYZ> pc);
-        std::string getPCpath();
-};
+#include <cad_to_pointcloud.h>
 
 
 CADToPointCloud::CADToPointCloud()
@@ -35,7 +6,7 @@ CADToPointCloud::CADToPointCloud()
     _pc_path = getPCpath();
 }
 
-CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ> &pointcloud)
+CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud)
 {
     _pc_path = getPCpath();
     CADToMesh(cad_file); // here we get _CAD_mesh
@@ -57,10 +28,8 @@ void CADToPointCloud::visualizeMesh(pcl::PolygonMesh mesh)
     }
 }
 
-void CADToPointCloud::visualizePointCloud(pcl::PointCloud<pcl::PointXYZ> pc)
+void CADToPointCloud::visualizePointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
 {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(&pc);
-
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("Pointcloud Viewer"));
     viewer->setBackgroundColor (0, 0, 0);
     viewer->addPointCloud(cloud);
@@ -77,16 +46,18 @@ void CADToPointCloud::CADToMesh(std::string filename)
 {
     pcl::PolygonMesh mesh;
     pcl::io::loadPolygonFile(_pc_path+filename,mesh);
-
+    
     _CAD_mesh = mesh;
 
-    visualizeMesh(_CAD_mesh);
+    // visualizeMesh(_CAD_mesh);
 }
 
 void CADToPointCloud::MeshToPointCloud(pcl::PolygonMesh mesh)
 {
-    pcl::fromPCLPointCloud2(mesh.cloud,_CAD_cloud);
+    ROS_INFO("MeshToPointCloud");
+    pcl::fromPCLPointCloud2(mesh.cloud, *_CAD_cloud);
 
+    ROS_INFO("MeshToPointCloud VISUALIZING");
     visualizePointCloud(_CAD_cloud);
 }
 
@@ -102,18 +73,4 @@ std::string CADToPointCloud::getPCpath()
 
 	_pc_path = pkg_path + "/pointclouds/";
 	return _pc_path;
-}
-
-
-int main(int argc, char** argv)
-{
-    ros::init(argc, argv, "CADToPointCloud");
-
-    pcl::PointCloud<pcl::PointXYZ> pc;
-
-    CADToPointCloud cad_to_pointcloud = CADToPointCloud("untitled.obj", pc);
-
-    ros::spin();
-
-    return 0;
 }
