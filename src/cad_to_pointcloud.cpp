@@ -13,6 +13,9 @@
 class CADToPointCloud {
     public:
         CADToPointCloud();
+        CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ> &pointcloud);
+        ~CADToPointCloud() {};
+
     
         pcl::PolygonMesh _CAD_mesh;
         pcl::PointCloud<pcl::PointXYZ> _CAD_cloud;
@@ -32,9 +35,18 @@ CADToPointCloud::CADToPointCloud()
     _pc_path = getPCpath();
 }
 
+CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ> &pointcloud)
+{
+    _pc_path = getPCpath();
+    CADToMesh(cad_file); // here we get _CAD_mesh
+    MeshToPointCloud(_CAD_mesh); // here we get _CAD_cloud
+
+    pointcloud = _CAD_cloud;
+}
+
 void CADToPointCloud::visualizeMesh(pcl::PolygonMesh mesh)
 {
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("Mesh Viewer"));
     viewer->setBackgroundColor (0, 0, 0);
     viewer->addPolygonMesh(mesh,"meshes",0);
     viewer->addCoordinateSystem (1.0);
@@ -49,7 +61,7 @@ void CADToPointCloud::visualizePointCloud(pcl::PointCloud<pcl::PointXYZ> pc)
 {
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(&pc);
 
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("Pointcloud Viewer"));
     viewer->setBackgroundColor (0, 0, 0);
     viewer->addPointCloud(cloud);
     viewer->addCoordinateSystem (1.0);
@@ -97,10 +109,9 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "CADToPointCloud");
 
-    CADToPointCloud cad_to_pointcloud;
+    pcl::PointCloud<pcl::PointXYZ> pc;
 
-    cad_to_pointcloud.CADToMesh("untitled.obj");
-    cad_to_pointcloud.MeshToPointCloud(cad_to_pointcloud._CAD_mesh);
+    CADToPointCloud cad_to_pointcloud = CADToPointCloud("untitled.obj", pc);
 
     ros::spin();
 
