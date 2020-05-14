@@ -47,3 +47,11 @@ target_link_libraries(3dscan_to_cad_align
 # target_link_libraries(laserscan_to_pointcloud
 #   ${catkin_LIBRARIES}
 # )
+
+add_executable(mesh_sampling 
+src/mesh_sampling.cpp
+)
+
+target_link_libraries(mesh_sampling
+  ${catkin_LIBRARIES}
+)

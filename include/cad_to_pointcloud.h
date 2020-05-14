@@ -15,7 +15,7 @@
 class CADToPointCloud {
     public:
         CADToPointCloud();
-        CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud);
+        CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud, bool big_file);
         ~CADToPointCloud() {};
 
         pcl::PolygonMesh _CAD_mesh;
@@ -23,6 +23,7 @@ class CADToPointCloud {
         sensor_msgs::PointCloud2 _CAD_cloud_msg; 
         std::string _pc_path;
         void CADToMesh(std::string filename);
+        void MeshToPointCloud(std::string filename);
         void MeshToPointCloud(pcl::PolygonMesh mesh);
         void MeshToROSPointCloud(pcl::PolygonMesh mesh);
         void visualizeMesh(pcl::PolygonMesh mesh);
