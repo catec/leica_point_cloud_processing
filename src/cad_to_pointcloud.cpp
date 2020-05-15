@@ -79,7 +79,7 @@ void CADToPointCloud::MeshToPointCloud(pcl::PolygonMesh mesh)
     // Hay que intentar reproducir el comportamiento de este programa:
     // pcl_mesh_sampling input.obj output.pcd    
 
-    visualizePointCloud(_CAD_cloud);
+    // visualizePointCloud(_CAD_cloud);
 }
 
 void CADToPointCloud::MeshToROSPointCloud(pcl::PolygonMesh mesh)
