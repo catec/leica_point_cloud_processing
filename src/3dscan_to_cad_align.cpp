@@ -24,7 +24,7 @@
 * and persistent over multiple scales 
 **/
 
-const Eigen::Vector4f downsampling_leaf_size(0.01f, 0.01f, 0.01f, 0.0f);
+const Eigen::Vector4f downsampling_leaf_size(0.05f, 0.05f, 0.05f, 0.0f);
 
 class PointCloudAlignment 
 {
@@ -33,6 +33,7 @@ class PointCloudAlignment
         ~PointCloudAlignment() {};
 
         pcl::PointCloud<pcl::PointXYZ> pc;
+        Eigen::Matrix4f transform;
 
         void printKeypoints(std::vector<int> const &input);
         bool getNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
@@ -61,6 +62,12 @@ void PointCloudAlignment::downsampleCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cl
     downsampling_filter.setLeafSize(downsampling_leaf_size);
     downsampling_filter.filter(*cloud_downsampled);
     ROS_INFO("pc size after: %zu",cloud_downsampled->points.size());
+
+/*     pcl::visualization::CloudViewer viewer("Downsampled:");
+    viewer.showCloud(cloud_downsampled, "Downsampled");
+    ROS_INFO("Waiting for the user to quit the visualization window");
+    while (!viewer.wasStopped(50)) {
+    } */
 }
 
 void PointCloudAlignment::getKeypointsAndFeatures(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, 
@@ -105,13 +112,11 @@ void PointCloudAlignment::getKeypointsAndFeatures(pcl::PointCloud<pcl::PointXYZ>
     // pcl::PointCloud<pcl::PointXYZ>::Ptr persistent_features_locations(new pcl::PointCloud<pcl::PointXYZ>());
     extract_indices_filter.filter(*keypoints_cloud);
 
-    pcl::visualization::CloudViewer viewer("Viewer for keypoints");
+/*     pcl::visualization::CloudViewer viewer("Viewer for keypoints");
     viewer.showCloud(keypoints_cloud, "persistent features");
-    ROS_INFO("Persistent features have been computed. Waiting for the user to quit the "
-           "visualization window.\n");
-
+    ROS_INFO("Persistent features have been computed. Waiting for the user to quit the visualization window");
     while (!viewer.wasStopped(50)) {
-    }
+    } */
 }
 
 void PointCloudAlignment::printKeypoints(std::vector<int> const &input)
@@ -165,7 +170,6 @@ void PointCloudAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>
     rejector.setInputCorrespondences(correspondences);;
     rejector.getCorrespondences(*corr_filtered);
     
-    Eigen::Matrix4f transform;
     pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ> trans_est;
     trans_est.estimateRigidTransformation(*source_keypoints,*target_keypoints, 
                                           *corr_filtered, transform);
@@ -175,6 +179,8 @@ void PointCloudAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "PointCloudAlignment");
+
+    ROS_INFO("PointCloudAlignment");
 
     PointCloudAlignment point_cloud_alignment;
     pcl::PointCloud<pcl::PointXYZ>::Ptr cad_pc(new pcl::PointCloud<pcl::PointXYZ>);
@@ -188,7 +194,10 @@ int main(int argc, char** argv)
     pcl::PointCloud<pcl::FPFHSignature33>::Ptr cad_features (new pcl::PointCloud<pcl::FPFHSignature33> ());
     pcl::PointCloud<pcl::FPFHSignature33>::Ptr scan_features (new pcl::PointCloud<pcl::FPFHSignature33> ());
 
-    CADToPointCloud cad_to_pointcloud = CADToPointCloud("untitled.obj", cad_pc, true);
+    ROS_INFO("Getting pointclouds to align");
+    CADToPointCloud cad_to_pointcloud = CADToPointCloud("conjunto_estranio.obj", cad_pc, true);
+    std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio.pcd";
+    pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
 
     ROS_INFO("Downsampling...");
     point_cloud_alignment.downsampleCloud(cad_pc,cad_pc_downsampled);
@@ -201,6 +210,30 @@ int main(int argc, char** argv)
     point_cloud_alignment.getKeypointsAndFeatures(scan_pc_downsampled,scan_normals,scan_keypoints,scan_features);
     ROS_INFO("Getting transform...");
     point_cloud_alignment.initialAlingment(scan_features,cad_features,scan_keypoints,cad_keypoints);
+
+    Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+    std::cout << point_cloud_alignment.transform.format(CleanFmt) << std::endl;
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr scan_aligned(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::transformPointCloud(*scan_pc_downsampled,*scan_aligned,point_cloud_alignment.transform);
+    
+    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cad_cloud_rgb(cad_pc_downsampled, 0, 0, 255); 
+    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> scan_cloud_rgb(scan_aligned, 255, 0, 0);
+
+    pcl::visualization::PCLVisualizer viewer;
+    viewer.setBackgroundColor(0,0,0);
+    viewer.addCoordinateSystem(1.0);
+    viewer.addPointCloud<pcl::PointXYZ>(cad_pc_downsampled, cad_cloud_rgb, "cad");
+    viewer.addPointCloud<pcl::PointXYZ>(scan_aligned, scan_cloud_rgb, "scan");
+    viewer.initCameraParameters();
+    ROS_INFO("Waiting for the user to quit the visualization window");
+    while (!viewer.wasStopped()) {
+        viewer.spinOnce(100);
+        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+    } 
+
+
+
 
     ROS_INFO("end");
 
