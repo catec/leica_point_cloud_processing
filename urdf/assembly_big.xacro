@@ -14,13 +14,14 @@
         <visual>
             <origin xyz="$(arg x) $(arg y) $(arg z)"/>
             <geometry>
-                <mesh filename="file:///$(find leica_scanstation)/meshes/Assembly2.dae" scale="0.0005 0.0005 0.0005"/>
+                <!-- <mesh filename="file:///$(find leica_scanstation)/meshes/Assembly2.dae" scale="0.0005 0.0005 0.0005"/> -->
+                <mesh filename="file:///$(find leica_scanstation)/meshes/untitled.obj"/>
             </geometry>
         </visual>
         <collision>
             <origin xyz="$(arg x) $(arg y) $(arg z)"/>
             <geometry>
-                <mesh filename="file:///$(find leica_scanstation)/meshes/Assembly2.dae" scale="0.0005 0.0005 0.0005"/>
+                <mesh filename="file:///$(find leica_scanstation)/meshes/untitled.obj"/>
             </geometry>
         </collision>
     </link>

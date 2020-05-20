@@ -23,5 +23,5 @@ if __name__ == '__main__':
     rospy.init_node("laserscan_to_pointcloud")
 
 
-    rospy.Subscriber("/c5/laser/scan", LaserScan, scan_cb, queue_size=1)
+    rospy.Subscriber("/laser/scan", LaserScan, scan_cb, queue_size=1)
     rospy.spin()
