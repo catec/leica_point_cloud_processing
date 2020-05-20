@@ -268,6 +268,7 @@ int main(int argc, char** argv)
     pcl::transformPointCloud(*scan_pc_downsampled,*scan_aligned,point_cloud_alignment.transform);
     ROS_INFO("Computing iterative Algorithm to get fine registration...");
     point_cloud_alignment.fine_registration(scan_aligned,cad_pc_downsampled);
+    std::cout << point_cloud_alignment.fine_transform.format(CleanFmt) << std::endl;
     ROS_INFO("Applying fine transform...");
     pcl::PointCloud<pcl::PointXYZ>::Ptr scan_fine_aligned(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::transformPointCloud(*scan_aligned,*scan_fine_aligned,point_cloud_alignment.fine_transform);
