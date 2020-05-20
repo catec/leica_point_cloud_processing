@@ -12,15 +12,7 @@ Meshes and pointclouds are not updated online because they are confidential.
 
 ## Usage ##
 
-    roslaunch leica_scanstation system_spawn.launch
-
-    roslaunch leica_scanstation clustering.launch
-
-    rosrun leica_scanstation downsample_pc.py
-    
-    rosrun leica_scanstation segment_pc.py
-
-    rosrun leica_scanstation segment_and_publish_pcs.py
+    rosrun leica_scanstation 3dscan_to_cad_align
 
 ## Hacks ##
 
@@ -33,21 +25,11 @@ Meshes and pointclouds are not updated online because they are confidential.
 
 ## Dependencies ##
 
-* PCL:
+1. Boost, Flann, Eigen3, OpenNI, OpenNI2
 
-    1. Boost
+        sudo apt-get install libboost1.58* libflann1.8 libeigen3-dev libopenni-dev libopenni2-dev
 
-        sudo apt-get install libboost1.58*
-
-    2. Flann
-
-        sudo apt-get install libflann1.8
-
-    3. Eigen3
-
-        sudo apt-get install libeigen3-dev
-
-    4. VTK
+2. VTK
 
         wget http://www.vtk.org/files/release/7.1/VTK-7.1.0.tar.gz
         tar -xf VTK-7.1.0.tar.gz
@@ -56,21 +38,38 @@ Meshes and pointclouds are not updated online because they are confidential.
         make                                                                   
         sudo make install
 
-    5. PCL y PCL-ROS
+3. PCL >1.8.1
 
-        sudo apt-get install ros-kinetic-pcl-*
-        sudo apt-get install pcl-tools
-
-        wget https://github.com/PointCloudLibrary/pcl/archive/pcl-1.8.0.tar.gz
-        tar -xf pcl-1.8.0.tar.gz
-        cd pcl-pcl-1.8.0 && mkdir build && cd build
+        wget https://github.com/PointCloudLibrary/pcl/archive/pcl-1.8.1.tar.gz
+        tar -xf pcl-1.8.1.tar.gz
+        cd pcl-pcl-1.8.1 && mkdir build && cd build
         cmake .. -DBUILD_tools=ON
         make
         sudo make install
 
-* PYTHON-PCL
+4. PCL-ROS
 
-    pip3 install python-pcl
+        sudo apt-get install ros-kinetic-pcl-*
+        sudo apt-get install pcl-tools
+
+5. PYTHON-PCL
+
+        pip3 install python-pcl
+
+## RESULTS
+
+const Eigen::Vector4f downsampling_leaf_size(0.1f, 0.1f, 0.1f, 0.0f);
+[ 0.5099,  0.5881, -0.6278,  -10.92]
+[-0.8591,  0.3851, -0.3371,   -3.87]
+[0.04355,  0.7112,  0.7016,   -4.63]
+[      0,       0,       0,       1]
+
+const Eigen::Vector4f downsampling_leaf_size(0.05f, 0.05f, 0.05f, 0.0f);
+[ 0.8794, -0.3988,  0.2599,  -10.46]
+[-0.3362, -0.1339,  0.9322, -0.3845]
+[ -0.337, -0.9072, -0.2518,  -0.315]
+[      0,       0,       0,       1]
+
 
 ## Help ##
 Ines M. Lara - imlara@catec.aero

@@ -2,19 +2,20 @@ cmake_minimum_required(VERSION 2.8.3)
 project(leica_scanstation)
 
 set(CMAKE_CXX_STANDARD 11)
+set(VTK_LEGACY_SILENT ON)
 add_compile_options(-std=c++11)
 
 find_package(Eigen3 REQUIRED)
-# find_package(PCL REQUIRED)
+find_package(PCL 1.8 REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+  roslib
   std_msgs
   tf
-  pcl_conversions
   # pcl_conversions
-  pcl_ros
+  # pcl_ros
   sensor_msgs
 )
 
@@ -26,7 +27,7 @@ include_directories(
     include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
-  # ${PCL_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
 # add_library(cad_to_pointcloud src/cad_to_pointcloud.cpp)
@@ -41,6 +42,7 @@ src/cad_to_pointcloud.cpp
 
 target_link_libraries(3dscan_to_cad_align
   ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
 )
 
 # add_executable(laserscan_to_pointcloud src/laserscan_to_pointcloud.cpp)

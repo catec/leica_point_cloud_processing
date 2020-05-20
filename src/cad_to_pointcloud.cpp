@@ -84,7 +84,7 @@ void CADToPointCloud::MeshToPointCloud(pcl::PolygonMesh mesh)
 
 void CADToPointCloud::MeshToROSPointCloud(pcl::PolygonMesh mesh)
 {
-    pcl_conversions::fromPCL( mesh.cloud, _CAD_cloud_msg);
+    // pcl_conversions::fromPCL( mesh.cloud, _CAD_cloud_msg);
 
     // Hay una función de pcl_ros muy util:
     // rosrun pcl_ros pcd_to_pointcloud input.pcd periodo _frame_id:=/world
