@@ -43,36 +43,49 @@ void CADToPointCloud::visualizeMesh(pcl::PolygonMesh mesh)
 void CADToPointCloud::visualizePointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color)
 {
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
+    resetVisualizer();
+    _viewer->setBackgroundColor (0, 0, 0);
+    _viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,"cloud");
+    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,5);
+    _viewer->addCoordinateSystem (1.0);
+    _viewer->initCameraParameters ();
     
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("Pointcloud Viewer"));
-    viewer->setBackgroundColor (0, 0, 0);
-    viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,"cloud");
-    viewer->addCoordinateSystem (1.0);
-    viewer->initCameraParameters ();
-    
-    while (!viewer->wasStopped ()){
-        viewer->spinOnce (100);
+    while (!_viewer->wasStopped ()){
+        _viewer->spinOnce (100);
         boost::this_thread::sleep (boost::posix_time::microseconds (100000));
     } 
 }
 
-void CADToPointCloud::visualizePointCloudAndNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
-                                                    pcl::PointCloud<pcl::Normal>::Ptr normals,
-                                                    pc_color color)
+void CADToPointCloud::resetVisualizer()
 {
-    ROS_INFO("Color rgb: (%d,%d,%d)",BLUE.r,BLUE.g,BLUE.b);
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
+    _viewer->removeAllCoordinateSystems();
+    _viewer->removeAllPointClouds();
+    _viewer->removeAllShapes();
+}
 
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("Pointcloud and Normals Viewer"));
-    viewer->setBackgroundColor (0, 0, 0);
-    viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,"cloud");
-    viewer->addPointCloudNormals<pcl::PointXYZ, pcl::Normal>(cloud,normals,1,0.02,"normals");
-    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,5);
-    viewer->addCoordinateSystem (1.0);
-    viewer->initCameraParameters ();
-    
-    while (!viewer->wasStopped ()){
-        viewer->spinOnce (100);
+
+void CADToPointCloud::addNormalsToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+                                             pcl::PointCloud<pcl::Normal>::Ptr normals,
+                                             std::string name)
+{
+    ROS_INFO("Add normals to cloud in visualizer");
+    _viewer->resetStoppedFlag();
+    _viewer->addPointCloudNormals<pcl::PointXYZ, pcl::Normal>(cloud,normals,1,0.02,name);
+    while (!_viewer->wasStopped ()){
+        _viewer->spinOnce (100);
+        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+    } 
+}
+
+void CADToPointCloud::addPCToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color, std::string name)
+{
+    ROS_INFO("Add cloud in visualizer");
+    _viewer->resetStoppedFlag();
+    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
+    _viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,name);
+    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,5,name);
+    while (!_viewer->wasStopped ()){
+        _viewer->spinOnce (100);
         boost::this_thread::sleep (boost::posix_time::microseconds (100000));
     } 
 }
