@@ -7,6 +7,8 @@ CADToPointCloud::CADToPointCloud()
     RED = {255,0,0};
     GREEN = {0,255,0};
     BLUE = {0,0,255};
+    PINK = {255,0,128};
+    ORANGE = {255,128,0};
 }
 
 CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud, bool big_file)
@@ -15,6 +17,8 @@ CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::Poin
     RED = {255,0,0};
     GREEN = {0,255,0};
     BLUE = {0,0,255};
+    PINK = {255,0,128};
+    ORANGE = {255,128,0};
 
     CADToMesh(cad_file); // here we get _CAD_mesh
 
@@ -46,7 +50,7 @@ void CADToPointCloud::visualizePointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cl
     resetVisualizer();
     _viewer->setBackgroundColor (0, 0, 0);
     _viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,"cloud");
-    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,5);
+    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,2);
     _viewer->addCoordinateSystem (1.0);
     _viewer->initCameraParameters ();
     
@@ -83,7 +87,7 @@ void CADToPointCloud::addPCToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr clou
     _viewer->resetStoppedFlag();
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
     _viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,name);
-    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,5,name);
+    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,2,name);
     while (!_viewer->wasStopped ()){
         _viewer->spinOnce (100);
         boost::this_thread::sleep (boost::posix_time::microseconds (100000));

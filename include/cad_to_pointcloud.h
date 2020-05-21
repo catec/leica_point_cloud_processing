@@ -20,7 +20,7 @@ class CADToPointCloud {
         ~CADToPointCloud() {};
 
         struct pc_color { int r,g,b; };
-        pc_color RED, GREEN, BLUE;
+        pc_color RED,GREEN,BLUE,PINK,ORANGE;
 
         pcl::PolygonMesh _CAD_mesh;
         pcl::PointCloud<pcl::PointXYZ>::Ptr _CAD_cloud{new pcl::PointCloud<pcl::PointXYZ>};

@@ -35,7 +35,8 @@ class PointCloudAlignment
         ~PointCloudAlignment() {};
 
         pcl::PointCloud<pcl::PointXYZ> pc;
-        Eigen::Matrix4f transform,fine_transform;
+        Eigen::Matrix4f transform;
+        Eigen::Matrix4d fine_transform;
 
         void printKeypoints(std::vector<int> const &input);
         bool getNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
@@ -188,16 +189,24 @@ void PointCloudAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>
 void PointCloudAlignment::getCovariances(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
                                          boost::shared_ptr< std::vector<Eigen::Matrix3d, Eigen::aligned_allocator<Eigen::Matrix3d>> > covs)
 {
-    // reconstruct meshes
-    pcl::PolygonMesh::Ptr mesh (new pcl::PolygonMesh);
+    // reconstruct meshes NOT WORKING
+/*     pcl::PolygonMesh::Ptr mesh (new pcl::PolygonMesh);
     pcl::OrganizedFastMesh<pcl::PointXYZ> fast_mesh;
     fast_mesh.setInputCloud(cloud);
+    fast_mesh.setMaxEdgeLength (15);
+    fast_mesh.setTrianglePixelSize (20);
+    fast_mesh.setTriangulationType(pcl::OrganizedFastMesh<pcl::PointXYZ>::TRIANGLE_ADAPTIVE_CUT);
     fast_mesh.reconstruct(*mesh);
-    
+    cad_to_pointcloud.visualizeMesh(*mesh); */    
+
     // compute normals and covariances for source and target
-    pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal>);
-    pcl::features::computeApproximateNormals(*cloud, mesh->polygons, *normals);
+    pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+    // pcl::features::computeApproximateNormals(*cloud, mesh->polygons, *normals); // NOT WORKING
+    
+    // alternative way of getting normals
+    getNormals(cloud,normals);
     pcl::features::computeApproximateCovariances(*cloud, *normals, *covs);
+    ROS_INFO("covs size: %zu",covs->size());
 }
 
 void PointCloudAlignment::fine_registration(pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
@@ -214,14 +223,25 @@ void PointCloudAlignment::fine_registration(pcl::PointCloud<pcl::PointXYZ>::Ptr 
     // setup Generalized-ICP
     pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
     gicp.setMaxCorrespondenceDistance(1);
+    gicp.setMaximumIterations(500); // no encuentro el numero maximo
     gicp.setInputSource(source_cloud);
     gicp.setInputTarget(target_cloud);
-    gicp.setSourceCovariances(source_covariances);
-    gicp.setTargetCovariances(target_covariances);
+    // gicp.setSourceCovariances(source_covariances);
+    // gicp.setTargetCovariances(target_covariances);
     // run registration and get transformation
-    pcl::PointCloud<pcl::PointXYZ> output;
-    gicp.align(output);
-    fine_transform = gicp.getFinalTransformation();
+    gicp.align(*source_cloud);
+ 
+    if (gicp.hasConverged())
+    {
+        ROS_INFO("Converged in %f",gicp.getFitnessScore());
+        fine_transform = gicp.getFinalTransformation().cast<double>();
+        Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]"); // just for print
+        std::cout << fine_transform.format(CleanFmt) << std::endl;
+    }
+    else 
+    {
+        ROS_ERROR("NO CONVERGE");
+    }
 }
 
 
@@ -244,21 +264,40 @@ int main(int argc, char** argv)
     pcl::PointCloud<pcl::FPFHSignature33>::Ptr scan_features (new pcl::PointCloud<pcl::FPFHSignature33> ());
 
     ROS_INFO("Getting pointclouds to align");
-    CADToPointCloud cad_to_pointcloud = CADToPointCloud("conjunto_estranio.obj", cad_pc, true);
+    CADToPointCloud cad_to_pointcloud = CADToPointCloud("conjunto_estranio.obj", cad_pc, false);
     std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio_no_floor.pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
 
+/*     // Defining a rotation matrix and translation vector
+    Eigen::Matrix4d transformation_matrix = Eigen::Matrix4d::Identity ();
+    double theta = M_PI / 8;  // The angle of rotation in radians
+    transformation_matrix (0, 0) = std::cos (theta);
+    transformation_matrix (0, 1) = -sin (theta);
+    transformation_matrix (1, 0) = sin (theta);
+    transformation_matrix (1, 1) = std::cos (theta);
+    // A translation on Z axis (0.4 meters)
+    transformation_matrix (2, 3) = 0.4;
+    pcl::transformPointCloud(*cad_pc,*scan_pc,transformation_matrix);
+    Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]"); // just for print
+    std::cout << transformation_matrix.format(CleanFmt) << std::endl; */
+
     ROS_INFO("Downsampling...");
-    const Eigen::Vector4f small_leaf_size(0.05f, 0.05f, 0.05f, 0.0f);
+    const Eigen::Vector4f small_leaf_size(0.03f, 0.03f, 0.03f, 0.0f);
     const Eigen::Vector4f big_leaf_size(0.1f, 0.1f, 0.1f, 0.0f);
     point_cloud_alignment.downsampleCloud(cad_pc,cad_pc_downsampled,small_leaf_size);
-    point_cloud_alignment.downsampleCloud(scan_pc,scan_pc_downsampled,big_leaf_size);
+    point_cloud_alignment.downsampleCloud(scan_pc,scan_pc_downsampled,small_leaf_size); 
     ROS_INFO("Computing normals...");
     point_cloud_alignment.getNormals(cad_pc_downsampled,cad_normals);
     point_cloud_alignment.getNormals(scan_pc_downsampled,scan_normals);
+    cad_to_pointcloud.visualizePointCloud(cad_pc_downsampled,cad_to_pointcloud.RED);
+    cad_to_pointcloud.addNormalsToVisualizer(cad_pc_downsampled,cad_normals,"cad_normals");
+    cad_to_pointcloud.addPCToVisualizer(scan_pc_downsampled,cad_to_pointcloud.PINK,"scan");
+    cad_to_pointcloud.addNormalsToVisualizer(scan_pc_downsampled,scan_normals,"scan_normals");
     ROS_INFO("Computing keypoints...");
     point_cloud_alignment.getKeypointsAndFeatures(cad_pc_downsampled,cad_normals,cad_keypoints,cad_features);
+    cad_to_pointcloud.addPCToVisualizer(cad_keypoints,cad_to_pointcloud.GREEN,"cad_key");
     point_cloud_alignment.getKeypointsAndFeatures(scan_pc_downsampled,scan_normals,scan_keypoints,scan_features);
+    cad_to_pointcloud.addPCToVisualizer(scan_keypoints,cad_to_pointcloud.GREEN,"scan_key");
     ROS_INFO("Getting transform...");
     point_cloud_alignment.initialAlingment(scan_features,cad_features,scan_keypoints,cad_keypoints);
     Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]"); // just for print
@@ -266,22 +305,25 @@ int main(int argc, char** argv)
     ROS_INFO("Applying transform...");
     pcl::PointCloud<pcl::PointXYZ>::Ptr scan_aligned(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::transformPointCloud(*scan_pc_downsampled,*scan_aligned,point_cloud_alignment.transform);
+    cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.BLUE,"scan_tf");
     ROS_INFO("Computing iterative Algorithm to get fine registration...");
     point_cloud_alignment.fine_registration(scan_aligned,cad_pc_downsampled);
-    std::cout << point_cloud_alignment.fine_transform.format(CleanFmt) << std::endl;
+    cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.ORANGE,"scan_tf_fine");
     ROS_INFO("Applying fine transform...");
     pcl::PointCloud<pcl::PointXYZ>::Ptr scan_fine_aligned(new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::transformPointCloud(*scan_aligned,*scan_fine_aligned,point_cloud_alignment.fine_transform);
-
+    pcl::transformPointCloud(*scan_pc_downsampled,*scan_fine_aligned,point_cloud_alignment.fine_transform);
+ /*  
     // visualization
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cad_cloud_rgb(cad_pc_downsampled, 0, 0, 255); 
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> scan_cloud_rgb(scan_aligned, 255, 0, 0);
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> scan_fine_cloud_rgb(scan_fine_aligned, 0, 255, 0);
+    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> scancad_pc_downsampled(scan_pc_downsampled, 255, 255, 255); 
+    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> scan_fine_cloud_rgb(scan_aligned, 0, 255, 0);
+    // pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> scan_fine_cloud_rgb(scan_fine_aligned, 0, 255, 0);
 
     pcl::visualization::PCLVisualizer viewer;
     viewer.setBackgroundColor(0,0,0);
     viewer.addCoordinateSystem(1.0);
     viewer.addPointCloud<pcl::PointXYZ>(cad_pc_downsampled, cad_cloud_rgb, "cad");
+    viewer.addPointCloud<pcl::PointXYZ>(scan_pc_downsampled, scancad_pc_downsampled, "cad2");
     viewer.addPointCloud<pcl::PointXYZ>(scan_aligned, scan_cloud_rgb, "scan");
     viewer.addPointCloud<pcl::PointXYZ>(scan_fine_aligned, scan_fine_cloud_rgb, "scan fine");
     viewer.initCameraParameters();
@@ -290,7 +332,7 @@ int main(int argc, char** argv)
         viewer.spinOnce(100);
         boost::this_thread::sleep (boost::posix_time::microseconds (100000));
     } 
-
+*/
 
     ROS_INFO("end");
 
