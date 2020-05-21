@@ -29,5 +29,7 @@ class CADToPointCloud {
         void MeshToROSPointCloud(pcl::PolygonMesh mesh);
         void visualizeMesh(pcl::PolygonMesh mesh);
         void visualizePointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
+        void visualizePointCloudAndNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+                                           pcl::PointCloud<pcl::Normal>::Ptr normals);
         std::string getPCpath();
 };

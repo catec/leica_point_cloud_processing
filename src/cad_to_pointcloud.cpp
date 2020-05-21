@@ -47,6 +47,22 @@ void CADToPointCloud::visualizePointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cl
     } 
 }
 
+void CADToPointCloud::visualizePointCloudAndNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+                                                    pcl::PointCloud<pcl::Normal>::Ptr normals)
+{
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("Pointcloud and Normals Viewer"));
+    viewer->setBackgroundColor (0, 0, 0);
+    viewer->addPointCloud(cloud);
+    viewer->addPointCloudNormals<pcl::PointXYZ, pcl::Normal>(cloud,normals,10,0.05,"normals");
+    viewer->addCoordinateSystem (1.0);
+    viewer->initCameraParameters ();
+    
+    while (!viewer->wasStopped ()){
+        viewer->spinOnce (100);
+        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+    } 
+}
+
 void CADToPointCloud::CADToMesh(std::string filename)
 {
     pcl::PolygonMesh mesh;
