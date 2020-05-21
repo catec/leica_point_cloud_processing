@@ -12,6 +12,10 @@ CADToPointCloud::CADToPointCloud()
 CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud, bool big_file)
 {
     _pc_path = getPCpath();
+    RED = {255,0,0};
+    GREEN = {0,255,0};
+    BLUE = {0,0,255};
+
     CADToMesh(cad_file); // here we get _CAD_mesh
 
     if (big_file) MeshToPointCloud(_CAD_mesh); // here we get _CAD_cloud
@@ -56,13 +60,14 @@ void CADToPointCloud::visualizePointCloudAndNormals(pcl::PointCloud<pcl::PointXY
                                                     pcl::PointCloud<pcl::Normal>::Ptr normals,
                                                     pc_color color)
 {
+    ROS_INFO("Color rgb: (%d,%d,%d)",BLUE.r,BLUE.g,BLUE.b);
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
 
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("Pointcloud and Normals Viewer"));
     viewer->setBackgroundColor (0, 0, 0);
     viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,"cloud");
-    viewer->addPointCloudNormals<pcl::PointXYZ, pcl::Normal>(cloud,normals,10,0.02,"normals");
-    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,10);
+    viewer->addPointCloudNormals<pcl::PointXYZ, pcl::Normal>(cloud,normals,1,0.02,"normals");
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,5);
     viewer->addCoordinateSystem (1.0);
     viewer->initCameraParameters ();
     
