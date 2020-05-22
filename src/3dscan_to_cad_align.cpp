@@ -149,7 +149,7 @@ bool PointCloudAlignment::getNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
 
     pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
     // Use all neighbors in a sphere of radius 3cm
-    ne.setRadiusSearch(0.03);
+    ne.setRadiusSearch(0.1);
     ne.compute(*normals);
 
     // As we compute normal for each pointcloud, both should have same number of points
@@ -265,7 +265,7 @@ int main(int argc, char** argv)
 
     ROS_INFO("Getting pointclouds to align");
     CADToPointCloud cad_to_pointcloud = CADToPointCloud("conjunto_estranio.obj", cad_pc, false);
-    std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio_no_floor.pcd";
+    std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio.pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
 
 /*     // Defining a rotation matrix and translation vector
@@ -283,9 +283,9 @@ int main(int argc, char** argv)
 
     ROS_INFO("Downsampling...");
     const Eigen::Vector4f small_leaf_size(0.03f, 0.03f, 0.03f, 0.0f);
-    const Eigen::Vector4f big_leaf_size(0.1f, 0.1f, 0.1f, 0.0f);
+    const Eigen::Vector4f big_leaf_size(0.05f, 0.05f, 0.05f, 0.0f);
     point_cloud_alignment.downsampleCloud(cad_pc,cad_pc_downsampled,small_leaf_size);
-    point_cloud_alignment.downsampleCloud(scan_pc,scan_pc_downsampled,small_leaf_size); 
+    point_cloud_alignment.downsampleCloud(scan_pc,scan_pc_downsampled,big_leaf_size); 
     ROS_INFO("Computing normals...");
     point_cloud_alignment.getNormals(cad_pc_downsampled,cad_normals);
     point_cloud_alignment.getNormals(scan_pc_downsampled,scan_normals);
@@ -312,7 +312,7 @@ int main(int argc, char** argv)
     ROS_INFO("Applying fine transform...");
     pcl::PointCloud<pcl::PointXYZ>::Ptr scan_fine_aligned(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::transformPointCloud(*scan_pc_downsampled,*scan_fine_aligned,point_cloud_alignment.fine_transform);
- /*  
+ /*   
     // visualization
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cad_cloud_rgb(cad_pc_downsampled, 0, 0, 255); 
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> scancad_pc_downsampled(scan_pc_downsampled, 255, 255, 255); 
