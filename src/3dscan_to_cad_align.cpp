@@ -18,15 +18,16 @@
 #include <cad_to_pointcloud.h>
 
 /**
-* Large scans key issue:
-
-* To find and appropiate descriptor but also an appropiate scale, for computing proccess
-
-* One option is to look for descriptors that proves to be distintive at the scale 
-* and persistent over multiple scales 
+ * POINTCLOUDS:
+    - target pointcloud: directly obtain from downsampling a part's cad
+    - source pointcloud: result from scanning the same cad part in Gazebo with leica c5 simulator
+ * WORKFLOW:
+    1. Filter pointclouds to reduce number of points (VoxelGrid)
+    2. Get normal for every point in both clouds (pcl::NormalEstimation)
+    3. Extract features and keypoints from pointcloud and it's normals (FPFH descriptor and pcl::MultiscaleFeaturePersistence)
+    4. Perform initial aligment as rigid transformation (pcl::CorrespondenceEstimation)
+    5. Applied GICP to refine transformation (pcl::GeneralizedIterativeClosestPoint)
 **/
-
-const Eigen::Vector4f downsampling_leaf_size(0.05f, 0.05f, 0.05f, 0.0f);
 
 class PointCloudAlignment 
 {
@@ -95,7 +96,7 @@ void PointCloudAlignment::getKeypointsAndFeatures(pcl::PointCloud<pcl::PointXYZ>
     ROS_INFO("2. Define feature persistence");
     pcl::MultiscaleFeaturePersistence<pcl::PointXYZ, pcl::FPFHSignature33> fper;
     boost::shared_ptr<std::vector<int> > keypoints(new std::vector<int>); // Interest points
-    std::vector<float> scale_values = { 0.5f, 1.0f, 1.5f }; //pre-selected 
+    std::vector<float> scale_values = {0.5f,1.0f,1.5f}; //pre-selected 
     fper.setScalesVector(scale_values);
     fper.setAlpha(1.3f);
     fper.setFeatureEstimator(fest);

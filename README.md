@@ -12,7 +12,7 @@ Meshes and pointclouds are not updated online because they are confidential.
 
 ## Usage ##
 
-    rosrun leica_scanstation 3dscan_to_cad_align
+    roslaunch leica_scanstation align.launch
 
 ## Hacks ##
 
