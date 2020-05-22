@@ -37,7 +37,7 @@ class PointCloudAlignment
         pcl::PointCloud<pcl::PointXYZ> pc;
         Eigen::Matrix4f transform;
         Eigen::Matrix4d fine_transform;
-        double _normal_radius, _feauter_radius;
+        double _normal_radius, _feature_radius,_inlier_threshold;
 
         void printKeypoints(std::vector<int> const &input);
         bool getNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
@@ -57,7 +57,8 @@ class PointCloudAlignment
                               pcl::PointCloud<pcl::PointXYZ>::Ptr target_keypoints);
         
         void fine_registration(pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
-                               pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud);
+                               pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+                               pcl::PointCloud<pcl::PointXYZ>::Ptr transf_cloud);
         
         void getCovariances(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
                             boost::shared_ptr< std::vector<Eigen::Matrix3d, Eigen::aligned_allocator<Eigen::Matrix3d>> > covs);
@@ -74,12 +75,6 @@ void PointCloudAlignment::downsampleCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cl
     downsampling_filter.setLeafSize(downsampling_leaf_size);
     downsampling_filter.filter(*cloud_downsampled);
     ROS_INFO("pc size after: %zu",cloud_downsampled->points.size());
-
-/*     pcl::visualization::CloudViewer viewer("Downsampled:");
-    viewer.showCloud(cloud_downsampled, "Downsampled");
-    ROS_INFO("Waiting for the user to quit the visualization window");
-    while (!viewer.wasStopped(50)) {
-    } */
 }
 
 void PointCloudAlignment::getKeypointsAndFeatures(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, 
@@ -88,22 +83,16 @@ void PointCloudAlignment::getKeypointsAndFeatures(pcl::PointCloud<pcl::PointXYZ>
                                                   pcl::PointCloud<pcl::FPFHSignature33>::Ptr features)
 {
     // SELECTED DESCRIPTOR: FPFH
-    ROS_INFO("1. Set descriptor FPFH");
+    ROS_INFO("1. Set descriptor FPFH with radius: %f",_feature_radius);
     pcl::FPFHEstimation<pcl::PointXYZ, pcl::Normal, pcl::FPFHSignature33>::Ptr  
-    fest(new pcl::FPFHEstimation<pcl::PointXYZ, pcl::Normal, pcl::FPFHSignature33>);
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
+        fest(new pcl::FPFHEstimation<pcl::PointXYZ, pcl::Normal, pcl::FPFHSignature33>);
     fest->setInputCloud(cloud);
     fest->setInputNormals(normals);
-    // Use all neighbors in a sphere of radius 5cm
-    // IMPORTANT: the radius has to be larger than the radius used to estimate the surface normals!!!
-    fest->setRadiusSearch (0.5);
+    fest->setRadiusSearch(_feature_radius);
+    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
     fest->setSearchMethod(tree);
 
-    // ROS_INFO("2. Computing features");
-    // pcl::PointCloud<pcl::FPFHSignature33>::Ptr features (new pcl::PointCloud<pcl::FPFHSignature33> ());
-    // // fest->compute(*features);
-
-    ROS_INFO("3. Define feature persistence");
+    ROS_INFO("2. Define feature persistence");
     pcl::MultiscaleFeaturePersistence<pcl::PointXYZ, pcl::FPFHSignature33> fper;
     boost::shared_ptr<std::vector<int> > keypoints(new std::vector<int>); // Interest points
     std::vector<float> scale_values = { 0.5f, 1.0f, 1.5f }; //pre-selected 
@@ -112,7 +101,7 @@ void PointCloudAlignment::getKeypointsAndFeatures(pcl::PointCloud<pcl::PointXYZ>
     fper.setFeatureEstimator(fest);
     fper.setDistanceMetric(pcl::CS);
 
-    ROS_INFO("4. Extracting keypoints");
+    ROS_INFO("3. Extracting keypoints");
     fper.determinePersistentFeatures(*features, keypoints);
 
     ROS_INFO("keypoints: %zu",keypoints->size());
@@ -121,14 +110,7 @@ void PointCloudAlignment::getKeypointsAndFeatures(pcl::PointCloud<pcl::PointXYZ>
     pcl::ExtractIndices<pcl::PointXYZ> extract_indices_filter;
     extract_indices_filter.setInputCloud(cloud);
     extract_indices_filter.setIndices(keypoints);
-    // pcl::PointCloud<pcl::PointXYZ>::Ptr persistent_features_locations(new pcl::PointCloud<pcl::PointXYZ>());
     extract_indices_filter.filter(*keypoints_cloud);
-
-/*     pcl::visualization::CloudViewer viewer("Viewer for keypoints");
-    viewer.showCloud(keypoints_cloud, "persistent features");
-    ROS_INFO("Persistent features have been computed. Waiting for the user to quit the visualization window");
-    while (!viewer.wasStopped(50)) {
-    } */
 }
 
 void PointCloudAlignment::printKeypoints(std::vector<int> const &input)
@@ -141,15 +123,15 @@ void PointCloudAlignment::printKeypoints(std::vector<int> const &input)
 bool PointCloudAlignment::getNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
                                      pcl::PointCloud<pcl::Normal>::Ptr &normals)
 {
+    ROS_INFO("Normal with radius: %f",_normal_radius);
     pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
     ne.setInputCloud(cloud);
 
     pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ> ());
-    
     ne.setSearchMethod(tree);
 
     pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
-    // Use all neighbors in a sphere of radius 3cm
+    // Use all neighbors in a sphere of radius _normal_radius cm
     ne.setRadiusSearch(_normal_radius);
     ne.compute(*normals);
 
@@ -171,12 +153,12 @@ void PointCloudAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>
     cest.setInputSource(source_features);
     cest.setInputTarget(target_features);
     cest.determineCorrespondences(*correspondences);
-
+    ROS_INFO("inlier threshold: %f",_inlier_threshold);
     pcl::CorrespondencesPtr corr_filtered(new pcl::Correspondences);
     pcl::registration::CorrespondenceRejectorSampleConsensus<pcl::PointXYZ> rejector;
     rejector.setInputSource(source_keypoints);
     rejector.setInputTarget(target_keypoints);
-    rejector.setInlierThreshold(0.5);
+    rejector.setInlierThreshold(_inlier_threshold);
     rejector.setMaximumIterations(1000000);
     rejector.setRefineModel(false);
     rejector.setInputCorrespondences(correspondences);;
@@ -211,7 +193,8 @@ void PointCloudAlignment::getCovariances(pcl::PointCloud<pcl::PointXYZ>::Ptr clo
 }
 
 void PointCloudAlignment::fine_registration(pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
-                                            pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud)
+                                            pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+                                            pcl::PointCloud<pcl::PointXYZ>::Ptr transf_cloud)
 {
     boost::shared_ptr< std::vector<Eigen::Matrix3d, Eigen::aligned_allocator<Eigen::Matrix3d>> > 
             source_covariances(new std::vector<Eigen::Matrix3d, Eigen::aligned_allocator<Eigen::Matrix3d>>);
@@ -230,7 +213,7 @@ void PointCloudAlignment::fine_registration(pcl::PointCloud<pcl::PointXYZ>::Ptr 
     // gicp.setSourceCovariances(source_covariances);
     // gicp.setTargetCovariances(target_covariances);
     // run registration and get transformation
-    gicp.align(*source_cloud);
+    gicp.align(*transf_cloud);
  
     if (gicp.hasConverged())
     {
@@ -263,10 +246,13 @@ int main(int argc, char** argv)
     pcl::PointCloud<pcl::PointXYZ>::Ptr scan_keypoints(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::FPFHSignature33>::Ptr cad_features (new pcl::PointCloud<pcl::FPFHSignature33> ());
     pcl::PointCloud<pcl::FPFHSignature33>::Ptr scan_features (new pcl::PointCloud<pcl::FPFHSignature33> ());
+    pcl::PointCloud<pcl::PointXYZ>::Ptr scan_aligned(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr scan_fine_aligned(new pcl::PointCloud<pcl::PointXYZ>);
 
     // PARAMETERS
     double small_leaf = 0.03f;
     double big_leaf = 0.05f;
+    double cnst;
     bool NORMALS=true,KEYPOINTS=true,TRANSFORM=true,ICP=true;
     if (!nh.getParam("/PointCloudAlignment/small_leaf_size", small_leaf))   return 0;
     if (!nh.getParam("/PointCloudAlignment/big_leaf_size", big_leaf))       return 0;
@@ -274,9 +260,10 @@ int main(int argc, char** argv)
     if (!nh.getParam("/PointCloudAlignment/run_keypoints", KEYPOINTS))      return 0;
     if (!nh.getParam("/PointCloudAlignment/run_transform", TRANSFORM))      return 0;
     if (!nh.getParam("/PointCloudAlignment/run_icp", ICP))                  return 0;
-    ROS_INFO("Received parameters: small %f, big %f",small_leaf,big_leaf);
-    point_cloud_alignment._normal_radius = big_leaf + small_leaf;
-    ROS_INFO("Computed parameters: normal %f",point_cloud_alignment._normal_radius);
+    if (!nh.getParam("/PointCloudAlignment/const", cnst))                   return 0;
+    point_cloud_alignment._normal_radius = (big_leaf+small_leaf)*1.25; // 25% higher
+    point_cloud_alignment._feature_radius = point_cloud_alignment._normal_radius*1.20; // 20% higher
+    point_cloud_alignment._inlier_threshold = point_cloud_alignment._normal_radius*cnst;
 
     // Pointclouds to be aligned:
     // cad_pc is the target pointcloud directly obtain from a part's cad
@@ -306,8 +293,8 @@ int main(int argc, char** argv)
 
     ROS_INFO("Computing keypoints...");
     point_cloud_alignment.getKeypointsAndFeatures(cad_pc_downsampled,cad_normals,cad_keypoints,cad_features);
-    cad_to_pointcloud.addPCToVisualizer(cad_keypoints,cad_to_pointcloud.GREEN,"cad_key");
     point_cloud_alignment.getKeypointsAndFeatures(scan_pc_downsampled,scan_normals,scan_keypoints,scan_features);
+    cad_to_pointcloud.addPCToVisualizer(cad_keypoints,cad_to_pointcloud.GREEN,"cad_key");
     cad_to_pointcloud.addPCToVisualizer(scan_keypoints,cad_to_pointcloud.GREEN,"scan_key");
 
     if (!TRANSFORM) return 0;
@@ -317,18 +304,16 @@ int main(int argc, char** argv)
     Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]"); // just for print
     std::cout << point_cloud_alignment.transform.format(CleanFmt) << std::endl;
     ROS_INFO("Applying transform...");
-    pcl::PointCloud<pcl::PointXYZ>::Ptr scan_aligned(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::transformPointCloud(*scan_pc_downsampled,*scan_aligned,point_cloud_alignment.transform);
     cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.BLUE,"scan_tf");
 
     if (!ICP) return 0;
 
     ROS_INFO("Computing iterative Algorithm to get fine registration...");
-    point_cloud_alignment.fine_registration(scan_aligned,cad_pc_downsampled);
-    cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.ORANGE,"scan_tf_fine");
-    ROS_INFO("Applying fine transform...");
-    pcl::PointCloud<pcl::PointXYZ>::Ptr scan_fine_aligned(new pcl::PointCloud<pcl::PointXYZ>);
- 
+    point_cloud_alignment.fine_registration(scan_aligned,cad_pc_downsampled,scan_fine_aligned);
+    cad_to_pointcloud.addPCToVisualizer(scan_fine_aligned,cad_to_pointcloud.ORANGE,"scan_tf_fine");
+    ROS_INFO("Check viewer");
+    
     ROS_INFO("the end");
 
     return 0;
