@@ -7,6 +7,7 @@
     <arg name="run_keypoints"   default="true"/>
     <arg name="run_transform"   default="true"/>
     <arg name="run_icp"         default="true"/>
+    <arg name="iterations"      default="2"/>
 
     <node name="PointCloudAlignment" pkg="leica_scanstation" type="3dscan_to_cad_align" output="screen">
         <param name="small_leaf_size"   value="$(arg small_leaf_size)"/>
@@ -16,6 +17,7 @@
         <param name="run_transform"     value="$(arg run_transform)"/>
         <param name="run_icp"           value="$(arg run_icp)"/>
         <param name="const"             value="$(arg const)"/>
+        <param name="iter"              value="$(arg iterations)"/>
     </node>
 
 </launch>
