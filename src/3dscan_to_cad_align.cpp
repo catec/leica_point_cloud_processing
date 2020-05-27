@@ -39,7 +39,7 @@ class PointCloudAlignment
 
         pcl::PointCloud<pcl::PointXYZ> pc;
         Eigen::Matrix4f transform, fine_transform;
-        double _normal_radius, _feature_radius,_inlier_threshold;
+        double _normal_radius, _feature_radius,_inlier_threshold,_iterations;
         bool _next_iteration;
         pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
 
@@ -70,46 +70,6 @@ class PointCloudAlignment
                             Eigen::aligned_allocator<Eigen::Matrix3d>> > covs);
 
 };
-
-
-void PointCloudAlignment::downsampleCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
-                                          pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_downsampled,
-                                          const Eigen::Vector4f downsampling_leaf_size)
-{
-    ROS_INFO("Pointcloud size before downsampling: %zu",cloud->points.size());
-    pcl::VoxelGrid<pcl::PointXYZ> downsampling_filter;
-    downsampling_filter.setInputCloud(cloud);
-    downsampling_filter.setLeafSize(downsampling_leaf_size);
-    downsampling_filter.filter(*cloud_downsampled);
-    ROS_INFO("Pointcloud size after downsampling: %zu",cloud_downsampled->points.size());
-}
-
-
-bool PointCloudAlignment::getNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
-                                     pcl::PointCloud<pcl::Normal>::Ptr &normals)
-{
-    ROS_INFO("Normal with radius: %f",_normal_radius);
-    pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
-    ne.setInputCloud(cloud);
-
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ> ());
-    ne.setSearchMethod(tree);
-
-    pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
-    // Use all neighbors in a sphere of radius _normal_radius cm
-    ne.setRadiusSearch(_normal_radius);
-    ne.compute(*normals);
-
-    // As we compute normal for each pointcloud, both should have same number of points
-    bool success = normals->points.size()==cloud->points.size() ? true : false;
-
-    return success;
-}
-
-Eigen::Vector3f point2vector(pcl::PointXYZ p)
-{
-    return Eigen::Vector3f(p.data);
-}
 
 double computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
 {
@@ -142,6 +102,48 @@ double computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
   return res;
 }
 
+
+void PointCloudAlignment::downsampleCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+                                          pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_downsampled,
+                                          const Eigen::Vector4f downsampling_leaf_size)
+{
+    double res = computeCloudResolution(cloud);
+    ROS_INFO("Pointcloud size before downsampling: %zu",cloud->points.size());
+    ROS_INFO("Pointcloud resolution before downsampling: %f",res);
+
+    pcl::VoxelGrid<pcl::PointXYZ> downsampling_filter;
+    downsampling_filter.setInputCloud(cloud);
+    downsampling_filter.setLeafSize(downsampling_leaf_size);
+    downsampling_filter.filter(*cloud_downsampled);
+
+    res = computeCloudResolution(cloud_downsampled);
+    ROS_INFO("Pointcloud size after downsampling: %zu",cloud_downsampled->points.size());
+    ROS_INFO("Pointcloud resolution before downsampling: %f",res);
+}
+
+
+bool PointCloudAlignment::getNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+                                     pcl::PointCloud<pcl::Normal>::Ptr &normals)
+{
+    ROS_INFO("Normal with radius: %f",_normal_radius);
+    pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+    ne.setInputCloud(cloud);
+
+    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ> ());
+    ne.setSearchMethod(tree);
+
+    pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
+    // Use all neighbors in a sphere of radius _normal_radius cm
+    ne.setRadiusSearch(_normal_radius);
+    ne.compute(*normals);
+
+    // As we compute normal for each pointcloud, both should have same number of points
+    bool success = normals->points.size()==cloud->points.size() ? true : false;
+
+    return success;
+}
+
+
 std::vector<float> getScaleValues(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
 {
     std::vector<float> scale_values;
@@ -156,11 +158,14 @@ std::vector<float> getScaleValues(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
     // scale_values.push_back((float)z_resolution);
 
     double cloud_resolution = computeCloudResolution(cloud);
-    for (int i=1; i<=3; i++)
+    scale_values.push_back((float)cloud_resolution*2);
+    scale_values.push_back((float)cloud_resolution*3);
+    scale_values.push_back((float)cloud_resolution*4);
+
+    /* for (int i=1; i<=3; i++)
     {
-        // scale_values.push_back((float)_inlier_threshold*i);
-        scale_values.push_back((float)cloud_resolution*i);
-    }
+        scale_values.push_back((float)_inlier_threshold*i);
+    } */
 
     return scale_values;
 }
@@ -189,51 +194,18 @@ void PointCloudAlignment::getKeypointsAndFeatures(pcl::PointCloud<pcl::PointXYZ>
     pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
     fest->setSearchMethod(tree);
 
-    // -- 1
     ROS_INFO("2. Define feature persistence");
     pcl::MultiscaleFeaturePersistence<pcl::PointXYZ, pcl::FPFHSignature33> fper;
-    boost::shared_ptr<std::vector<int> > keypoints1(new std::vector<int>); // Interest points
-    pcl::PointCloud<pcl::FPFHSignature33>::Ptr features1 (new pcl::PointCloud<pcl::FPFHSignature33>);
-    std::vector<float> scale_values1;
-    scale_values1 = getScaleValues(cloud);
-    printScaleValues(scale_values1);
-
-    fper.setScalesVector(scale_values1);
+    boost::shared_ptr<std::vector<int> > keypoints(new std::vector<int>); // Interest points
+    std::vector<float> scale_values = getScaleValues(cloud);
+    printScaleValues(scale_values);
+    fper.setScalesVector(scale_values);
     fper.setAlpha(1.3f);
     fper.setFeatureEstimator(fest);
     fper.setDistanceMetric(pcl::CS);
 
     ROS_INFO("3. Extracting keypoints");
-    fper.determinePersistentFeatures(*features1, keypoints1);
-    ROS_INFO("keypoints1: %zu", keypoints1->size());   
-
-    // -- 2
-    ROS_INFO("2. Define feature persistence");
-    pcl::MultiscaleFeaturePersistence<pcl::PointXYZ, pcl::FPFHSignature33> fper2;
-    boost::shared_ptr<std::vector<int> > keypoints2(new std::vector<int>); // Interest points
-    pcl::PointCloud<pcl::FPFHSignature33>::Ptr features2 (new pcl::PointCloud<pcl::FPFHSignature33>);
-    std::vector<float> scale_values2;
-    scale_values2.push_back(0.5f);
-    scale_values2.push_back(1.0f);   
-    scale_values2.push_back(1.5f);
-    printScaleValues(scale_values2);
-
-    fper2.setScalesVector(scale_values2);
-    fper2.setAlpha(1.3f);
-    fper2.setFeatureEstimator(fest);
-    fper2.setDistanceMetric(pcl::CS);
-
-    ROS_INFO("3. Extracting keypoints");
-    fper2.determinePersistentFeatures(*features2, keypoints2);
-    ROS_INFO("keypoints2: %zu", keypoints2->size());   
-
-    boost::shared_ptr<std::vector<int> > keypoints(new std::vector<int>);
-    // keypoints = keypoints1;
-    keypoints->insert(keypoints->end(),keypoints1->begin(),keypoints1->end());
-    keypoints->insert(keypoints->end(),keypoints2->begin(),keypoints2->end());
-    features->insert(features->end(),features1->begin(),features1->end());
-    features->insert(features->end(),features2->begin(),features2->end());
-
+    fper.determinePersistentFeatures(*features, keypoints);
 
     ROS_INFO("keypoints: %zu", keypoints->size());   
     bool success = keypoints->size()==features->size() ? true : false;
@@ -263,11 +235,11 @@ void PointCloudAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>
     rejector.setInputSource(source_keypoints);
     rejector.setInputTarget(target_keypoints);
     rejector.setInlierThreshold(_inlier_threshold);
-    rejector.setMaximumIterations(100000);
+    rejector.setMaximumIterations(_iterations);
     rejector.setRefineModel(false);
-    rejector.setInputCorrespondences(correspondences);;
+    rejector.setInputCorrespondences(correspondences);
     rejector.getCorrespondences(*corr_filtered);
-    
+
     ROS_INFO("6. Get rigid transformation: ");
     pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ> trans_est;
     trans_est.estimateRigidTransformation(*source_keypoints,*target_keypoints, 
@@ -392,27 +364,23 @@ int main(int argc, char** argv)
     // PARAMETERS
     double small_leaf = 0.03f;
     double big_leaf = 0.05f;
-    double cnst,n_r,f_r,th;
-    int iter;
+    double th = 0.5f;
+    int iter = 100000;
     bool NORMALS=true,KEYPOINTS=true,TRANSFORM=true,ICP=true,VISUALIZE=true;
     if (!nh.getParam("/PointCloudAlignment/small_leaf_size", small_leaf))   return 0;
     if (!nh.getParam("/PointCloudAlignment/big_leaf_size", big_leaf))       return 0;
-    if (!nh.getParam("/PointCloudAlignment/normal_r", n_r))       return 0;
-    if (!nh.getParam("/PointCloudAlignment/feature_r", f_r))       return 0;
-    if (!nh.getParam("/PointCloudAlignment/threshold", th))       return 0;
+    if (!nh.getParam("/PointCloudAlignment/threshold", th))                 return 0;
     if (!nh.getParam("/PointCloudAlignment/run_normals", NORMALS))          return 0;
     if (!nh.getParam("/PointCloudAlignment/run_keypoints", KEYPOINTS))      return 0;
     if (!nh.getParam("/PointCloudAlignment/run_transform", TRANSFORM))      return 0;
     if (!nh.getParam("/PointCloudAlignment/run_icp", ICP))                  return 0;
     if (!nh.getParam("/PointCloudAlignment/visualize", VISUALIZE))          return 0;
-    if (!nh.getParam("/PointCloudAlignment/const", cnst))                   return 0;
     if (!nh.getParam("/PointCloudAlignment/iter", iter))                    return 0;
-    // point_cloud_alignment._normal_radius = (big_leaf+small_leaf)*1.25  ; // 25% higher
-    // point_cloud_alignment._feature_radius = point_cloud_alignment._normal_radius*1.20; // 20% higher
+    point_cloud_alignment._normal_radius = (big_leaf+small_leaf)*1.25  ; // 25% higher
+    point_cloud_alignment._feature_radius = point_cloud_alignment._normal_radius*1.20; // 20% higher
     // point_cloud_alignment._inlier_threshold = point_cloud_alignment._normal_radius*cnst;
-    point_cloud_alignment._normal_radius = n_r;
-    point_cloud_alignment._feature_radius = f_r;
     point_cloud_alignment._inlier_threshold = th;
+    point_cloud_alignment._iterations = iter;
     ROS_INFO("Iterations: %d",iter);
     
     // Pointclouds to be aligned:
