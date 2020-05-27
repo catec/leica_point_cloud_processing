@@ -9,6 +9,7 @@ CADToPointCloud::CADToPointCloud()
     BLUE = {0,0,255};
     PINK = {255,0,128};
     ORANGE = {255,128,0};
+    WHITE = {255,255,255};
 }
 
 CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud, bool big_file)
@@ -19,6 +20,7 @@ CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::Poin
     BLUE = {0,0,255};
     PINK = {255,0,128};
     ORANGE = {255,128,0};
+    WHITE = {255,255,255};
 
     CADToMesh(cad_file); // here we get _CAD_mesh
 
