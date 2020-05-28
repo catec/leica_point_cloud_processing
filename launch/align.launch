@@ -1,7 +1,7 @@
 <launch>
 
-    <arg name="small_leaf_size" default="0.03"/>
-    <arg name="big_leaf_size"   default="0.03"/>
+    <arg name="small_leaf_size" default="0.05"/>
+    <arg name="big_leaf_size"   default="0.05"/>
     <arg name="threshold"       default="2.5"/>
     <arg name="run_normals"     default="true"/>
     <arg name="run_keypoints"   default="true"/>

@@ -205,7 +205,7 @@ void PointCloudAlignment::getKeypointsAndFeatures(pcl::PointCloud<pcl::PointXYZ>
     std::vector<float> scale_values = getScaleValues(cloud);
     printScaleValues(scale_values);
     fper.setScalesVector(scale_values);
-    fper.setAlpha(0.5f);
+    fper.setAlpha(0.6f);
     fper.setFeatureEstimator(fest);
     fper.setDistanceMetric(pcl::CS);
 
