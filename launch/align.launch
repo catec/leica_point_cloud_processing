@@ -1,13 +1,13 @@
 <launch>
 
     <arg name="small_leaf_size" default="0.03"/>
-    <arg name="big_leaf_size"   default="0.05"/>
-    <arg name="threshold"       default="0.9"/>
+    <arg name="big_leaf_size"   default="0.03"/>
+    <arg name="threshold"       default="2.5"/>
     <arg name="run_normals"     default="true"/>
     <arg name="run_keypoints"   default="true"/>
     <arg name="run_transform"   default="true"/>
-    <arg name="run_icp"         default="false"/>
-    <arg name="visualize"       default="true"/>
+    <arg name="run_icp"         default="true"/>
+    <arg name="visualize"       default="false"/>
     <arg name="iterations"      default="100000"/>
     
 

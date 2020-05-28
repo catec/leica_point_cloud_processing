@@ -58,7 +58,8 @@ class PointCloudAlignment
         void initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>::Ptr source_features,
                               pcl::PointCloud<pcl::FPFHSignature33>::Ptr target_features,
                               pcl::PointCloud<pcl::PointXYZ>::Ptr source_keypoints,
-                              pcl::PointCloud<pcl::PointXYZ>::Ptr target_keypoints);
+                              pcl::PointCloud<pcl::PointXYZ>::Ptr target_keypoints,
+                              pcl::CorrespondencesPtr correspondences);
         
         void fine_registration(pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
                                pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
@@ -118,7 +119,7 @@ void PointCloudAlignment::downsampleCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cl
 
     res = computeCloudResolution(cloud_downsampled);
     ROS_INFO("Pointcloud size after downsampling: %zu",cloud_downsampled->points.size());
-    ROS_INFO("Pointcloud resolution before downsampling: %f",res);
+    ROS_INFO("Pointcloud resolution after downsampling: %f",res);
 }
 
 
@@ -162,6 +163,10 @@ std::vector<float> getScaleValues(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
     scale_values.push_back((float)cloud_resolution*3);
     scale_values.push_back((float)cloud_resolution*4);
 
+    // scale_values.push_back(0.5f);
+    // scale_values.push_back(1.5f);
+    // scale_values.push_back(2.0f);
+
     /* for (int i=1; i<=3; i++)
     {
         scale_values.push_back((float)_inlier_threshold*i);
@@ -190,7 +195,7 @@ void PointCloudAlignment::getKeypointsAndFeatures(pcl::PointCloud<pcl::PointXYZ>
         fest(new pcl::FPFHEstimation<pcl::PointXYZ, pcl::Normal, pcl::FPFHSignature33>);
     fest->setInputCloud(cloud);
     fest->setInputNormals(normals);
-    fest->setRadiusSearch(_feature_radius);
+    // fest->setRadiusSearch(_feature_radius);
     pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
     fest->setSearchMethod(tree);
 
@@ -200,7 +205,7 @@ void PointCloudAlignment::getKeypointsAndFeatures(pcl::PointCloud<pcl::PointXYZ>
     std::vector<float> scale_values = getScaleValues(cloud);
     printScaleValues(scale_values);
     fper.setScalesVector(scale_values);
-    fper.setAlpha(1.3f);
+    fper.setAlpha(0.5f);
     fper.setFeatureEstimator(fest);
     fper.setDistanceMetric(pcl::CS);
 
@@ -220,7 +225,8 @@ void PointCloudAlignment::getKeypointsAndFeatures(pcl::PointCloud<pcl::PointXYZ>
 void PointCloudAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>::Ptr source_features,
                                            pcl::PointCloud<pcl::FPFHSignature33>::Ptr target_features,
                                            pcl::PointCloud<pcl::PointXYZ>::Ptr source_keypoints,
-                                           pcl::PointCloud<pcl::PointXYZ>::Ptr target_keypoints)
+                                           pcl::PointCloud<pcl::PointXYZ>::Ptr target_keypoints,
+                                           pcl::CorrespondencesPtr corr_filtered)
 {
     ROS_INFO("4. Use descriptor FPFH to compute correspondences");
     pcl::CorrespondencesPtr correspondences(new pcl::Correspondences);
@@ -230,7 +236,7 @@ void PointCloudAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>
     cest.determineCorrespondences(*correspondences);
 
     ROS_INFO("5. Get correspondences with inlier threshold: %f",_inlier_threshold);
-    pcl::CorrespondencesPtr corr_filtered(new pcl::Correspondences);
+    // pcl::CorrespondencesPtr corr_filtered(new pcl::Correspondences);
     pcl::registration::CorrespondenceRejectorSampleConsensus<pcl::PointXYZ> rejector;
     rejector.setInputSource(source_keypoints);
     rejector.setInputTarget(target_keypoints);
@@ -239,7 +245,7 @@ void PointCloudAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>
     rejector.setRefineModel(false);
     rejector.setInputCorrespondences(correspondences);
     rejector.getCorrespondences(*corr_filtered);
-
+    
     ROS_INFO("6. Get rigid transformation: ");
     pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ> trans_est;
     trans_est.estimateRigidTransformation(*source_keypoints,*target_keypoints, 
@@ -389,7 +395,7 @@ int main(int argc, char** argv)
     ROS_INFO("Getting pointclouds to align");
     // CADToPointCloud cad_to_pointcloud = CADToPointCloud("conjunto_estranio.obj", cad_pc, false);
     CADToPointCloud cad_to_pointcloud;
-    std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio.pcd";
+    std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio_scan_no_noise_no_floor.pcd";
     std::string f2 = cad_to_pointcloud._pc_path + "conjunto_estranio_cad.pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f2, *cad_pc);
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
@@ -437,12 +443,19 @@ int main(int argc, char** argv)
     if (!TRANSFORM) return 0;
 
     ROS_INFO("Getting transform...");
-    point_cloud_alignment.initialAlingment(scan_features,cad_features,scan_keypoints,cad_keypoints);
+    pcl::CorrespondencesPtr correspondences(new pcl::Correspondences);
+    point_cloud_alignment.initialAlingment(scan_features,cad_features,scan_keypoints,cad_keypoints,correspondences);
 
     ROS_INFO("Applying transform...");
     pcl::transformPointCloud(*scan_pc_downsampled,*scan_aligned,point_cloud_alignment.transform);
     if (VISUALIZE)
     {
+        ROS_INFO("Visualizing...");
+        cad_to_pointcloud._viewer->addCorrespondences<pcl::PointXYZ>(scan_pc_downsampled,cad_pc_downsampled,*correspondences);
+        // while (!cad_to_pointcloud._viewer->wasStopped ()){
+        //     cad_to_pointcloud._viewer->spinOnce (100);
+        //     boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+        // } 
         cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.BLUE,"scan_tf");         
     }
 

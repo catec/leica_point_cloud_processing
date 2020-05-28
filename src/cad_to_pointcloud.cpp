@@ -48,6 +48,8 @@ void CADToPointCloud::visualizeMesh(pcl::PolygonMesh mesh)
 
 void CADToPointCloud::visualizePointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color)
 {
+    ROS_INFO("Add cloud in visualizer");
+    ROS_WARN("Press (X) on viewer to continue");
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
     resetVisualizer();
     _viewer->setBackgroundColor (0, 0, 0);
@@ -75,6 +77,7 @@ void CADToPointCloud::addNormalsToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr
                                              std::string name)
 {
     ROS_INFO("Add normals to cloud in visualizer");
+    ROS_WARN("Press (X) on viewer to continue");
     _viewer->resetStoppedFlag();
     _viewer->addPointCloudNormals<pcl::PointXYZ, pcl::Normal>(cloud,normals,1,0.02,name);
     while (!_viewer->wasStopped ()){
@@ -86,6 +89,7 @@ void CADToPointCloud::addNormalsToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr
 void CADToPointCloud::addPCToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color, std::string name)
 {
     ROS_INFO("Add cloud in visualizer");
+    ROS_WARN("Press (X) on viewer to continue");
     _viewer->resetStoppedFlag();
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
     _viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,name);
