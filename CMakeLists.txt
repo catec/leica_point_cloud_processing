@@ -49,3 +49,12 @@ target_link_libraries(3dscan_to_cad_align
 # target_link_libraries(laserscan_to_pointcloud
 #   ${catkin_LIBRARIES}
 # )
+
+add_executable(filter_scan_floor 
+src/filter_scan_floor.cpp
+src/cad_to_pointcloud.cpp
+)
+target_link_libraries(filter_scan_floor
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
