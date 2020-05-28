@@ -58,3 +58,12 @@ target_link_libraries(filter_scan_floor
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
+
+add_executable(filter_scan_noise 
+src/filter_scan_noise.cpp
+src/cad_to_pointcloud.cpp
+)
+target_link_libraries(filter_scan_noise
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)

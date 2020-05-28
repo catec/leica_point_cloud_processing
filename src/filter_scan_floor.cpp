@@ -71,7 +71,7 @@ int main(int argc, char** argv)
 
     if (indices_internal.indices.size() == 0) 
     {
-        ROS_ERROR("Unable to find surface.");
+        ROS_ERROR("Unable to find floor.");
         return 0;
     }
 

@@ -12,6 +12,10 @@ Meshes and pointclouds are not updated online because they are confidential.
 
 ## Usage ##
 
+    rosrun leica_scanstation filter_scan_noise conjunto_estranio_scan 5
+
+    rosrun leica_scanstation filter_scan_floor conjunto_estranio_scan_no_noise 0.8
+
     roslaunch leica_scanstation align.launch
 
 ## Hacks ##
