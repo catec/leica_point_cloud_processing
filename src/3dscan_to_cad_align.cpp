@@ -394,7 +394,7 @@ int main(int argc, char** argv)
     double big_leaf = 0.05f;
     double th = 0.5f;
     int iter = 100000;
-    bool NORMALS=true,KEYPOINTS=true,TRANSFORM=true,ICP=true,VISUALIZE=true;
+    bool NORMALS=true,KEYPOINTS=true,TRANSFORM=true,ICP=true,VISUALIZE=true,PUBLISH=true;
     if (!nh.getParam("/PointCloudAlignment/small_leaf_size", small_leaf))   return 0;
     if (!nh.getParam("/PointCloudAlignment/big_leaf_size", big_leaf))       return 0;
     if (!nh.getParam("/PointCloudAlignment/threshold", th))                 return 0;
@@ -403,6 +403,7 @@ int main(int argc, char** argv)
     if (!nh.getParam("/PointCloudAlignment/run_transform", TRANSFORM))      return 0;
     if (!nh.getParam("/PointCloudAlignment/run_icp", ICP))                  return 0;
     if (!nh.getParam("/PointCloudAlignment/visualize", VISUALIZE))          return 0;
+    if (!nh.getParam("/PointCloudAlignment/publish", PUBLISH))              return 0;
     if (!nh.getParam("/PointCloudAlignment/iter", iter))                    return 0;
     point_cloud_alignment._normal_radius = (big_leaf+small_leaf)*1.25  ; // 25% higher
     point_cloud_alignment._feature_radius = point_cloud_alignment._normal_radius*1.20; // 20% higher
@@ -502,12 +503,9 @@ int main(int argc, char** argv)
     viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,2);
     viewer.addCoordinateSystem(1.0);
     viewer.initCameraParameters();
+
     ROS_INFO("On viewer press space to perform iteration");
-
     viewer.registerKeyboardCallback(&keyboardEventOccurred,(void*)NULL);
-
-
-
 
     while (!viewer.wasStopped())
     {
@@ -522,11 +520,19 @@ int main(int argc, char** argv)
         }
         next_iteration = false;
     }
+
     
+    if (!PUBLISH) return 0;
+
     // Convert to ROS data type
-    ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("/aligned_cloud", 1);
-    sensor_msgs::PointCloud2 aligned_cloud_msg;
+    ros::Publisher alg_pub = nh.advertise<sensor_msgs::PointCloud2>("/aligned_cloud", 1);
+    ros::Publisher cad_pub = nh.advertise<sensor_msgs::PointCloud2>("/cad_cloud", 1);
+    sensor_msgs::PointCloud2 aligned_cloud_msg, cad_cloud_msg;
     
+    pcl::toROSMsg(*cad_pc_downsampled,cad_cloud_msg);
+    cad_cloud_msg.header.frame_id = "world";
+    cad_cloud_msg.header.stamp = ros::Time::now();
+
     pcl::toROSMsg(*scan_aligned,aligned_cloud_msg);
     aligned_cloud_msg.header.frame_id = "world";
     aligned_cloud_msg.header.stamp = ros::Time::now();
@@ -534,7 +540,8 @@ int main(int argc, char** argv)
     while(ros::ok())
     {
         // Publish the data
-        pub.publish(aligned_cloud_msg);
+        cad_pub.publish(cad_cloud_msg);
+        alg_pub.publish(aligned_cloud_msg);
     }
 
     ROS_INFO("the end");
