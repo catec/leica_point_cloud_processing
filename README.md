@@ -5,6 +5,8 @@ This is involved in a ROSIN project.
 
 Meshes and pointclouds are not updated online because they are confidential.
 
+![process](alignment_process.gif)
+
 ## Set up ##
 
 * Clone
