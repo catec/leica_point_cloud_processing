@@ -36,7 +36,11 @@ class CADToPointCloud {
         void addNormalsToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
                                     pcl::PointCloud<pcl::Normal>::Ptr normals,
                                     std::string name);
+        void addCorrespondencesToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
+                                            pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+                                            pcl::CorrespondencesPtr correspondences);
         void addPCToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color,std::string name);
+        void deletePCFromVisualizer(std::string name);
         void resetVisualizer();
         std::string getPCpath();
 };

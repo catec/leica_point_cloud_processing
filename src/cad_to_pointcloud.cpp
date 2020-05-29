@@ -86,14 +86,49 @@ void CADToPointCloud::addNormalsToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr
     } 
 }
 
-void CADToPointCloud::addPCToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color, std::string name)
+void CADToPointCloud::addCorrespondencesToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
+                                                     pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+                                                     pcl::CorrespondencesPtr correspondences)
 {
-    ROS_INFO("Add cloud in visualizer");
+    ROS_INFO("Add correspondences between clouds in visualizer");
     ROS_WARN("Press (X) on viewer to continue");
     _viewer->resetStoppedFlag();
+    _viewer->addCorrespondences<pcl::PointXYZ>(source_cloud,target_cloud,*correspondences);
+    while (!_viewer->wasStopped ()){
+        _viewer->spinOnce (100);
+        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+    }
+    _viewer->removeCorrespondences();
+}
+
+void CADToPointCloud::addPCToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color, std::string name)
+{
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
-    _viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,name);
-    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,2,name);
+    _viewer->resetStoppedFlag();
+
+    if (_viewer->contains(name))
+    {
+        ROS_INFO("Update cloud in visualizer");
+        _viewer->updatePointCloud(cloud,cloud_rgb,name);
+    }
+    else
+    {
+        ROS_INFO("Add cloud in visualizer");
+        _viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,name);
+        _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,2,name);
+    }
+    ROS_WARN("Press (X) on viewer to continue");
+
+    while (!_viewer->wasStopped ()){
+        _viewer->spinOnce (100);
+        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+    } 
+}
+
+void CADToPointCloud::deletePCFromVisualizer(std::string name)
+{
+    _viewer->resetStoppedFlag();
+    _viewer->removePointCloud(name);
     while (!_viewer->wasStopped ()){
         _viewer->spinOnce (100);
         boost::this_thread::sleep (boost::posix_time::microseconds (100000));
