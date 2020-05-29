@@ -48,6 +48,7 @@ int main(int argc, char** argv)
     CADToPointCloud cad_to_pointcloud;
     std::string f = cad_to_pointcloud._pc_path + file_name + ".pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *cloud);
+    cad_to_pointcloud.visualizePointCloud(cloud, cad_to_pointcloud.PINK);
 
     ROS_INFO("create box with threshold: %f",threshold);
     pcl::CropBox<pcl::PointXYZ> boxFilter;
@@ -72,18 +73,7 @@ int main(int argc, char** argv)
     f = cad_to_pointcloud._pc_path + file_name + "_no_noise.pcd";
     pcl::io::savePCDFile<pcl::PointXYZ> (f, *no_noise_cloud);
 
-    ROS_INFO("view");
-    pcl::visualization::PCLVisualizer viewer("No noise pointcloud");
-    viewer.setBackgroundColor (0, 0, 0);
-    viewer.addPointCloud(no_noise_cloud);
-    viewer.addCoordinateSystem(1.0);
-    viewer.initCameraParameters();
-
-    while (!viewer.wasStopped())
-    {
-        viewer.spinOnce();
-    }
-
+    cad_to_pointcloud.addPCToVisualizer(no_noise_cloud,cad_to_pointcloud.PINK,"cloud");
 
     return 0;
 }

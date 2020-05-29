@@ -48,21 +48,20 @@ int main(int argc, char** argv)
     CADToPointCloud cad_to_pointcloud;
     std::string f = cad_to_pointcloud._pc_path + file_name + ".pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *cloud);
+    cad_to_pointcloud.visualizePointCloud(cloud, cad_to_pointcloud.PINK);
+
     ROS_INFO("create segmenter with threshold: %f",threshold);
     pcl::SACSegmentation<pcl::PointXYZ> seg;
-    seg.setOptimizeCoefficients(true);
-    // Search for a plane perpendicular to some axis (specified below).
-    seg.setModelType(pcl::SACMODEL_PERPENDICULAR_PLANE);
-    seg.setMethodType(pcl::SAC_RANSAC);
-    // Set the distance to the plane for a point to be an inlier.
-    seg.setDistanceThreshold(threshold);
-    seg.setInputCloud(cloud);
-    ROS_INFO("axis");
-    // Make sure that the plane is perpendicular to Z-axis, 1 degree tolerance.
+
+    // Search for a plane perpendicular to z axis, 1 degree tolerance
     Eigen::Vector3f axis;
     axis << 0, 0, 1;
     seg.setAxis(axis);
-    seg.setEpsAngle(pcl::deg2rad(1.0));
+    seg.setEpsAngle(pcl::deg2rad(1.0));seg.setOptimizeCoefficients(true);
+    seg.setModelType(pcl::SACMODEL_PERPENDICULAR_PLANE);
+    seg.setMethodType(pcl::SAC_RANSAC);
+    seg.setDistanceThreshold(threshold);
+    seg.setInputCloud(cloud);
     
     ROS_INFO("apply");
     pcl::ModelCoefficients coeff;
@@ -86,18 +85,7 @@ int main(int argc, char** argv)
     f = cad_to_pointcloud._pc_path + file_name + "_no_floor.pcd";
     pcl::io::savePCDFile<pcl::PointXYZ> (f, *no_floor_cloud);
 
-    ROS_INFO("view");
-    pcl::visualization::PCLVisualizer viewer("No floor pointcloud");
-    viewer.setBackgroundColor (0, 0, 0);
-    viewer.addPointCloud(no_floor_cloud);
-    viewer.addCoordinateSystem(1.0);
-    viewer.initCameraParameters();
-
-    while (!viewer.wasStopped())
-    {
-        viewer.spinOnce();
-    }
-
+    cad_to_pointcloud.addPCToVisualizer(no_floor_cloud,cad_to_pointcloud.PINK,"cloud");
 
     return 0;
 }
