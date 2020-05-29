@@ -1,7 +1,7 @@
 #include "ros/ros.h"
 #include "ros/package.h"
-// #include "pcl_conversions/pcl_conversions.h"
-// #include <pcl_ros/point_cloud.h> 
+#include "pcl_conversions/pcl_conversions.h"
+#include <pcl_ros/point_cloud.h> 
 #include <pcl/io/vtk_lib_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/features/fpfh.h>
@@ -61,7 +61,7 @@ class PointCloudAlignment
                               pcl::PointCloud<pcl::PointXYZ>::Ptr target_keypoints,
                               pcl::CorrespondencesPtr correspondences);
         
-        void fine_registration(pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
+        void fineRegistration(pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
                                pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
                                pcl::PointCloud<pcl::PointXYZ>::Ptr transf_cloud,
                                int iterations);
@@ -69,6 +69,9 @@ class PointCloudAlignment
         void getCovariances(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
                             boost::shared_ptr< std::vector<Eigen::Matrix3d, 
                             Eigen::aligned_allocator<Eigen::Matrix3d>> > covs);
+
+        void iterateFineRegistration(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+                                     Eigen::Matrix4f &final_transform);
 
 };
 
@@ -286,7 +289,7 @@ void PointCloudAlignment::getCovariances(pcl::PointCloud<pcl::PointXYZ>::Ptr clo
     bool success = normals->points.size()==covs->size() ? true : false;
 }
 
-void PointCloudAlignment::fine_registration(pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
+void PointCloudAlignment::fineRegistration(pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
                                             pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
                                             pcl::PointCloud<pcl::PointXYZ>::Ptr transf_cloud,
                                             int iterations)
@@ -333,6 +336,25 @@ void PointCloudAlignment::fine_registration(pcl::PointCloud<pcl::PointXYZ>::Ptr 
     }
 }
 
+void PointCloudAlignment::iterateFineRegistration(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+                                                  Eigen::Matrix4f &final_transform)
+{
+    ROS_INFO("Computing iteration...");
+    gicp.align(*cloud);
+
+    if (gicp.hasConverged()) 
+    {
+        ROS_INFO("Final transformation:");
+        fine_transform = gicp.getFinalTransformation();
+        final_transform = fine_transform * final_transform;
+        ROS_INFO("Converged in %f",gicp.getFitnessScore());
+    }
+    else
+    {
+        ROS_ERROR("no converge");
+    }
+    
+}
 
 void PointCloudAlignment::printTransform(Eigen::Matrix4f transform)
 {
@@ -408,12 +430,6 @@ int main(int argc, char** argv)
     point_cloud_alignment.downsampleCloud(cad_pc,cad_pc_downsampled,small_leaf_size);
     point_cloud_alignment.downsampleCloud(scan_pc,scan_pc_downsampled,big_leaf_size); 
 
-/*     // get inlier threshold with resolution
-    double cad_res = computeCloudResolution(cad_pc_downsampled);
-    double scan_res = computeCloudResolution(scan_pc_downsampled);
-    ROS_INFO("CAD Resolution: %f",cad_res);
-    ROS_INFO("SCAN Resolution: %f",scan_res);
-    point_cloud_alignment._inlier_threshold = std::min(cad_res,scan_res); */
 
     if (!NORMALS) return 0;
 
@@ -422,10 +438,10 @@ int main(int argc, char** argv)
     point_cloud_alignment.getNormals(scan_pc_downsampled,scan_normals);
     if (VISUALIZE)
     {
-        cad_to_pointcloud.visualizePointCloud(cad_pc_downsampled,cad_to_pointcloud.RED);
-        // cad_to_pointcloud.addNormalsToVisualizer(cad_pc_downsampled,cad_normals,"cad_normals");
+        cad_to_pointcloud.visualizePointCloud(cad_pc_downsampled,cad_to_pointcloud.BLUE);
+        cad_to_pointcloud.addNormalsToVisualizer(cad_pc_downsampled,cad_normals,"cad_normals");
         cad_to_pointcloud.addPCToVisualizer(scan_pc_downsampled,cad_to_pointcloud.PINK,"scan");
-        // cad_to_pointcloud.addNormalsToVisualizer(scan_pc_downsampled,scan_normals,"scan_normals");
+        cad_to_pointcloud.addNormalsToVisualizer(scan_pc_downsampled,scan_normals,"scan_normals");
     }
 
 
@@ -438,6 +454,8 @@ int main(int argc, char** argv)
     {
         cad_to_pointcloud.addPCToVisualizer(cad_keypoints,cad_to_pointcloud.GREEN,"cad_key");
         cad_to_pointcloud.addPCToVisualizer(scan_keypoints,cad_to_pointcloud.GREEN,"scan_key");
+        cad_to_pointcloud.deletePCFromVisualizer("cad_key");
+        cad_to_pointcloud.deletePCFromVisualizer("scan_key");
     }
     
     if (!TRANSFORM) return 0;
@@ -450,29 +468,31 @@ int main(int argc, char** argv)
     pcl::transformPointCloud(*scan_pc_downsampled,*scan_aligned,point_cloud_alignment.transform);
     if (VISUALIZE)
     {
-        ROS_INFO("Visualizing...");
-        cad_to_pointcloud._viewer->addCorrespondences<pcl::PointXYZ>(scan_pc_downsampled,cad_pc_downsampled,*correspondences);
-        // while (!cad_to_pointcloud._viewer->wasStopped ()){
-        //     cad_to_pointcloud._viewer->spinOnce (100);
-        //     boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-        // } 
-        cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.BLUE,"scan_tf");         
+        ROS_INFO("Visualizing..."); 
+        cad_to_pointcloud.addCorrespondencesToVisualizer(scan_pc_downsampled,cad_pc_downsampled,correspondences);
+        cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.PINK,"scan");         
     }
 
     if (!ICP) return 0;
 
     ROS_INFO("Computing iterative Algorithm to get fine registration...");
-    point_cloud_alignment.fine_registration(scan_aligned,cad_pc_downsampled,scan_fine_aligned,iter);
+    point_cloud_alignment.fineRegistration(scan_aligned,cad_pc_downsampled,scan_fine_aligned,100);
     if (VISUALIZE)
     {
-        cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.ORANGE,"scan_tf_fine");
+        // cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.ORANGE,"scan_tf_fine");
+        cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.PINK,"scan");         
         ROS_INFO("Check viewer");
     }
 
     ros::Duration exec_time = ros::Time::now() - begin;
     ROS_INFO("Total process time: %lf s",exec_time.toSec());
 
-    // more iterations    
+    ROS_INFO("Final transformation:");
+    Eigen::Matrix4f final_transform = point_cloud_alignment.fine_transform * point_cloud_alignment.transform;
+    point_cloud_alignment.printTransform(final_transform);
+
+
+    // Show Results on Viewer and Ask user for more iterations
     pcl::visualization::PCLVisualizer viewer("GICP");
     viewer.setBackgroundColor (0, 0, 0);
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cad_pc_downsampled, 255,255,255); 
@@ -486,9 +506,8 @@ int main(int argc, char** argv)
 
     viewer.registerKeyboardCallback(&keyboardEventOccurred,(void*)NULL);
 
-    ROS_INFO("Final transformation:");
-    Eigen::Matrix4f final_transform = point_cloud_alignment.fine_transform * point_cloud_alignment.transform;
-    point_cloud_alignment.printTransform(final_transform);
+
+
 
     while (!viewer.wasStopped())
     {
@@ -496,27 +515,26 @@ int main(int argc, char** argv)
         // The user pressed "space" :
         if (next_iteration)
         {
-            ROS_INFO("Computing iteration...");
-            // The Iterative Closest Point algorithm
-            point_cloud_alignment.gicp.align(*scan_aligned);
-
-            if (point_cloud_alignment.gicp.hasConverged()) 
-            {
-                ROS_INFO("Final transformation:");
-                point_cloud_alignment.fine_transform = point_cloud_alignment.gicp.getFinalTransformation();
-                final_transform = point_cloud_alignment.fine_transform * final_transform;
-                point_cloud_alignment.printTransform(final_transform);
-                // point_cloud_alignment.printTransform(point_cloud_alignment.fine_transform);
-                ROS_INFO("Converged in %f",point_cloud_alignment.gicp.getFitnessScore());
-                ROS_INFO("Update cloud");
-                viewer.updatePointCloud(scan_aligned,cloud_rgb2,"cloud2");
-            }
-            else
-            {
-                ROS_ERROR("no converge");
-            }
+            point_cloud_alignment.iterateFineRegistration(scan_aligned,final_transform);
+            point_cloud_alignment.printTransform(final_transform);
+            ROS_INFO("Update cloud");
+            viewer.updatePointCloud(scan_aligned,cloud_rgb2,"cloud2");
         }
         next_iteration = false;
+    }
+    
+    // Convert to ROS data type
+    ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("/aligned_cloud", 1);
+    sensor_msgs::PointCloud2 aligned_cloud_msg;
+    
+    pcl::toROSMsg(*scan_aligned,aligned_cloud_msg);
+    aligned_cloud_msg.header.frame_id = "world";
+    aligned_cloud_msg.header.stamp = ros::Time::now();
+
+    while(ros::ok())
+    {
+        // Publish the data
+        pub.publish(aligned_cloud_msg);
     }
 
     ROS_INFO("the end");

@@ -7,7 +7,7 @@
     <arg name="run_keypoints"   default="true"/>
     <arg name="run_transform"   default="true"/>
     <arg name="run_icp"         default="true"/>
-    <arg name="visualize"       default="false"/>
+    <arg name="visualize"       default="true"/>
     <arg name="iterations"      default="100000"/>
     
 
