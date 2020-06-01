@@ -8,6 +8,8 @@
 #include <pcl/surface/mls.h>
 #include <pcl/surface/gp3.h>
 #include <pcl_ros/point_cloud.h> 
+#include <pcl/filters/extract_indices.h>
+#include <pcl/octree/octree_pointcloud_changedetector.h>
 #include <cad_to_pointcloud.h>
 
 #define NORMAL_RADIUS 0.1
@@ -16,51 +18,39 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "CloudToMesh");
 
-    std::string file_name = "";
-    double radius_search;
-    if (argc<2)
-    {
-        ROS_ERROR("Please specify file_name");
-        return 0;
-    }
-    else
-    {
-        file_name = argv[1];
-        if (file_name.find(".")!=std::string::npos)
-        {
-            ROS_ERROR("Please specify file_name without extension");
-            return 0;
-        }
-        if (argc<3)
-        {
-            radius_search = NORMAL_RADIUS;
-            ROS_WARN("Threshold not specified. Set to default: %f",radius_search);
-        }
-        else 
-        {
-            radius_search = atof(argv[2]);
-            if (radius_search < 0)
-            {
-                ROS_ERROR("Please specify non-negative threshold");
-                return 0;
-            }
-        }
-    }
-
     pcl::PointCloud<pcl::PointXYZ>::Ptr cad_pc(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr scan_pc(new pcl::PointCloud<pcl::PointXYZ>);
 
     ROS_INFO("open file");
-    CADToPointCloud cad_to_pointcloud;
-    std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio_scan_transformed_reconstructed.stl";
-    std::string f2 = cad_to_pointcloud._pc_path + "conjunto_estranio_cad.pcd";
-    pcl::io::loadPCDFile<pcl::PointXYZ> (f2, *cad_pc);
-    pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);    
+    CADToPointCloud cad_to_pointcloud = CADToPointCloud("conjunto_estranio_scan_transformed_reconstructed.obj", scan_pc, false);
+    std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio_cad.pcd";
+    pcl::io::loadPCDFile<pcl::PointXYZ> (f, *cad_pc);
 
-    cad_to_pointcloud.visualizePointCloud(cad_pc,cad_to_pointcloud.WHITE);
-    cad_to_pointcloud.addPCToVisualizer(scan_pc,cad_to_pointcloud.PINK,"scan");
+    // cad_to_pointcloud.visualizePointCloud(cad_pc,cad_to_pointcloud.WHITE);
+    // cad_to_pointcloud.addPCToVisualizer(scan_pc,cad_to_pointcloud.PINK,"scan");
 
-    
+    // Octree resolution - side length of octree voxels
+    float resolution = 32.0f;
+    pcl::octree::OctreePointCloudChangeDetector<pcl::PointXYZ> octree(resolution);
+    octree.setInputCloud(scan_pc);
+    octree.addPointsFromInputCloud();
+
+    // Switch octree buffers: This resets octree but keeps previous tree structure in memory.
+    octree.switchBuffers();
+
+    octree.setInputCloud(cad_pc);
+    octree.addPointsFromInputCloud();
+
+    boost::shared_ptr<std::vector<int> > indices(new std::vector<int>); // Interest points
+    octree.getPointIndicesFromNewVoxels(*indices);
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr diff_pc(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::ExtractIndices<pcl::PointXYZ> extract_indices_filter;
+    extract_indices_filter.setInputCloud(scan_pc);
+    extract_indices_filter.setIndices(indices);
+    extract_indices_filter.filter(*diff_pc);
+
+    cad_to_pointcloud.visualizePointCloud(diff_pc,cad_to_pointcloud.BLUE);
 
     return 0;
 }

@@ -257,7 +257,8 @@ void PointCloudAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>
 }
 
 void PointCloudAlignment::getCovariances(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
-                                         boost::shared_ptr< std::vector<Eigen::Matrix3d, Eigen::aligned_allocator<Eigen::Matrix3d>> > covs)
+                                         boost::shared_ptr< std::vector<Eigen::Matrix3d, 
+                                         Eigen::aligned_allocator<Eigen::Matrix3d>> > covs)
 {
     // reconstruct meshes NOT WORKING
 /*     pcl::PolygonMesh::Ptr mesh (new pcl::PolygonMesh);

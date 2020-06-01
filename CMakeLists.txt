@@ -76,3 +76,12 @@ target_link_libraries(cloud_to_mesh
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
+
+add_executable(differentiate_point_clouds 
+src/differentiate_point_clouds.cpp
+src/cad_to_pointcloud.cpp
+)
+target_link_libraries(differentiate_point_clouds
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
