@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     // cad_to_pointcloud.visualizePointCloud(cloud, cad_to_pointcloud.PINK);
 
     ROS_INFO("getting normals");
-    pcl::search::KdTree<pcl::PointNormal>::Ptr tree(new pcl::search::KdTree<pcl::PointNormal>);
+    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
     pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
     ne.setSearchMethod(tree);
     ne.setInputCloud(cloud);
