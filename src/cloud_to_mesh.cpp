@@ -7,6 +7,7 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl/surface/mls.h>
 #include <pcl/surface/gp3.h>
+#include <pcl/io/obj_io.h>
 #include <pcl_ros/point_cloud.h> 
 #include <cad_to_pointcloud.h>
 
@@ -89,9 +90,8 @@ int main(int argc, char** argv)
     cad_to_pointcloud.visualizeMesh(mesh);
     
     ROS_INFO("saving");
-    f = cad_to_pointcloud._pc_path + file_name + "_reconstructed.stl";
-    pcl::io::savePolygonFileSTL(f,mesh);
-
+    f = cad_to_pointcloud._pc_path + file_name + "_reconstructed.obj";
+    pcl::io::saveOBJFile(f,mesh);
 
     return 0;
 }
