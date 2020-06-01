@@ -521,6 +521,8 @@ int main(int argc, char** argv)
         next_iteration = false;
     }
 
+    f = cad_to_pointcloud._pc_path + "conjunto_estranio_scan_transformed.pcd";
+    pcl::io::savePCDFile(f, *scan_aligned);
     
     if (!PUBLISH) return 0;
 
