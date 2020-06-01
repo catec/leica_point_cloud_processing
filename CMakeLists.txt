@@ -67,3 +67,12 @@ target_link_libraries(filter_scan_noise
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
+
+add_executable(cloud_to_mesh 
+src/cloud_to_mesh.cpp
+src/cad_to_pointcloud.cpp
+)
+target_link_libraries(cloud_to_mesh
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
