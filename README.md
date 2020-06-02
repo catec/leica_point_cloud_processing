@@ -20,6 +20,10 @@ Meshes and pointclouds are not updated online because they are confidential.
 
     roslaunch leica_scanstation align.launch
 
+    rosrun leica_scanstation cloud_to_mesh conjunto_estranio_scan_aligned 
+
+    rosrun leica_scanstation differentiate_point_clouds 0.2
+
 ## Hacks ##
 
     rosrun pcl_ros bag_to_pcd /media/catec/Datos/Bags/rosin_leica/assembly.bag /camera/depth/points /home/catec/catkin_ws/src/leica_scanstation/pointclouds

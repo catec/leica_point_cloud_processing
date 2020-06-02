@@ -417,7 +417,7 @@ int main(int argc, char** argv)
     // cad_pc is the target pointcloud directly obtain from a part's cad
     // scan_pc is the source pointcloud created on gazebo with leica c5 simulator
     ROS_INFO("Getting pointclouds to align");
-    // CADToPointCloud cad_to_pointcloud = CADToPointCloud("conjunto_estranio.obj", cad_pc, false);
+    // CADToPointCloud cad_to_pointcloud = CADToPointCloud("conjunto_estranio_cad.obj", cad_pc, false);
     CADToPointCloud cad_to_pointcloud;
     std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio_scan_no_noise_no_floor.pcd";
     std::string f2 = cad_to_pointcloud._pc_path + "conjunto_estranio_cad.pcd";
@@ -493,7 +493,6 @@ int main(int argc, char** argv)
     Eigen::Matrix4f final_transform = point_cloud_alignment.fine_transform * point_cloud_alignment.transform;
     point_cloud_alignment.printTransform(final_transform);
 
-
     // Show Results on Viewer and Ask user for more iterations
     pcl::visualization::PCLVisualizer viewer("GICP");
     viewer.setBackgroundColor (0, 0, 0);
@@ -522,7 +521,7 @@ int main(int argc, char** argv)
         next_iteration = false;
     }
 
-    f = cad_to_pointcloud._pc_path + "conjunto_estranio_scan_transformed.pcd";
+    f = cad_to_pointcloud._pc_path + "conjunto_estranio_scan_aligned.pcd";
     pcl::io::savePCDFile(f, *scan_aligned);
     
     if (!PUBLISH) return 0;

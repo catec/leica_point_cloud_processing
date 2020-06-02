@@ -12,36 +12,48 @@
 #include <pcl/octree/octree_pointcloud_changedetector.h>
 #include <cad_to_pointcloud.h>
 
-#define NORMAL_RADIUS 0.1
+#define RESOLUTION 0.5
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "CloudToMesh");
+    ros::init(argc, argv, "DiffOnPointclouds");
+
+    double voxel_resolution; // Octree resolution - side length of octree voxels
+    if (argc<2)
+    {
+        voxel_resolution = RESOLUTION;
+        ROS_WARN("Resolution not specified. Set to default: %f",voxel_resolution);
+    }
+    else
+    {
+        voxel_resolution = atof(argv[1]);
+    }
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cad_pc(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr scan_pc(new pcl::PointCloud<pcl::PointXYZ>);
 
     ROS_INFO("open file");
-    CADToPointCloud cad_to_pointcloud = CADToPointCloud("conjunto_estranio_scan_transformed_reconstructed.obj", scan_pc, false);
+    CADToPointCloud cad_to_pointcloud;
     std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio_cad.pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *cad_pc);
+    f = cad_to_pointcloud._pc_path + "conjunto_estranio_scan_aligned.pcd";
+    pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
 
     // cad_to_pointcloud.visualizePointCloud(cad_pc,cad_to_pointcloud.WHITE);
     // cad_to_pointcloud.addPCToVisualizer(scan_pc,cad_to_pointcloud.PINK,"scan");
 
-    // Octree resolution - side length of octree voxels
-    float resolution = 32.0f;
-    pcl::octree::OctreePointCloudChangeDetector<pcl::PointXYZ> octree(resolution);
-    octree.setInputCloud(scan_pc);
+    pcl::octree::OctreePointCloudChangeDetector<pcl::PointXYZ> octree(voxel_resolution);
+    octree.setInputCloud(cad_pc);
     octree.addPointsFromInputCloud();
 
     // Switch octree buffers: This resets octree but keeps previous tree structure in memory.
     octree.switchBuffers();
 
-    octree.setInputCloud(cad_pc);
+    octree.setInputCloud(scan_pc);
     octree.addPointsFromInputCloud();
 
-    boost::shared_ptr<std::vector<int> > indices(new std::vector<int>); // Interest points
+    ROS_INFO("Extracting differences");
+    boost::shared_ptr<std::vector<int> > indices(new std::vector<int>); // Diferentiated points
     octree.getPointIndicesFromNewVoxels(*indices);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr diff_pc(new pcl::PointCloud<pcl::PointXYZ>);
@@ -51,6 +63,7 @@ int main(int argc, char** argv)
     extract_indices_filter.filter(*diff_pc);
 
     cad_to_pointcloud.visualizePointCloud(diff_pc,cad_to_pointcloud.BLUE);
+    // cad_to_pointcloud.addPCToVisualizer(diff_pc,cad_to_pointcloud.BLUE,"diff");
 
     return 0;
 }
