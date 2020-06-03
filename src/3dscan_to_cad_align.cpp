@@ -419,7 +419,7 @@ int main(int argc, char** argv)
     ROS_INFO("Getting pointclouds to align");
     // CADToPointCloud cad_to_pointcloud = CADToPointCloud("conjunto_estranio_cad.obj", cad_pc, false);
     CADToPointCloud cad_to_pointcloud;
-    std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio_scan_no_noise_no_floor.pcd";
+    std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio_fod_no_noise_no_floor.pcd";
     std::string f2 = cad_to_pointcloud._pc_path + "conjunto_estranio_cad.pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f2, *cad_pc);
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
@@ -521,7 +521,7 @@ int main(int argc, char** argv)
         next_iteration = false;
     }
 
-    f = cad_to_pointcloud._pc_path + "conjunto_estranio_scan_aligned.pcd";
+    f = cad_to_pointcloud._pc_path + "conjunto_estranio_fod_aligned.pcd";
     pcl::io::savePCDFile(f, *scan_aligned);
     
     if (!PUBLISH) return 0;
