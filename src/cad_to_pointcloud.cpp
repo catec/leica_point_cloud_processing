@@ -4,6 +4,7 @@
 CADToPointCloud::CADToPointCloud()
 {
     _pc_path = getPCpath();
+    _point_size = 2;
     RED = {255,0,0};
     GREEN = {0,255,0};
     BLUE = {0,0,255};
@@ -15,6 +16,7 @@ CADToPointCloud::CADToPointCloud()
 CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud, bool big_file)
 {
     _pc_path = getPCpath();
+    _point_size = 2;
     RED = {255,0,0};
     GREEN = {0,255,0};
     BLUE = {0,0,255};
@@ -54,7 +56,7 @@ void CADToPointCloud::visualizePointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cl
     resetVisualizer();
     _viewer->setBackgroundColor (0, 0, 0);
     _viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,"cloud");
-    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,2);
+    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,_point_size);
     _viewer->addCoordinateSystem (1.0);
     _viewer->initCameraParameters ();
     
@@ -110,12 +112,13 @@ void CADToPointCloud::addPCToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr clou
     {
         ROS_INFO("Update cloud in visualizer");
         _viewer->updatePointCloud(cloud,cloud_rgb,name);
+        _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,_point_size,name);
     }
     else
     {
         ROS_INFO("Add cloud in visualizer");
         _viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,name);
-        _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,2,name);
+        _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,_point_size,name);
     }
     ROS_WARN("Press (X) on viewer to continue");
 
