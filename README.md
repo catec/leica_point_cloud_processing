@@ -22,7 +22,7 @@ Meshes and pointclouds are not updated online because they are confidential.
 
     rosrun leica_scanstation cloud_to_mesh conjunto_estranio_scan_aligned 
 
-    rosrun leica_scanstation differentiate_point_clouds 0.2
+    rosrun leica_scanstation differentiate_point_clouds 0.1
 
 ## Hacks ##
 
