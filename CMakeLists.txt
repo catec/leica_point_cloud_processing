@@ -85,3 +85,12 @@ target_link_libraries(differentiate_point_clouds
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
+
+add_executable(fod_detector 
+src/fod_detector.cpp
+src/cad_to_pointcloud.cpp
+)
+target_link_libraries(fod_detector
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
