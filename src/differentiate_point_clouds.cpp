@@ -20,21 +20,41 @@
 #define RESOLUTION 0.5
 #define PUBLISH_TIME 10
 
+double computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
+{
+  double res = 0.0;
+  int n_points = 0;
+  int nres;
+  std::vector<int> indices (2);
+  std::vector<float> sqr_distances (2);
+  pcl::search::KdTree<pcl::PointXYZ> tree;
+  tree.setInputCloud(cloud);
+
+  for (std::size_t i = 0; i < cloud->size (); ++i)
+  {
+    if (! std::isfinite ((*cloud)[i].x))
+    {
+      continue;
+    }
+    //Considering the second neighbor since the first is the point itself.
+    nres = tree.nearestKSearch (i, 2, indices, sqr_distances);
+    if (nres == 2)
+    {
+      res += sqrt (sqr_distances[1]);
+      ++n_points;
+    }
+  }
+  if (n_points != 0)
+  {
+    res /= n_points;
+  }
+  return res;
+}
+
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "DiffOnPointclouds");
     ros::NodeHandle nh;
-
-    double voxel_resolution; // Octree resolution - side length of octree voxels
-    if (argc<2)
-    {
-        voxel_resolution = RESOLUTION;
-        ROS_WARN("Resolution not specified. Set to default: %f",voxel_resolution);
-    }
-    else
-    {
-        voxel_resolution = atof(argv[1]);
-    }
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cad_pc(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr scan_pc(new pcl::PointCloud<pcl::PointXYZ>);
@@ -47,8 +67,11 @@ int main(int argc, char** argv)
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
 
     cad_to_pointcloud.visualizePointCloud(scan_pc,cad_to_pointcloud.PINK);
-    // cad_to_pointcloud.addPCToVisualizer(cad_pc,cad_to_pointcloud.WHITE,"scan");
+    cad_to_pointcloud.addPCToVisualizer(cad_pc,cad_to_pointcloud.BLUE,"scan");
 
+    double voxel_resolution = computeCloudResolution(scan_pc);
+    voxel_resolution = voxel_resolution*3; // 3 times higher to cover more than two neighbors
+    ROS_INFO("Creating octree with resolution: %f",voxel_resolution);
     pcl::octree::OctreePointCloudChangeDetector<pcl::PointXYZ> octree(voxel_resolution);
     octree.setInputCloud(cad_pc);
     octree.addPointsFromInputCloud();
@@ -77,7 +100,9 @@ int main(int argc, char** argv)
 
     cad_to_pointcloud._point_size = 3;
     // cad_to_pointcloud.visualizePointCloud(diff_pc,cad_to_pointcloud.BLUE);
-    cad_to_pointcloud.addPCToVisualizer(diff_pc,cad_to_pointcloud.BLUE,"diff");
+    cad_to_pointcloud.addPCToVisualizer(diff_pc,cad_to_pointcloud.WHITE,"diff");
+    cad_to_pointcloud.deletePCFromVisualizer("cloud");
+    cad_to_pointcloud.deletePCFromVisualizer("scan");
 
     ROS_INFO("Getting possible fods");
     // get possible fods
@@ -87,8 +112,8 @@ int main(int argc, char** argv)
     std::vector<pcl::PointIndices>cluster_indices; //This is a vector of cluster
     pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
     ec.setClusterTolerance(voxel_resolution);
-    ec.setMinClusterSize(2);
-    ec.setMaxClusterSize(25000);
+    ec.setMinClusterSize(10);
+    ec.setMaxClusterSize(1000);
     ec.setSearchMethod(tree);
     ec.setInputCloud(diff_pc);
     ec.extract(cluster_indices);
@@ -131,7 +156,7 @@ int main(int argc, char** argv)
     }
     ROS_INFO("Detected %d objects",j);
     // publish total of clusters
-    ros::Publisher npub = nh.advertise<std_msgs::Int16>("/num_of_fods_detected", 1);
+    ros::Publisher npub = nh.advertise<std_msgs::Int16>("/num_of_fods", 1);
     std_msgs::Int16 msg;
     msg.data = j;
     npub.publish(msg);
@@ -139,7 +164,7 @@ int main(int argc, char** argv)
     // publish each fod in a separated topic
     while(ros::ok())
     {
-        for(int i=0; i<j; i++)
+        for(int i=0; i<j; i++) // temporary resolution
         {
             topic_name = "/fod"+std::to_string(i);
             ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>(topic_name, 1);
