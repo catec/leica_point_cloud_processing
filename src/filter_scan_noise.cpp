@@ -4,6 +4,7 @@
 // #include "pcl/sample_consensus/model_types.h"
 #include <pcl/filters/crop_box.h>
 #include <cad_to_pointcloud.h>
+#include <viewer.h>
 
 #define DEFAULT_THRESHOLD 30
 
@@ -48,7 +49,8 @@ int main(int argc, char** argv)
     CADToPointCloud cad_to_pointcloud;
     std::string f = cad_to_pointcloud._pc_path + file_name + ".pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *cloud);
-    cad_to_pointcloud.visualizePointCloud(cloud, cad_to_pointcloud.PINK);
+
+    Viewer::visualizePointCloud(cloud);
 
     ROS_INFO("create box with threshold: %f",threshold);
     pcl::CropBox<pcl::PointXYZ> boxFilter;
@@ -73,7 +75,7 @@ int main(int argc, char** argv)
     f = cad_to_pointcloud._pc_path + file_name + "_no_noise.pcd";
     pcl::io::savePCDFile<pcl::PointXYZ> (f, *no_noise_cloud);
 
-    cad_to_pointcloud.addPCToVisualizer(no_noise_cloud,cad_to_pointcloud.PINK,"cloud");
+    Viewer::visualizePointCloud(no_noise_cloud);
 
     return 0;
 }

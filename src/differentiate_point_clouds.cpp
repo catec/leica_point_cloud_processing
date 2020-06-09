@@ -16,39 +16,40 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <std_msgs/Int16.h>
 #include <cad_to_pointcloud.h>
+#include <viewer.h>
 
 #define RESOLUTION 0.5
 #define PUBLISH_TIME 10
 
 double computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
 {
-  double res = 0.0;
-  int n_points = 0;
-  int nres;
-  std::vector<int> indices (2);
-  std::vector<float> sqr_distances (2);
-  pcl::search::KdTree<pcl::PointXYZ> tree;
-  tree.setInputCloud(cloud);
+    double res = 0.0;
+    int n_points = 0;
+    int nres;
+    std::vector<int> indices (2);
+    std::vector<float> sqr_distances (2);
+    pcl::search::KdTree<pcl::PointXYZ> tree;
+    tree.setInputCloud(cloud);
 
-  for (std::size_t i = 0; i < cloud->size (); ++i)
-  {
-    if (! std::isfinite ((*cloud)[i].x))
+    for (std::size_t i = 0; i < cloud->size (); ++i)
     {
-      continue;
+        if (! std::isfinite ((*cloud)[i].x))
+        {
+        continue;
+        }
+        //Considering the second neighbor since the first is the point itself.
+        nres = tree.nearestKSearch (i, 2, indices, sqr_distances);
+        if (nres == 2)
+        {
+        res += sqrt (sqr_distances[1]);
+        ++n_points;
+        }
     }
-    //Considering the second neighbor since the first is the point itself.
-    nres = tree.nearestKSearch (i, 2, indices, sqr_distances);
-    if (nres == 2)
+    if (n_points != 0)
     {
-      res += sqrt (sqr_distances[1]);
-      ++n_points;
+        res /= n_points;
     }
-  }
-  if (n_points != 0)
-  {
-    res /= n_points;
-  }
-  return res;
+    return res;    
 }
 
 int main(int argc, char** argv)
@@ -66,8 +67,9 @@ int main(int argc, char** argv)
     f = cad_to_pointcloud._pc_path + "conjunto_estranio_fod_aligned.pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
 
-    cad_to_pointcloud.visualizePointCloud(scan_pc,cad_to_pointcloud.PINK);
-    cad_to_pointcloud.addPCToVisualizer(cad_pc,cad_to_pointcloud.BLUE,"scan");
+    Viewer leica_viewer;
+    leica_viewer.addPCToViewer(scan_pc,leica_viewer.PINK,"scan");
+    leica_viewer.addPCToViewer(cad_pc,leica_viewer.BLUE,"cad");
 
     double voxel_resolution = computeCloudResolution(scan_pc);
     voxel_resolution = voxel_resolution*3; // 3 times higher to cover more than two neighbors
@@ -98,11 +100,10 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    cad_to_pointcloud._point_size = 3;
-    // cad_to_pointcloud.visualizePointCloud(diff_pc,cad_to_pointcloud.BLUE);
-    cad_to_pointcloud.addPCToVisualizer(diff_pc,cad_to_pointcloud.WHITE,"diff");
-    cad_to_pointcloud.deletePCFromVisualizer("cloud");
-    cad_to_pointcloud.deletePCFromVisualizer("scan");
+    leica_viewer.setPointSize(3);
+    leica_viewer.addPCToViewer(diff_pc,leica_viewer.WHITE,"diff");
+    leica_viewer.deletePCFromViewer("cloud");
+    leica_viewer.deletePCFromViewer("scan");
 
     ROS_INFO("Getting possible fods");
     // get possible fods
@@ -132,7 +133,7 @@ int main(int argc, char** argv)
         cloud_cluster->is_dense = true;
 
         cluster_name = "/fod"+std::to_string(j);
-        cad_to_pointcloud.addPCToVisualizer(cloud_cluster,cad_to_pointcloud.GREEN,cluster_name);
+        leica_viewer.addPCToViewer(cloud_cluster,leica_viewer.GREEN,cluster_name);
         j++;
 
         // apply color to publish

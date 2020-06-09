@@ -5,6 +5,7 @@
 #include "pcl/segmentation/sac_segmentation.h"
 #include <pcl/filters/extract_indices.h>
 #include <cad_to_pointcloud.h>
+#include <viewer.h>
 
 #define DEFAULT_THRESHOLD 0.1
 
@@ -48,7 +49,8 @@ int main(int argc, char** argv)
     CADToPointCloud cad_to_pointcloud;
     std::string f = cad_to_pointcloud._pc_path + file_name + ".pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *cloud);
-    cad_to_pointcloud.visualizePointCloud(cloud, cad_to_pointcloud.PINK);
+
+    Viewer::visualizePointCloud(cloud);
 
     ROS_INFO("create segmenter with threshold: %f",threshold);
     pcl::SACSegmentation<pcl::PointXYZ> seg;
@@ -85,7 +87,7 @@ int main(int argc, char** argv)
     f = cad_to_pointcloud._pc_path + file_name + "_no_floor.pcd";
     pcl::io::savePCDFile<pcl::PointXYZ> (f, *no_floor_cloud);
 
-    cad_to_pointcloud.addPCToVisualizer(no_floor_cloud,cad_to_pointcloud.PINK,"cloud");
+    Viewer::visualizePointCloud(no_floor_cloud);
 
     return 0;
 }

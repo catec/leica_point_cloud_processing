@@ -16,6 +16,7 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <std_msgs/Int16.h>
 #include <cad_to_pointcloud.h>
+#include <viewer.h>
 
 class FODDetector 
 {

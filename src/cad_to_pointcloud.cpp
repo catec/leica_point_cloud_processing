@@ -4,26 +4,12 @@
 CADToPointCloud::CADToPointCloud()
 {
     _pc_path = getPCpath();
-    _point_size = 2;
-    RED = {255,0,0};
-    GREEN = {0,255,0};
-    BLUE = {0,0,255};
-    PINK = {255,0,128};
-    ORANGE = {255,128,0};
-    WHITE = {255,255,255};
 }
 
 CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud, bool big_file)
 {
     _pc_path = getPCpath();
-    _point_size = 2;
-    RED = {255,0,0};
-    GREEN = {0,255,0};
-    BLUE = {0,0,255};
-    PINK = {255,0,128};
-    ORANGE = {255,128,0};
-    WHITE = {255,255,255};
-
+    
     CADToMesh(cad_file); // here we get _CAD_mesh
 
     if (big_file) MeshToPointCloud(_CAD_mesh); // here we get _CAD_cloud
@@ -34,109 +20,6 @@ CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::Poin
     pointcloud = _CAD_cloud;
 }
 
-void CADToPointCloud::visualizeMesh(pcl::PolygonMesh mesh)
-{
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("Mesh Viewer"));
-    
-    viewer->setBackgroundColor (0, 0, 0);
-    viewer->addPolygonMesh(mesh,"meshes",0);
-    viewer->addCoordinateSystem (1.0);
-    viewer->initCameraParameters ();
-    while (!viewer->wasStopped ()){
-        viewer->spinOnce (100);
-        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-    }
-}
-
-void CADToPointCloud::visualizePointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color)
-{
-    ROS_INFO("Add cloud in visualizer");
-    ROS_WARN("Press (X) on viewer to continue");
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
-    resetVisualizer();
-    _viewer->setBackgroundColor (0, 0, 0);
-    _viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,"cloud");
-    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,_point_size);
-    _viewer->addCoordinateSystem (1.0);
-    _viewer->initCameraParameters ();
-    
-    while (!_viewer->wasStopped ()){
-        _viewer->spinOnce (100);
-        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-    } 
-}
-
-void CADToPointCloud::resetVisualizer()
-{
-    _viewer->removeAllCoordinateSystems();
-    _viewer->removeAllPointClouds();
-    _viewer->removeAllShapes();
-}
-
-
-void CADToPointCloud::addNormalsToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
-                                             pcl::PointCloud<pcl::Normal>::Ptr normals,
-                                             std::string name)
-{
-    ROS_INFO("Add normals to cloud in visualizer");
-    ROS_WARN("Press (X) on viewer to continue");
-    _viewer->resetStoppedFlag();
-    _viewer->addPointCloudNormals<pcl::PointXYZ, pcl::Normal>(cloud,normals,1,0.02,name);
-    while (!_viewer->wasStopped ()){
-        _viewer->spinOnce (100);
-        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-    } 
-}
-
-void CADToPointCloud::addCorrespondencesToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
-                                                     pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
-                                                     pcl::CorrespondencesPtr correspondences)
-{
-    ROS_INFO("Add correspondences between clouds in visualizer");
-    ROS_WARN("Press (X) on viewer to continue");
-    _viewer->resetStoppedFlag();
-    _viewer->addCorrespondences<pcl::PointXYZ>(source_cloud,target_cloud,*correspondences);
-    while (!_viewer->wasStopped ()){
-        _viewer->spinOnce (100);
-        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-    }
-    _viewer->removeCorrespondences();
-}
-
-void CADToPointCloud::addPCToVisualizer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color, std::string name)
-{
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
-    _viewer->resetStoppedFlag();
-
-    if (_viewer->contains(name))
-    {
-        ROS_INFO("Update cloud in visualizer");
-        _viewer->updatePointCloud(cloud,cloud_rgb,name);
-        _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,_point_size,name);
-    }
-    else
-    {
-        ROS_INFO("Add cloud in visualizer");
-        _viewer->addPointCloud<pcl::PointXYZ>(cloud,cloud_rgb,name);
-        _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,_point_size,name);
-    }
-    ROS_WARN("Press (X) on viewer to continue");
-
-    while (!_viewer->wasStopped ()){
-        _viewer->spinOnce (100);
-        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-    } 
-}
-
-void CADToPointCloud::deletePCFromVisualizer(std::string name)
-{
-    _viewer->resetStoppedFlag();
-    _viewer->removePointCloud(name);
-    while (!_viewer->wasStopped ()){
-        _viewer->spinOnce (100);
-        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-    } 
-}
 
 void CADToPointCloud::CADToMesh(std::string filename)
 {

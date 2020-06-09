@@ -3,7 +3,7 @@
 #include "pcl_conversions/pcl_conversions.h"
 #include <pcl_ros/point_cloud.h> 
 #include <pcl/io/vtk_lib_io.h>
-#include <pcl/visualization/pcl_visualizer.h>
+// #include <pcl/visualization/pcl_Viewer.h>
 #include <pcl/features/fpfh.h>
 #include <pcl/features/multiscale_feature_persistence.h>
 #include <pcl/features/normal_3d.h>
@@ -16,6 +16,7 @@
 #include <pcl/registration/gicp.h>
 #include <pcl/features/from_meshes.h>
 #include <cad_to_pointcloud.h>
+#include <viewer.h>
 
 /**
  * POINTCLOUDS:
@@ -376,6 +377,8 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
     ROS_INFO("PointCloudAlignment");
 
+    Viewer leica_viewer;
+
     PointCloudAlignment point_cloud_alignment;
     pcl::PointCloud<pcl::PointXYZ>::Ptr cad_pc(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr scan_pc(new pcl::PointCloud<pcl::PointXYZ>);
@@ -440,10 +443,10 @@ int main(int argc, char** argv)
     point_cloud_alignment.getNormals(scan_pc_downsampled,scan_normals);
     if (VISUALIZE)
     {
-        cad_to_pointcloud.visualizePointCloud(cad_pc_downsampled,cad_to_pointcloud.BLUE);
-        cad_to_pointcloud.addNormalsToVisualizer(cad_pc_downsampled,cad_normals,"cad_normals");
-        cad_to_pointcloud.addPCToVisualizer(scan_pc_downsampled,cad_to_pointcloud.PINK,"scan");
-        cad_to_pointcloud.addNormalsToVisualizer(scan_pc_downsampled,scan_normals,"scan_normals");
+        leica_viewer.addPCToViewer(cad_pc_downsampled,leica_viewer.BLUE,"cad");
+        leica_viewer.addNormalsToViewer(cad_pc_downsampled,cad_normals,"cad_normals");
+        leica_viewer.addPCToViewer(scan_pc_downsampled,leica_viewer.PINK,"scan");
+        leica_viewer.addNormalsToViewer(scan_pc_downsampled,scan_normals,"scan_normals");
     }
 
 
@@ -454,10 +457,10 @@ int main(int argc, char** argv)
     point_cloud_alignment.getKeypointsAndFeatures(scan_pc_downsampled,scan_normals,scan_keypoints,scan_features);
     if (VISUALIZE)
     {
-        cad_to_pointcloud.addPCToVisualizer(cad_keypoints,cad_to_pointcloud.GREEN,"cad_key");
-        cad_to_pointcloud.addPCToVisualizer(scan_keypoints,cad_to_pointcloud.GREEN,"scan_key");
-        cad_to_pointcloud.deletePCFromVisualizer("cad_key");
-        cad_to_pointcloud.deletePCFromVisualizer("scan_key");
+        leica_viewer.addPCToViewer(cad_keypoints,leica_viewer.GREEN,"cad_key");
+        leica_viewer.addPCToViewer(scan_keypoints,leica_viewer.GREEN,"scan_key");
+        leica_viewer.deletePCFromViewer("cad_key");
+        leica_viewer.deletePCFromViewer("scan_key");
     }
     
     if (!TRANSFORM) return 0;
@@ -471,8 +474,8 @@ int main(int argc, char** argv)
     if (VISUALIZE)
     {
         ROS_INFO("Visualizing..."); 
-        cad_to_pointcloud.addCorrespondencesToVisualizer(scan_pc_downsampled,cad_pc_downsampled,correspondences);
-        cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.PINK,"scan");         
+        leica_viewer.addCorrespondencesToViewer(scan_pc_downsampled,cad_pc_downsampled,correspondences);
+        leica_viewer.addPCToViewer(scan_aligned,leica_viewer.PINK,"scan");         
     }
 
     if (!ICP) return 0;
@@ -481,8 +484,8 @@ int main(int argc, char** argv)
     point_cloud_alignment.fineRegistration(scan_aligned,cad_pc_downsampled,scan_fine_aligned,100);
     if (VISUALIZE)
     {
-        // cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.ORANGE,"scan_tf_fine");
-        cad_to_pointcloud.addPCToVisualizer(scan_aligned,cad_to_pointcloud.PINK,"scan");         
+        // leica_viewer.addPCToViewer(scan_aligned,leica_viewer.ORANGE,"scan_tf_fine");
+        leica_viewer.addPCToViewer(scan_aligned,leica_viewer.PINK,"scan");         
         ROS_INFO("Check viewer");
     }
 
@@ -493,32 +496,26 @@ int main(int argc, char** argv)
     Eigen::Matrix4f final_transform = point_cloud_alignment.fine_transform * point_cloud_alignment.transform;
     point_cloud_alignment.printTransform(final_transform);
 
+
     // Show Results on Viewer and Ask user for more iterations
-    pcl::visualization::PCLVisualizer viewer("GICP");
-    viewer.setBackgroundColor (0, 0, 0);
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cad_pc_downsampled, 255,255,255); 
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb2(scan_aligned, 255,0,255); 
-    viewer.addPointCloud<pcl::PointXYZ>(cad_pc_downsampled,cloud_rgb,"cloud");
-    viewer.addPointCloud<pcl::PointXYZ>(scan_aligned,cloud_rgb2,"cloud2");
-    viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,2);
-    viewer.addCoordinateSystem(1.0);
-    viewer.initCameraParameters();
-
+    Viewer gicp_viewer;
+    gicp_viewer.addPCToViewer(cad_pc_downsampled,gicp_viewer.WHITE,"cad");
+    gicp_viewer.addPCToViewer(scan_aligned,gicp_viewer.PINK,"aligned");
     ROS_INFO("On viewer press space to perform iteration");
-    viewer.registerKeyboardCallback(&keyboardEventOccurred,(void*)NULL);
+    gicp_viewer.checkForSpaceKeyPressed();
 
-    while (!viewer.wasStopped())
+    while (!gicp_viewer._viewer->wasStopped())
     {
-        viewer.spinOnce();
+        gicp_viewer._viewer->spinOnce();
         // The user pressed "space" :
-        if (next_iteration)
+        if (gicp_viewer._pressed_space)
         {
             point_cloud_alignment.iterateFineRegistration(scan_aligned,final_transform);
             point_cloud_alignment.printTransform(final_transform);
             ROS_INFO("Update cloud");
-            viewer.updatePointCloud(scan_aligned,cloud_rgb2,"cloud2");
+            gicp_viewer.addPCToViewer(scan_aligned,gicp_viewer.PINK,"aligned");
         }
-        next_iteration = false;
+        gicp_viewer._pressed_space = false;
     }
 
     f = cad_to_pointcloud._pc_path + "conjunto_estranio_fod_aligned.pcd";

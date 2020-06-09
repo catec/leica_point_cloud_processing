@@ -145,8 +145,9 @@ int main(int argc, char** argv)
     f = cad_to_pointcloud._pc_path + "conjunto_estranio_fod_aligned.pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
 
-    cad_to_pointcloud.visualizePointCloud(scan_pc,cad_to_pointcloud.PINK);
-    cad_to_pointcloud.addPCToVisualizer(cad_pc,cad_to_pointcloud.BLUE,"scan");
+    Viewer leica_viewer;
+    leica_viewer.addPCToViewer(cad_pc,leica_viewer.BLUE,"cad");
+    leica_viewer.addPCToViewer(scan_pc,leica_viewer.PINK,"scan");
 
     FODDetector fod_detector;
 
@@ -156,14 +157,14 @@ int main(int argc, char** argv)
 
     if (diff_pc->size()<=0) 
     {
-        ROS_ERROR("No differences found. Try a small resolution");
+        ROS_ERROR("No differences found.");
         return 0;
     }
 
-    cad_to_pointcloud._point_size = 3;
-    cad_to_pointcloud.addPCToVisualizer(diff_pc,cad_to_pointcloud.WHITE,"diff");
-    cad_to_pointcloud.deletePCFromVisualizer("cloud");
-    cad_to_pointcloud.deletePCFromVisualizer("scan");
+    leica_viewer.setPointSize(3);
+    leica_viewer.addPCToViewer(diff_pc,leica_viewer.WHITE,"diff");
+    leica_viewer.deletePCFromViewer("cloud");
+    leica_viewer.deletePCFromViewer("scan");
 
     ROS_INFO("Getting possible fods");
     std::vector<pcl::PointIndices>cluster_indices; //This is a vector of cluster

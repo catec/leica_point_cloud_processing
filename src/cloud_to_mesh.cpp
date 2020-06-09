@@ -10,6 +10,7 @@
 #include <pcl/io/obj_io.h>
 #include <pcl_ros/point_cloud.h> 
 #include <cad_to_pointcloud.h>
+#include <viewer.h>
 
 #define NORMAL_RADIUS 0.1
 
@@ -54,7 +55,6 @@ int main(int argc, char** argv)
     CADToPointCloud cad_to_pointcloud;
     std::string f = cad_to_pointcloud._pc_path + file_name + ".pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *cloud);
-    // cad_to_pointcloud.visualizePointCloud(cloud, cad_to_pointcloud.PINK);
 
     ROS_INFO("getting normals");
     pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
     gp3.setSearchMethod(tree2);
     gp3.reconstruct(mesh);
 
-    cad_to_pointcloud.visualizeMesh(mesh);
+    Viewer::visualizeMesh(mesh);
     
     ROS_INFO("saving");
     f = cad_to_pointcloud._pc_path + file_name + "_reconstructed.obj";
