@@ -32,7 +32,6 @@ void cloudCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
     PointCloudRGB::Ptr cloud(new PointCloudRGB);
     pcl::fromROSMsg(*msg, *cloud);
 
-    ROS_INFO("Downsampling cloud");
     PointCloudRGB::Ptr cloud_downsampled(new PointCloudRGB);
     const Eigen::Vector4f downsampling_leaf_size(leaf_size, leaf_size, leaf_size, 0.0f);
     downsampleCloud(cloud, cloud_downsampled, downsampling_leaf_size);
@@ -42,12 +41,10 @@ void cloudCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
     
     if (noise_filter_threshold > 0)
     {
-        ROS_INFO("Applying noise filter to cloud");
         filter_noise(noise_filter_threshold, cloud_filtered, cloud_filtered);
     }
     if (floor_filter_threshold > 0)
     {
-        ROS_INFO("Filtering cloud floor");
         filter_floor(floor_filter_threshold, cloud_filtered, cloud_filtered);
     }
 
@@ -56,7 +53,6 @@ void cloudCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
     cloud_msg.header.frame_id = FRAME_ID;
     cloud_msg.header.stamp = ros::Time::now();
 
-    ROS_INFO("publishing");
     g_pub.publish(cloud_msg);
 }
 
@@ -83,20 +79,24 @@ int main(int argc, char** argv)
     }
 
     ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("cloud", 1, cloudCb);
+    ROS_INFO("Subscribing to: %s", sub.getTopic().c_str());
+    
     g_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud_filtered", 1);
+    ROS_INFO("Publishing to: %s", g_pub.getTopic().c_str());
 
     ros::spin();
 
     return 0;
 }
 
+
 void downsampleCloud(PointCloudRGB::Ptr cloud,
                      PointCloudRGB::Ptr cloud_downsampled,
                      const Eigen::Vector4f leaf_size)
 {
     double res = Utils::computeCloudResolution(cloud);
-    ROS_INFO("Pointcloud size before downsampling: %zu",cloud->points.size());
-    ROS_INFO("Pointcloud resolution before downsampling: %f",res);
+    // ROS_INFO("Pointcloud size before downsampling: %zu",cloud->points.size());
+    // ROS_INFO("Pointcloud resolution before downsampling: %f",res);
 
     pcl::VoxelGrid<pcl::PointXYZRGB> downsampling_filter;
     downsampling_filter.setInputCloud(cloud);
@@ -104,13 +104,13 @@ void downsampleCloud(PointCloudRGB::Ptr cloud,
     downsampling_filter.filter(*cloud_downsampled);
 
     res = Utils::computeCloudResolution(cloud_downsampled);
-    ROS_INFO("Pointcloud size after downsampling: %zu",cloud_downsampled->points.size());
-    ROS_INFO("Pointcloud resolution after downsampling: %f",res);
+    // ROS_INFO("Pointcloud size after downsampling: %zu",cloud_downsampled->points.size());
+    // ROS_INFO("Pointcloud resolution after downsampling: %f",res);
 }
 
 void filter_noise(double threshold, PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered)
 {
-    ROS_INFO("create box with threshold: %f",threshold);
+    // ROS_INFO("create box with threshold: %f",threshold);
     pcl::CropBox<pcl::PointXYZRGB> boxFilter;
     
     //get box center
@@ -120,7 +120,7 @@ void filter_noise(double threshold, PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr
     boxTranslatation[0]=centroid[0];  
     boxTranslatation[1]=centroid[1];  
     boxTranslatation[2]=centroid[2];
-    ROS_INFO("Point cloud center: (%f,%f,%f)",centroid[0],centroid[1],centroid[2]);
+    // ROS_INFO("Point cloud center: (%f,%f,%f)",centroid[0],centroid[1],centroid[2]);
 
     // apply filter
     boxFilter.setTranslation(boxTranslatation);
@@ -132,7 +132,7 @@ void filter_noise(double threshold, PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr
 
 void filter_floor(double threshold, PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered)
 {
-    ROS_INFO("create segmenter with threshold: %f",threshold);
+    // ROS_INFO("create segmenter with threshold: %f",threshold);
     pcl::SACSegmentation<pcl::PointXYZRGB> seg;
 
     // Search for a plane perpendicular to z axis, 1 degree tolerance
@@ -145,7 +145,6 @@ void filter_floor(double threshold, PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr
     seg.setDistanceThreshold(threshold);
     seg.setInputCloud(cloud);
     
-    ROS_INFO("apply");
     pcl::ModelCoefficients coeff;
     pcl::PointIndices indices_internal;
     seg.segment(indices_internal, coeff);

@@ -10,11 +10,11 @@
         <param name="floor_filter_threshold"   value="-1"/>
     </node>
 
-    <!-- <node name="filter" pkg="leica_scanstation" type="filter" output="screen" ns="scan">
+    <node name="filter" pkg="leica_scanstation" type="filter" output="screen" ns="scan">
         <param name="leaf_size"                value="0.05"/>
-        <param name="noise_filter_threshold"   value="5"/>
+        <param name="noise_filter_threshold"   value="10"/>
         <param name="floor_filter_threshold"   value="0.8"/>
-    </node> -->
+    </node>
 
 
 </launch>
