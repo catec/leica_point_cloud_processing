@@ -24,4 +24,5 @@ class Utils {
                                   int R, int G, int B);
         static double computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
         static double computeCloudResolution(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud);
+        static void printTransform(Eigen::Matrix4f transform);
 };

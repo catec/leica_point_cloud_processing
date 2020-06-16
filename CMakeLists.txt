@@ -30,30 +30,33 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
 )
 
-# add_library(cad_to_pointcloud src/cad_to_pointcloud.cpp)
-# target_link_libraries(cad_to_pointcloud
-#   ${catkin_LIBRARIES}
-# )
+add_library(utils 
+src/utils.cpp
+src/initial_alignment.cpp
+)
+target_link_libraries(utils
+  ${catkin_LIBRARIES}
+)
 
 add_executable(input_cloud 
 src/input_cloud.cpp
 src/cad_to_pointcloud.cpp
-src/utils.cpp
 )
 
 target_link_libraries(input_cloud
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
+  utils
 )
 
 add_executable(filter 
 src/filter_cloud.cpp
-src/utils.cpp
 )
 
 target_link_libraries(filter
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
+  utils
 )
 
 # add_executable(3dscan_to_cad_align 

@@ -110,3 +110,9 @@ double Utils::computeCloudResolution(pcl::PointCloud<pcl::PointXYZRGB>::Ptr clou
     }
     return res;
 }
+
+void Utils::printTransform(Eigen::Matrix4f transform)
+{
+    Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+    std::cout << transform.format(CleanFmt) << std::endl;
+}

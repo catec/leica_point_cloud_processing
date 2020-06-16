@@ -8,7 +8,8 @@
 #include <pcl/search/kdtree.h>
 #include "pcl/common/angles.h"
 #include "pcl/segmentation/sac_segmentation.h"
-#include <utils.h>
+// #include <utils.h>
+#include <initial_alignment.h>
 
 /**
  * POINTCLOUDS:
