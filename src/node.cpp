@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     ros::Publisher scan_pub = nh.advertise<sensor_msgs::PointCloud2>("scan/cloud_aligned", 1);
 
     sensor_msgs::PointCloud2 cad_cloud_msg, scan_cloud_msg;
-    
+
     pcl::toROSMsg(*cad_cloud_downsampled,cad_cloud_msg);
     cad_cloud_msg.header.frame_id = FRAME_ID;
     cad_cloud_msg.header.stamp = ros::Time::now();

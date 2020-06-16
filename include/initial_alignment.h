@@ -36,11 +36,12 @@ class InitialAlignment
         void run();
         Eigen::Matrix4f getRigidTransform();
         void getAlignedCloud(PointCloudRGB::Ptr aligned_cloud);
+        void getAlignedCloudROSMsg(sensor_msgs::PointCloud2 &aligned_cloud_msg);
 
     private:
         Eigen::Matrix4f _rigid_tf;
         double _normal_radius, _feature_radius, _inlier_threshold;
-        PointCloudRGB::Ptr _target_cloud, _source_cloud;
+        PointCloudRGB::Ptr _target_cloud, _source_cloud, _aligned_cloud;
 
         void configParameters();
         std::vector<float> getScaleValues(PointCloudRGB::Ptr cloud);
@@ -57,5 +58,5 @@ class InitialAlignment
                               PointCloudRGB::Ptr source_keypoints,
                               PointCloudRGB::Ptr target_keypoints,
                               pcl::CorrespondencesPtr correspondences);
-
+        void applyTFtoCloud();
 };

@@ -1,6 +1,7 @@
 #include <initial_alignment.h>
 
 InitialAlignment::InitialAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRGB::Ptr source_cloud)
+    : _aligned_cloud(new PointCloudRGB)
 {
     _target_cloud = target_cloud;
     _source_cloud = source_cloud;
@@ -26,6 +27,8 @@ void InitialAlignment::run()
 
     pcl::CorrespondencesPtr correspondences(new pcl::Correspondences);
     initialAlingment(source_features, target_features, source_keypoints, target_keypoints, correspondences);
+
+    applyTFtoCloud();
 }
 
 Eigen::Matrix4f InitialAlignment::getRigidTransform()
@@ -159,8 +162,19 @@ void InitialAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>::P
     transform_exists = true;
 }
 
+void InitialAlignment::applyTFtoCloud()
+{
+    pcl::transformPointCloud(*_source_cloud,*_aligned_cloud,_rigid_tf);
+}
 
 void InitialAlignment::getAlignedCloud(PointCloudRGB::Ptr aligned_cloud)
 {
-    pcl::transformPointCloud(*_source_cloud,*aligned_cloud,_rigid_tf);
+    pcl::copyPointCloud(*_aligned_cloud, *aligned_cloud);
+}
+
+void InitialAlignment::getAlignedCloudROSMsg(sensor_msgs::PointCloud2 &aligned_cloud_msg)
+{   
+    pcl::toROSMsg(*_aligned_cloud,aligned_cloud_msg);
+    aligned_cloud_msg.header.frame_id = "world";
+    aligned_cloud_msg.header.stamp = ros::Time::now();
 }
