@@ -2,14 +2,15 @@
 
 
 CADToPointCloud::CADToPointCloud()
-{
-    _pc_path = getPCpath();
-}
+{}
 
-CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud, bool big_file)
-{
-    _pc_path = getPCpath();
-    
+CADToPointCloud::CADToPointCloud(std::string pointcloud_path, 
+                                 std::string cad_file, 
+                                 pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud, 
+                                 bool big_file)
+{    
+    setPCpath(pointcloud_path);
+
     CADToMesh(cad_file); // here we get _CAD_mesh
 
     if (big_file) MeshToPointCloud(_CAD_mesh); // here we get _CAD_cloud
@@ -19,7 +20,6 @@ CADToPointCloud::CADToPointCloud(std::string cad_file, pcl::PointCloud<pcl::Poin
 
     pointcloud = _CAD_cloud;
 }
-
 
 void CADToPointCloud::CADToMesh(std::string filename)
 {
@@ -65,11 +65,7 @@ void CADToPointCloud::MeshToROSPointCloud(pcl::PolygonMesh mesh)
     // rosrun pcl_ros pcd_to_pointcloud input.pcd periodo _frame_id:=/world
 }
 
-
-std::string CADToPointCloud::getPCpath()
+void CADToPointCloud::setPCpath(std::string path)
 {
-    std::string pkg_path = ros::package::getPath("leica_scanstation");
-
-	_pc_path = pkg_path + "/pointclouds/";
-	return _pc_path;
+    _pc_path = path;
 }

@@ -12,6 +12,14 @@ Meshes and pointclouds are not updated online because they are confidential.
 * Clone
 * Compile
 
+## Run order ##
+
+    rosrun leica_scanstation_utils main
+
+    rosrun leica_scanstation input_cloud
+
+    
+
 ## Usage ##
 
     rosrun leica_scanstation filter_scan_noise conjunto_estranio_scan 5
