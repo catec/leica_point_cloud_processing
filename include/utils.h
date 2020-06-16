@@ -1,12 +1,15 @@
+// utils.h
+#pragma once
+#ifndef _UTILS_H
+#define _UTILS_H
+
 #include "ros/ros.h"
 #include "ros/package.h"
-// #include <sensor_msgs/PointCloud2.h>
 #include "pcl_conversions/pcl_conversions.h"
 #include <pcl_ros/point_cloud.h> 
 #include <pcl/features/normal_3d.h>
-// #include <pcl/io/vtk_lib_io.h>
-// #include <pcl/visualization/pcl_visualizer.h>
 
+#endif 
 
 class Utils {
     public:

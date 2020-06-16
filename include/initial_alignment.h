@@ -35,6 +35,7 @@ class InitialAlignment
         bool transform_exists;
         void run();
         Eigen::Matrix4f getRigidTransform();
+        void getAlignedCloud(PointCloudRGB::Ptr aligned_cloud);
 
     private:
         Eigen::Matrix4f _rigid_tf;

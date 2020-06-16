@@ -32,11 +32,24 @@ include_directories(
 
 add_library(utils 
 src/utils.cpp
+src/filter.cpp
 src/initial_alignment.cpp
 )
 target_link_libraries(utils
   ${catkin_LIBRARIES}
 )
+
+add_executable(node 
+src/node.cpp
+src/cad_to_pointcloud.cpp
+)
+
+target_link_libraries(node
+  ${catkin_LIBRARIES} 
+  ${PCL_LIBRARIES}
+  utils
+)
+
 
 add_executable(input_cloud 
 src/input_cloud.cpp

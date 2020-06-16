@@ -43,6 +43,7 @@ void InitialAlignment::configParameters()
 
     _normal_radius = (target_res + source_res) * 1.25; // 25% higher
     _feature_radius = _normal_radius*1.20; // 20% higher
+    _inlier_threshold = 2.5;
 
     ROS_INFO("Parameters: \n\tnormal radius: %f, \n\tfeature radius: %f",_normal_radius, _feature_radius);
 }
@@ -156,5 +157,10 @@ void InitialAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>::P
     trans_est.estimateRigidTransformation(*source_keypoints,*target_keypoints, 
                                           *corr_filtered, _rigid_tf);
     transform_exists = true;
-    Utils::printTransform(_rigid_tf);
+}
+
+
+void InitialAlignment::getAlignedCloud(PointCloudRGB::Ptr aligned_cloud)
+{
+    pcl::transformPointCloud(*_source_cloud,*aligned_cloud,_rigid_tf);
 }
