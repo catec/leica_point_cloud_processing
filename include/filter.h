@@ -15,13 +15,18 @@ typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
 class Filter {
     public:
-        Filter() {};
+        Filter();
+        Filter(double leaf_size);
+        Filter(double leaf_size, double noise_threshold);
+        Filter(double leaf_size, double noise_threshold, double floor_threshold);
         ~Filter() {};
 
         double _leaf_size, _noise_filter_threshold, _floor_filter_threshold;
         ros::Publisher pub;
 
-        void downsampleCloud(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_downsampled, const Eigen::Vector4f leaf_size);
+        void downsampleCloud(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_downsampled);
         void filter_noise(double threshold, PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered);
         void filter_floor(double threshold, PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered);
+        void setLeafSize(double new_leaf_size);
+        void run(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered);
 };

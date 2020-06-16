@@ -46,16 +46,12 @@ int main(int argc, char** argv)
     Utils::cloudToXYZRGB(scan_pc, scan_pc_rgb, 255, 0, 128);
 
     // Filter clouds
-    Filter cloud_filter;
+    Filter cad_cloud_filter(0.05);
+    Filter scan_cloud_filter(0.05, 10, 0.8);
     PointCloudRGB::Ptr cad_cloud_downsampled(new PointCloudRGB);
-    PointCloudRGB::Ptr scan_cloud_downsampled(new PointCloudRGB);
-    const Eigen::Vector4f downsampling_leaf_size(0.05, 0.05, 0.05, 0.0f);
-    cloud_filter.downsampleCloud(cad_pc_rgb, cad_cloud_downsampled, downsampling_leaf_size);
-    cloud_filter.downsampleCloud(scan_pc_rgb, scan_cloud_downsampled, downsampling_leaf_size);
-
     PointCloudRGB::Ptr scan_cloud_filtered(new PointCloudRGB);
-    cloud_filter.filter_noise(10, scan_cloud_downsampled, scan_cloud_filtered);
-    cloud_filter.filter_floor(0.8, scan_cloud_filtered, scan_cloud_filtered);
+    cad_cloud_filter.run(cad_pc_rgb, cad_cloud_downsampled);
+    scan_cloud_filter.run(scan_pc_rgb, scan_cloud_filtered);
     
     // Get initial alignment
     InitialAlignment initial_alignment(cad_cloud_downsampled, scan_cloud_filtered);

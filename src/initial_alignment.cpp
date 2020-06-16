@@ -8,7 +8,6 @@ InitialAlignment::InitialAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRG
     configParameters();
     transform_exists = false;
     _rigid_tf = Eigen::Matrix4f::Zero();
-    Utils::printTransform(_rigid_tf);
 }
 
 void InitialAlignment::run()

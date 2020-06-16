@@ -1,9 +1,27 @@
 #include <filter.h>
 
+Filter::Filter(double leaf_size)
+{
+    _leaf_size = leaf_size;
+    _noise_filter_threshold = 0;
+    _floor_filter_threshold = 0;
+}
 
-void Filter::downsampleCloud(PointCloudRGB::Ptr cloud,
-                     PointCloudRGB::Ptr cloud_downsampled,
-                     const Eigen::Vector4f leaf_size)
+Filter::Filter(double leaf_size, double noise_threshold)
+{
+    _leaf_size = leaf_size;
+    _noise_filter_threshold = noise_threshold;
+    _floor_filter_threshold = 0;
+}
+
+Filter::Filter(double leaf_size, double noise_threshold, double floor_threshold)
+{
+    _leaf_size = leaf_size;
+    _noise_filter_threshold = noise_threshold;
+    _floor_filter_threshold = floor_threshold;
+}
+
+void Filter::downsampleCloud(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_downsampled)
 {
     double res = Utils::computeCloudResolution(cloud);
     // ROS_INFO("Pointcloud size before downsampling: %zu",cloud->points.size());
@@ -11,7 +29,8 @@ void Filter::downsampleCloud(PointCloudRGB::Ptr cloud,
 
     pcl::VoxelGrid<pcl::PointXYZRGB> downsampling_filter;
     downsampling_filter.setInputCloud(cloud);
-    downsampling_filter.setLeafSize(leaf_size);
+    const Eigen::Vector4f downsampling_leaf_size(_leaf_size, _leaf_size, _leaf_size, 0.0f);
+    downsampling_filter.setLeafSize(downsampling_leaf_size);
     downsampling_filter.filter(*cloud_downsampled);
 
     res = Utils::computeCloudResolution(cloud_downsampled);
@@ -72,4 +91,18 @@ void Filter::filter_floor(double threshold, PointCloudRGB::Ptr cloud, PointCloud
         extract_indices_filter.setNegative(true);
         extract_indices_filter.filter(*cloud_filtered);
     }
+}
+
+void Filter::setLeafSize(double new_leaf_size)
+{
+    _leaf_size = new_leaf_size;
+}
+
+void Filter::run(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered)
+{
+    downsampleCloud(cloud, cloud_filtered);
+    if (_noise_filter_threshold > 0)
+        filter_noise(_noise_filter_threshold,cloud_filtered, cloud_filtered);
+    if (_floor_filter_threshold > 0)
+        filter_floor(_floor_filter_threshold,cloud_filtered, cloud_filtered);
 }
