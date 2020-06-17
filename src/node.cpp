@@ -1,11 +1,14 @@
 #include "ros/ros.h"
 #include "ros/package.h"
+#include "std_srvs/Trigger.h"
 #include "pcl_conversions/pcl_conversions.h"
 #include <pcl_ros/point_cloud.h>
 #include <cad_to_pointcloud.h>
 // #include <utils.h>
 #include <filter.h>
 // #include <initial_alignment.h>
+#include <gicp_alignment.h>
+
 
 /**
  * POINTCLOUDS:
@@ -15,6 +18,28 @@
 
 std::string FRAME_ID = "world";
 int FREQ = 5; // Hz
+
+bool iterate = false;
+bool undo_last_iteration = false;
+
+bool gicpCb(std_srvs::Trigger::Request  &req,
+            std_srvs::Trigger::Response &res)
+{
+    iterate = true; 
+
+    res.success = true;
+    res.message = "iteration";
+}
+
+bool undoCb(std_srvs::Trigger::Request  &req,
+            std_srvs::Trigger::Response &res)
+{
+    undo_last_iteration = true; 
+
+    res.success = true;
+    res.message = "undo";
+}
+
 
 int main(int argc, char** argv)
 {
@@ -56,10 +81,20 @@ int main(int argc, char** argv)
     // Get initial alignment
     InitialAlignment initial_alignment(cad_cloud_downsampled, scan_cloud_filtered);
     initial_alignment.run();
-    Eigen::Matrix4f rigid_transform = initial_alignment.getRigidTransform();
-    Utils::printTransform(rigid_transform);
+    // Eigen::Matrix4f rigid_transform = initial_alignment.getRigidTransform();
+    Utils::printTransform(initial_alignment.getRigidTransform());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr scan_pc_aligned(new pcl::PointCloud<pcl::PointXYZRGB>);
     initial_alignment.getAlignedCloud(scan_pc_aligned);
+
+    // Get fine alignment
+    GICPAlignment gicp_alignment(cad_cloud_downsampled, scan_pc_aligned);
+    gicp_alignment.run();
+    Utils::printTransform(gicp_alignment.getFineTransform());
+    gicp_alignment.getAlignedCloud(scan_pc_aligned);
+
+    // TODO aqui poner service para iterar gicp
+    ros::ServiceServer gicp_service = nh.advertiseService("iterate_gicp", gicpCb);
+    ros::ServiceServer undo_service = nh.advertiseService("undo_iteration", undoCb);
 
     // Convert to ROS data type
     ros::Publisher cad_pub = nh.advertise<sensor_msgs::PointCloud2>("/cad/cloud_filtered", 1);
@@ -84,6 +119,21 @@ int main(int argc, char** argv)
         scan_pub.publish(scan_cloud_msg);
         ros::spinOnce();
         r.sleep();
+
+        if(iterate)
+        {
+            gicp_alignment.iterate();
+            gicp_alignment.getAlignedCloudROSMsg(scan_cloud_msg);
+            iterate = false;
+        }
+
+        if (undo_last_iteration)
+        {
+            gicp_alignment.undo();
+            gicp_alignment.getAlignedCloudROSMsg(scan_cloud_msg);
+            undo_last_iteration = false;
+        }
+
     }
 
     return 0;

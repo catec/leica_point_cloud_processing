@@ -14,15 +14,15 @@ std::string Utils::getPCpath()
 	return _pc_path;
 }
 
-bool Utils::getNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+bool Utils::getNormals(PointCloudRGB::Ptr &cloud,
                        double normal_radius,
                        pcl::PointCloud<pcl::Normal>::Ptr &normals)
 {
     ROS_INFO("Computing normals with radius: %f",normal_radius);
-    pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+    pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> ne;
     ne.setInputCloud(cloud);
 
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ> ());
+    pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB> ());
     ne.setSearchMethod(tree);
 
     pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);

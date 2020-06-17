@@ -34,6 +34,7 @@ add_library(utils
 src/utils.cpp
 src/filter.cpp
 src/initial_alignment.cpp
+src/gicp_alignment.cpp
 )
 target_link_libraries(utils
   ${catkin_LIBRARIES}

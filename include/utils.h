@@ -11,6 +11,8 @@
 
 #endif 
 
+typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
+
 class Utils {
     public:
         Utils();
@@ -19,7 +21,7 @@ class Utils {
         std::string _pc_path;
 
         std::string getPCpath();
-        static bool getNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+        static bool getNormals(PointCloudRGB::Ptr &cloud,
                                double normal_radius,
                                pcl::PointCloud<pcl::Normal>::Ptr &normals);
         static void cloudToXYZRGB(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
@@ -28,4 +30,6 @@ class Utils {
         static double computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
         static double computeCloudResolution(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud);
         static void printTransform(Eigen::Matrix4f transform);
+        static void filterNanValues(PointCloudRGB::Ptr &cloud);
+        static void filterNanValues(PointCloudRGB::Ptr &cloud, pcl::PointCloud<pcl::Normal>::Ptr &normals);
 };
