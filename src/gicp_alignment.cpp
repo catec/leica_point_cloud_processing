@@ -98,7 +98,8 @@ void GICPAlignment::fineAlignment(PointCloudRGB::Ptr source_cloud,
     _gicp.setSourceCovariances(source_covariances);
     _gicp.setTargetCovariances(target_covariances);
     // run Alignment and get transformation
-    _gicp.align(*source_cloud);
+    PointCloudRGB::Ptr aligned_cloud(new PointCloudRGB);
+    _gicp.align(*aligned_cloud);
 
     ros::Duration exec_time = ros::Time::now()-begin;
     ROS_INFO("GICP time: %lf s",exec_time.toSec());

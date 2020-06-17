@@ -419,12 +419,14 @@ int main(int argc, char** argv)
     // Pointclouds to be aligned:
     // cad_pc is the target pointcloud directly obtain from a part's cad
     // scan_pc is the source pointcloud created on gazebo with leica c5 simulator
+    std::string path = "/home/catec/catkin_ws/src/leica_point_cloud_processing/pointclouds/";
     ROS_INFO("Getting pointclouds to align");
-    // CADToPointCloud cad_to_pointcloud = CADToPointCloud("conjunto_estranio_cad.obj", cad_pc, false);
-    CADToPointCloud cad_to_pointcloud;
+    CADToPointCloud cad_to_pointcloud = CADToPointCloud(path,"conjunto_estranio_cad.obj", cad_pc, false);
+    // CADToPointCloud cad_to_pointcloud;
+    cad_to_pointcloud._pc_path = path;
     std::string f = cad_to_pointcloud._pc_path + "conjunto_estranio_fod_no_noise_no_floor.pcd";
-    std::string f2 = cad_to_pointcloud._pc_path + "conjunto_estranio_cad.pcd";
-    pcl::io::loadPCDFile<pcl::PointXYZ> (f2, *cad_pc);
+    // std::string f2 = cad_to_pointcloud._pc_path + "conjunto_estranio_cad.pcd";
+    // pcl::io::loadPCDFile<pcl::PointXYZ> (f2, *cad_pc);
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
 
     ros::Time begin = ros::Time::now();

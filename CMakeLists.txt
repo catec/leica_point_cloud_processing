@@ -73,16 +73,16 @@ target_link_libraries(filter
   utils
 )
 
-# add_executable(3dscan_to_cad_align 
-# src/3dscan_to_cad_align.cpp
-# src/cad_to_pointcloud.cpp
-# src/viewer.cpp
-# )
+add_executable(3dscan_to_cad_align 
+src/3dscan_to_cad_align.cpp
+src/cad_to_pointcloud.cpp
+src/viewer.cpp
+)
 
-# target_link_libraries(3dscan_to_cad_align
-#   ${catkin_LIBRARIES}
-#   ${PCL_LIBRARIES}
-# )
+target_link_libraries(3dscan_to_cad_align
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
 
 # add_executable(laserscan_to_pointcloud src/laserscan_to_pointcloud.cpp)
 # target_link_libraries(laserscan_to_pointcloud

@@ -5,7 +5,7 @@ Viewer::Viewer()
 {
     _point_size = 2;
     setColors();
-    configViewer();
+    // configViewer();
 }
 
 void Viewer::setColors()
@@ -49,6 +49,7 @@ void Viewer::loopViewer()
 
 void Viewer::addPCToViewer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color, std::string name)
 {
+    configViewer();
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
     _viewer->resetStoppedFlag();
 

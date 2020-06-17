@@ -91,6 +91,9 @@ int main(int argc, char** argv)
     gicp_alignment.run();
     Utils::printTransform(gicp_alignment.getFineTransform());
     gicp_alignment.getAlignedCloud(scan_pc_aligned);
+    ROS_INFO("final transform:");
+    Eigen::Matrix4f final_transform = gicp_alignment.getFineTransform() * initial_alignment.getRigidTransform();
+    Utils::printTransform(final_transform);
 
     // TODO aqui poner service para iterar gicp
     ros::ServiceServer gicp_service = nh.advertiseService("iterate_gicp", gicpCb);
