@@ -50,7 +50,7 @@ void GICPAlignment::configParameters()
     double target_res = Utils::computeCloudResolution(_target_cloud);
     double source_res = Utils::computeCloudResolution(_source_cloud);
 
-    _normal_radius = (target_res + source_res) * 1.25; // 25% higher
+    _normal_radius = (target_res + source_res) * 1.5; // 25% higher
 
     // setup Generalized-ICP
     _gicp.setMaxCorrespondenceDistance(0.5);

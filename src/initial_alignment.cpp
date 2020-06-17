@@ -43,7 +43,7 @@ void InitialAlignment::configParameters()
     double target_res = Utils::computeCloudResolution(_target_cloud);
     double source_res = Utils::computeCloudResolution(_source_cloud);
 
-    _normal_radius = (target_res + source_res) * 1.25; // 25% higher
+    _normal_radius = (target_res + source_res) * 1.5; // 25% higher
     _feature_radius = _normal_radius*1.20; // 20% higher
     _inlier_threshold = 2.5;
 
