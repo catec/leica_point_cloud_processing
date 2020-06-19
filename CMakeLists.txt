@@ -33,8 +33,10 @@ include_directories(
 add_library(utils 
 src/utils.cpp
 src/filter.cpp
+src/viewer.cpp
 src/initial_alignment.cpp
 src/gicp_alignment.cpp
+src/boolean_difference.cpp
 )
 target_link_libraries(utils
   ${catkin_LIBRARIES}
@@ -63,26 +65,26 @@ target_link_libraries(input_cloud
   utils
 )
 
-add_executable(filter 
-src/filter_cloud.cpp
-)
+# add_executable(filter 
+# src/filter_cloud.cpp
+# )
 
-target_link_libraries(filter
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-  utils
-)
+# target_link_libraries(filter
+#   ${catkin_LIBRARIES}
+#   ${PCL_LIBRARIES}
+#   utils
+# )
 
-add_executable(3dscan_to_cad_align 
-src/3dscan_to_cad_align.cpp
-src/cad_to_pointcloud.cpp
-src/viewer.cpp
-)
+# add_executable(3dscan_to_cad_align 
+# src/3dscan_to_cad_align.cpp
+# src/cad_to_pointcloud.cpp
+# src/viewer.cpp
+# )
 
-target_link_libraries(3dscan_to_cad_align
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
+# target_link_libraries(3dscan_to_cad_align
+#   ${catkin_LIBRARIES}
+#   ${PCL_LIBRARIES}
+# )
 
 # add_executable(laserscan_to_pointcloud src/laserscan_to_pointcloud.cpp)
 # target_link_libraries(laserscan_to_pointcloud

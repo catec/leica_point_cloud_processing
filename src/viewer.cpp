@@ -70,6 +70,28 @@ void Viewer::addPCToViewer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color c
     loopViewer();
 }
 
+void Viewer::addPCToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::string name)
+{
+    configViewer();
+    _viewer->resetStoppedFlag();
+
+    if (_viewer->contains(name))
+    {
+        ROS_INFO("Update cloud in Viewer");
+        _viewer->updatePointCloud(cloud,name);
+        _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,_point_size,name);
+    }
+    else
+    {
+        ROS_INFO("Add cloud in Viewer");
+        _viewer->addPointCloud<pcl::PointXYZRGB>(cloud,name);
+        _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,_point_size,name);
+    }
+    ROS_WARN("Press (X) on viewer to continue");
+
+    loopViewer();
+}
+
 void Viewer::deletePCFromViewer(std::string name)
 {
     _viewer->resetStoppedFlag();
@@ -109,23 +131,6 @@ void Viewer::keyboardCallback(const pcl::visualization::KeyboardEvent& event,voi
 void Viewer::checkForSpaceKeyPressed()
 {
     _viewer->registerKeyboardCallback(&Viewer::keyboardCallback,*this);
-}
-
-void Viewer::visualizePointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
-{
-    ROS_INFO("Display cloud in Viewer");
-    ROS_WARN("Press (X) on viewer to continue");
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> pc_viewer(new pcl::visualization::PCLVisualizer ("Pointcloud viewer"));
-    pc_viewer->setBackgroundColor(0, 0, 0);
-    pc_viewer->addPointCloud<pcl::PointXYZ>(cloud,"cloud");
-    pc_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,3);
-    pc_viewer->addCoordinateSystem(1.0);
-    pc_viewer->initCameraParameters();
-    
-    while (!pc_viewer->wasStopped()){
-        pc_viewer->spinOnce(100);
-        boost::this_thread::sleep(boost::posix_time::microseconds (100000));
-    } 
 }
 
 void Viewer::visualizeMesh(pcl::PolygonMesh mesh)
