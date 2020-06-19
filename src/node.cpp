@@ -8,6 +8,8 @@
 #include <filter.h>
 // #include <initial_alignment.h>
 #include <gicp_alignment.h>
+#include <boolean_difference.h>
+#include <viewer.h>
 
 
 /**
@@ -21,6 +23,7 @@ int FREQ = 5; // Hz
 
 bool iterate = false;
 bool undo_last_iteration = false;
+bool get_fods = false;
 
 bool gicpCb(std_srvs::Trigger::Request  &req,
             std_srvs::Trigger::Response &res)
@@ -38,6 +41,15 @@ bool undoCb(std_srvs::Trigger::Request  &req,
 
     res.success = true;
     res.message = "undo";
+}
+
+bool fodsCb(std_srvs::Trigger::Request  &req,
+            std_srvs::Trigger::Response &res)
+{
+    get_fods = true; 
+
+    res.success = true;
+    res.message = "fods";
 }
 
 
@@ -65,29 +77,29 @@ int main(int argc, char** argv)
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
 
     // Colorize clouds
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cad_pc_rgb(new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr scan_pc_rgb(new pcl::PointCloud<pcl::PointXYZRGB>);
+    PointCloudRGB::Ptr cad_pc_rgb(new PointCloudRGB);
+    PointCloudRGB::Ptr scan_pc_rgb(new PointCloudRGB);
     Utils::cloudToXYZRGB(cad_pc, cad_pc_rgb, 0, 0, 255);
     Utils::cloudToXYZRGB(scan_pc, scan_pc_rgb, 255, 0, 128);
 
     // Filter clouds
     Filter cad_cloud_filter(0.05);
     Filter scan_cloud_filter(0.05, 10, 0.8);
-    PointCloudRGB::Ptr cad_cloud_downsampled(new PointCloudRGB);
-    PointCloudRGB::Ptr scan_cloud_filtered(new PointCloudRGB);
-    cad_cloud_filter.run(cad_pc_rgb, cad_cloud_downsampled);
-    scan_cloud_filter.run(scan_pc_rgb, scan_cloud_filtered);
+    PointCloudRGB::Ptr cad_pc_downsampled(new PointCloudRGB);
+    PointCloudRGB::Ptr scan_pc_filtered(new PointCloudRGB);
+    cad_cloud_filter.run(cad_pc_rgb, cad_pc_downsampled);
+    scan_cloud_filter.run(scan_pc_rgb, scan_pc_filtered);
     
     // Get initial alignment
-    InitialAlignment initial_alignment(cad_cloud_downsampled, scan_cloud_filtered);
+    InitialAlignment initial_alignment(cad_pc_downsampled, scan_pc_filtered);
     initial_alignment.run();
     // Eigen::Matrix4f rigid_transform = initial_alignment.getRigidTransform();
     Utils::printTransform(initial_alignment.getRigidTransform());
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr scan_pc_aligned(new pcl::PointCloud<pcl::PointXYZRGB>);
+    PointCloudRGB::Ptr scan_pc_aligned(new PointCloudRGB);
     initial_alignment.getAlignedCloud(scan_pc_aligned);
 
     // Get fine alignment
-    GICPAlignment gicp_alignment(cad_cloud_downsampled, scan_pc_aligned);
+    GICPAlignment gicp_alignment(cad_pc_downsampled, scan_pc_aligned);
     gicp_alignment.run();
     Utils::printTransform(gicp_alignment.getFineTransform());
     gicp_alignment.getAlignedCloud(scan_pc_aligned);
@@ -98,6 +110,7 @@ int main(int argc, char** argv)
     // TODO aqui poner service para iterar gicp
     ros::ServiceServer gicp_service = nh.advertiseService("iterate_gicp", gicpCb);
     ros::ServiceServer undo_service = nh.advertiseService("undo_iteration", undoCb);
+    ros::ServiceServer fods_service = nh.advertiseService("get_fods", fodsCb);
 
     // Convert to ROS data type
     ros::Publisher cad_pub = nh.advertise<sensor_msgs::PointCloud2>("/cad/cloud_filtered", 1);
@@ -105,7 +118,7 @@ int main(int argc, char** argv)
 
     sensor_msgs::PointCloud2 cad_cloud_msg, scan_cloud_msg;
 
-    pcl::toROSMsg(*cad_cloud_downsampled,cad_cloud_msg);
+    pcl::toROSMsg(*cad_pc_downsampled,cad_cloud_msg);
     cad_cloud_msg.header.frame_id = FRAME_ID;
     cad_cloud_msg.header.stamp = ros::Time::now();
 
@@ -135,6 +148,20 @@ int main(int argc, char** argv)
             gicp_alignment.undo();
             gicp_alignment.getAlignedCloudROSMsg(scan_cloud_msg);
             undo_last_iteration = false;
+        }
+
+        if (get_fods)
+        {
+            gicp_alignment.getAlignedCloud(scan_pc_aligned);
+            BooleanDifference boolean_difference(scan_pc_aligned);
+            boolean_difference.substract(cad_pc_downsampled);
+            if (!boolean_difference.substract_error)
+            {
+                PointCloudRGB::Ptr scan_pc_substracted(new PointCloudRGB);
+                boolean_difference.getResultCloud(scan_pc_substracted);
+                Viewer::visualizePointCloud<pcl::PointXYZRGB>(scan_pc_substracted);
+            }
+            get_fods = false;
         }
 
     }
