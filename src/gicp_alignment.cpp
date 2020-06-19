@@ -54,7 +54,7 @@ void GICPAlignment::configParameters()
 
     // setup Generalized-ICP
     _gicp.setMaxCorrespondenceDistance(0.5);
-    _gicp.setMaximumIterations(100); // no encuentro el numero maximo
+    _gicp.setMaximumIterations(10000);
     _gicp.setEuclideanFitnessEpsilon(1e-5);
     _gicp.setTransformationEpsilon(1e-5);
     _gicp.setRANSACOutlierRejectionThreshold(0.5);

@@ -37,6 +37,7 @@ src/viewer.cpp
 src/initial_alignment.cpp
 src/gicp_alignment.cpp
 src/boolean_difference.cpp
+src/fod_detector.cpp
 )
 target_link_libraries(utils
   ${catkin_LIBRARIES}

@@ -10,6 +10,7 @@
 #include <gicp_alignment.h>
 #include <boolean_difference.h>
 #include <viewer.h>
+#include <fod_detector.h>
 
 
 /**
@@ -17,6 +18,9 @@
     - target pointcloud: directly obtain from downsampling a part's cad
     - source pointcloud: result from scanning the same cad part in Gazebo with leica c5 simulator
 **/
+
+std::string TARGET_CLOUD_FILE = "conjunto_estranio_cad.obj";
+std::string SOURCE_CLOUD_FILE = "conjunto_estranio_fod.pcd";
 
 std::string FRAME_ID = "world";
 int FREQ = 5; // Hz
@@ -72,9 +76,21 @@ int main(int argc, char** argv)
     pcl::PointCloud<pcl::PointXYZ>::Ptr cad_pc(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr scan_pc(new pcl::PointCloud<pcl::PointXYZ>);
 
-    CADToPointCloud cad_to_pointcloud = CADToPointCloud(pointcloud_folder_path,"conjunto_estranio_cad.obj",cad_pc, false);
-    std::string f = pointcloud_folder_path + "conjunto_estranio_scan.pcd";
+    CADToPointCloud cad_to_pointcloud = CADToPointCloud(pointcloud_folder_path,TARGET_CLOUD_FILE,cad_pc, false);
+    std::string f = pointcloud_folder_path + SOURCE_CLOUD_FILE;
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
+
+    // Check for cloud existence
+    if (cad_pc->size()<=0)
+    {
+        ROS_ERROR("No cloud found: %s", TARGET_CLOUD_FILE.c_str());
+        return 0;
+    }
+    if (scan_pc->size()<=0)
+    {
+        ROS_ERROR("No cloud found: %s", SOURCE_CLOUD_FILE.c_str());
+        return 0;
+    }
 
     // Colorize clouds
     PointCloudRGB::Ptr cad_pc_rgb(new PointCloudRGB);
@@ -115,8 +131,11 @@ int main(int argc, char** argv)
     // Convert to ROS data type
     ros::Publisher cad_pub = nh.advertise<sensor_msgs::PointCloud2>("/cad/cloud_filtered", 1);
     ros::Publisher scan_pub = nh.advertise<sensor_msgs::PointCloud2>("scan/cloud_aligned", 1);
+    ros::Publisher npub = nh.advertise<std_msgs::Int16>("/num_of_fods", 1);
 
     sensor_msgs::PointCloud2 cad_cloud_msg, scan_cloud_msg;
+    std_msgs::Int16 n_fods_msg;
+    std::vector<sensor_msgs::PointCloud2> cluster_msg_array;
 
     pcl::toROSMsg(*cad_pc_downsampled,cad_cloud_msg);
     cad_cloud_msg.header.frame_id = FRAME_ID;
@@ -128,13 +147,14 @@ int main(int argc, char** argv)
 
     ROS_INFO("input_cloud: Publishing clouds on topics: \n\t/cad/cloud \n\t/scan/cloud");
     ros::Rate r(FREQ);
+
+    bool publish_fods = false;
+    int num_of_fods;
     while(ros::ok())
     {
         // Publish the data
         cad_pub.publish(cad_cloud_msg);
         scan_pub.publish(scan_cloud_msg);
-        ros::spinOnce();
-        r.sleep();
 
         if(iterate)
         {
@@ -160,10 +180,43 @@ int main(int argc, char** argv)
                 PointCloudRGB::Ptr scan_pc_substracted(new PointCloudRGB);
                 boolean_difference.getResultCloud(scan_pc_substracted);
                 Viewer::visualizePointCloud<pcl::PointXYZRGB>(scan_pc_substracted);
+            
+                FODDetector fod_detector(boolean_difference.getVoxelResolution());
+                std::vector<pcl::PointIndices>cluster_indices; //This is a vector of cluster
+                fod_detector.clusterPossibleFODs(scan_pc_substracted, cluster_indices);
+
+                // iterate through cluster_indices to create a pc for each cluster
+                num_of_fods = fod_detector.clusterIndicesToROSMsg(cluster_indices, scan_pc_substracted, cluster_msg_array);
+                n_fods_msg.data = num_of_fods;
+                ROS_INFO("Detected %d objects",num_of_fods);
+        
+                publish_fods = true;
             }
             get_fods = false;
         }
 
+        if (publish_fods)
+        {
+            std::vector<ros::Publisher> pub_array;
+            // publish each fod in a separated topic
+            for(int i=0; i<num_of_fods; i++) // temporary solution
+            {
+                std::string topic_name = "/fod" + std::to_string(i);
+                ROS_INFO("Publishing on topic %s", topic_name.c_str());
+                ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>(topic_name, 1);
+                pub_array.push_back(pub);
+                // pub.publish(cluster_msg_array[i]);
+            }
+            for(int i=0; i<num_of_fods; i++) // temporary solution
+            {
+                ROS_INFO("Point cloud size: %dx%d", cluster_msg_array[i].width, cluster_msg_array[i].height);
+                pub_array[i].publish(cluster_msg_array[i]);
+            }
+            npub.publish(n_fods_msg);
+        }
+
+        ros::spinOnce();
+        r.sleep();
     }
 
     return 0;

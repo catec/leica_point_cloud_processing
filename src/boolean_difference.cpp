@@ -22,16 +22,18 @@ double BooleanDifference::getVoxelResolution()
   return _voxel_resolution;
 }
 
+
 void BooleanDifference::getResultCloud(PointCloudRGB::Ptr result_cloud)
 {
   pcl::copyPointCloud(*_result_cloud, *result_cloud);
 }
 
+
 void BooleanDifference::computeResolution(PointCloudRGB::Ptr cloud)
 {
   double res = Utils::computeCloudResolution(cloud);
-  _voxel_resolution = res * 3; // 3 times higher to cover more than two neighbors
-  ROS_INFO("Creating octree with resolution: %f", _voxel_resolution);
+  _voxel_resolution = res * 3; // 6 times higher to cover more than two neighbors
+  ROS_INFO("Voxelize octree with resolution: %f", _voxel_resolution);
 }
 
 
@@ -50,6 +52,7 @@ void BooleanDifference::setOctreeAndGetIndices(PointCloudRGB::Ptr cloud_to_subst
   ROS_INFO("Extracting differences");
   octree.getPointIndicesFromNewVoxels(*_diff_indices);// Diferentiated points
 }
+
 
 int BooleanDifference::computeResultCloud()
 {
