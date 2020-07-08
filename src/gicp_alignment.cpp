@@ -21,8 +21,6 @@ void GICPAlignment::run()
 void GICPAlignment::iterate()
 {
     iterateFineAlignment(_aligned_cloud);
-
-    applyTFtoCloud(_aligned_cloud);
 }
 
 Eigen::Matrix4f GICPAlignment::getFineTransform()
@@ -50,14 +48,15 @@ void GICPAlignment::configParameters()
     double target_res = Utils::computeCloudResolution(_target_cloud);
     double source_res = Utils::computeCloudResolution(_source_cloud);
 
-    _normal_radius = (target_res + source_res) * 1.5; // 50% higher
+    _normal_radius = (target_res + source_res) * 2.0; // 2 times higher
+    double threshold = (target_res + source_res) * 0.95; // just below resolution
 
     // setup Generalized-ICP
-    _gicp.setMaxCorrespondenceDistance(0.5);
-    _gicp.setMaximumIterations(10000);
-    _gicp.setEuclideanFitnessEpsilon(1e-5);
-    _gicp.setTransformationEpsilon(1e-5);
-    _gicp.setRANSACOutlierRejectionThreshold(0.5);
+    _gicp.setMaxCorrespondenceDistance(100*threshold);
+    _gicp.setMaximumIterations(100);
+    _gicp.setEuclideanFitnessEpsilon(1); // divergence criterion
+    _gicp.setTransformationEpsilon(1e-9); // convergence criterion
+    _gicp.setRANSACOutlierRejectionThreshold(threshold);
 }
 
 
@@ -128,10 +127,9 @@ void GICPAlignment::iterateFineAlignment(PointCloudRGB::Ptr cloud)
 
     if (_gicp.hasConverged()) 
     {
-        ROS_INFO("Updated transform:");
         temp_tf = _gicp.getFinalTransformation();
         _fine_tf = temp_tf * _fine_tf;
-        Utils::printTransform(_fine_tf);
+        // Utils::printTransform(_fine_tf);
         ROS_INFO("Converged in %f",_gicp.getFitnessScore());
     }
     else

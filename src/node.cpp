@@ -105,6 +105,7 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "point_cloud_processing");
     ros::NodeHandle nh;
+    ros::Rate r(FREQ);
 
     ROS_INFO("%s",ros::this_node::getName().c_str());
 
@@ -131,6 +132,7 @@ int main(int argc, char** argv)
     ros::Publisher cad_pub = nh.advertise<sensor_msgs::PointCloud2>("/cad/cloud_filtered", 1);
     ros::Publisher scan_pub = nh.advertise<sensor_msgs::PointCloud2>("/scan/cloud_aligned", 1);
 
+    Eigen::Matrix4f final_transform; 
 
     while(ros::ok())
     {
@@ -156,7 +158,7 @@ int main(int argc, char** argv)
             Utils::printTransform(gicp_alignment.getFineTransform());
             gicp_alignment.getAlignedCloud(scan_pc_aligned);
             ROS_INFO("Updated transform:");
-            Eigen::Matrix4f final_transform = gicp_alignment.getFineTransform() * initial_alignment.getRigidTransform();
+            final_transform = gicp_alignment.getFineTransform() * initial_alignment.getRigidTransform();
             Utils::printTransform(final_transform);
 
             // Service para iterar gicp
@@ -169,7 +171,6 @@ int main(int argc, char** argv)
             Utils::cloudToROSMsg(scan_pc_aligned, scan_cloud_msg); 
 
             ROS_INFO("input_cloud: Publishing clouds on topics: \n\t\t\t\t/cad/cloud_filtered \n\t\t\t\t/scan/cloud_aligned");
-            ros::Rate r(FREQ);
 
             bool publish_fods = false;
             int num_of_fods=0;
@@ -184,6 +185,9 @@ int main(int argc, char** argv)
                 {
                     gicp_alignment.iterate();
                     gicp_alignment.getAlignedCloudROSMsg(scan_cloud_msg);
+                    ROS_INFO("Updated transform:");
+                    final_transform = gicp_alignment.getFineTransform() * initial_alignment.getRigidTransform();
+                    Utils::printTransform(final_transform);
                     iterate = false;
                 }
 
@@ -206,7 +210,7 @@ int main(int argc, char** argv)
                         Viewer::visualizePointCloud<pcl::PointXYZRGB>(scan_pc_substracted);
                     
                         FODDetector fod_detector(boolean_difference.getVoxelResolution());
-                        std::vector<pcl::PointIndices>cluster_indices; //This is a vector of cluster
+                        std::vector<pcl::PointIndices> cluster_indices; //This is a vector of cluster
                         fod_detector.clusterPossibleFODs(scan_pc_substracted, cluster_indices);
 
                         // iterate through cluster_indices to create a pc for each cluster
