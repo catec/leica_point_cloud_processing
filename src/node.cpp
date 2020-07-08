@@ -66,11 +66,6 @@ bool fodsCb(std_srvs::Trigger::Request  &req,
     res.message = "fods";
 }
 
-void exec()
-{
-
-}
-
 void cadCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
     if (!new_cad_pc)
@@ -83,6 +78,7 @@ void cadCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
         if (g_cad_pc->size()<=0)
         {
             ROS_ERROR("Error loading CAD cloud from %s",TARGET_CLOUD_TOPIC.c_str());
+            new_scan_pc = false;
         }
     }
 }
@@ -99,6 +95,7 @@ void scanCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
         if (g_scan_pc->size()<=0)
         {
             ROS_ERROR("Error loading SCAN cloud from %s",SOURCE_CLOUD_TOPIC.c_str());
+            new_scan_pc = false;
         }
     }
 }
@@ -119,13 +116,13 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    PointCloudRGB::Ptr cad_pc_rgb(new PointCloudRGB);
-    PointCloudRGB::Ptr scan_pc_rgb(new PointCloudRGB);
+    PointCloudRGB::Ptr cad_pc_filtered(new PointCloudRGB);
+    PointCloudRGB::Ptr scan_pc_filtered(new PointCloudRGB);
     PointCloudRGB::Ptr scan_pc_aligned(new PointCloudRGB);
 
     sensor_msgs::PointCloud2 cad_cloud_msg, scan_cloud_msg;
-    std_msgs::Int16 n_fods_msg;
     std::vector<sensor_msgs::PointCloud2> cluster_msg_array;
+    std_msgs::Int16 n_fods_msg;
     
     ros::Subscriber cad_sub = nh.subscribe(TARGET_CLOUD_TOPIC, 1, cadCb);
     ros::Subscriber scan_sub = nh.subscribe(SOURCE_CLOUD_TOPIC, 1, scanCb);
@@ -140,25 +137,21 @@ int main(int argc, char** argv)
         if (new_cad_pc && new_scan_pc)
         {
             ROS_INFO("Process started");
-            // pcl::copyPointCloud(*g_cad_pc, *cad_pc_rgb);
-            // pcl::copyPointCloud(*g_scan_pc, *scan_pc_rgb);
 
             // Filter clouds
             Filter cad_cloud_filter(0.05);
             Filter scan_cloud_filter(0.05, 10, 0.8);
-            PointCloudRGB::Ptr cad_pc_downsampled(new PointCloudRGB);
-            PointCloudRGB::Ptr scan_pc_filtered(new PointCloudRGB);
-            cad_cloud_filter.run(g_cad_pc, cad_pc_downsampled);
+            cad_cloud_filter.run(g_cad_pc, cad_pc_filtered);
             scan_cloud_filter.run(g_scan_pc, scan_pc_filtered);
             
             // Get initial alignment
-            InitialAlignment initial_alignment(cad_pc_downsampled, scan_pc_filtered);
+            InitialAlignment initial_alignment(cad_pc_filtered, scan_pc_filtered);
             initial_alignment.run();
             Utils::printTransform(initial_alignment.getRigidTransform());
             initial_alignment.getAlignedCloud(scan_pc_aligned);
 
             // Get fine alignment
-            GICPAlignment gicp_alignment(cad_pc_downsampled, scan_pc_aligned);
+            GICPAlignment gicp_alignment(cad_pc_filtered, scan_pc_aligned);
             gicp_alignment.run();
             Utils::printTransform(gicp_alignment.getFineTransform());
             gicp_alignment.getAlignedCloud(scan_pc_aligned);
@@ -172,10 +165,10 @@ int main(int argc, char** argv)
             ros::ServiceServer fods_service = nh.advertiseService("get_fods", fodsCb);
 
             // Convert to ROS data type
-            Utils::cloudToROSMsg(cad_pc_downsampled, cad_cloud_msg);
+            Utils::cloudToROSMsg(cad_pc_filtered, cad_cloud_msg);
             Utils::cloudToROSMsg(scan_pc_aligned, scan_cloud_msg); 
 
-            ROS_INFO("input_cloud: Publishing clouds on topics: \n\t\t\t/cad/cloud_filtered \n\t\t\t/scan/cloud_aligned");
+            ROS_INFO("input_cloud: Publishing clouds on topics: \n\t\t\t\t/cad/cloud_filtered \n\t\t\t\t/scan/cloud_aligned");
             ros::Rate r(FREQ);
 
             bool publish_fods = false;
@@ -205,7 +198,7 @@ int main(int argc, char** argv)
                 {
                     gicp_alignment.getAlignedCloud(scan_pc_aligned);
                     BooleanDifference boolean_difference(scan_pc_aligned);
-                    boolean_difference.substract(cad_pc_downsampled);
+                    boolean_difference.substract(cad_pc_filtered);
                     if (!boolean_difference.substract_error)
                     {
                         PointCloudRGB::Ptr scan_pc_substracted(new PointCloudRGB);
@@ -236,7 +229,6 @@ int main(int argc, char** argv)
                         ROS_INFO("Publishing on topic %s", topic_name.c_str());
                         ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>(topic_name, 1);
                         pub_array.push_back(pub);
-                        // pub.publish(cluster_msg_array[i]);
                     }
                     for(int i=0; i<num_of_fods; i++) // temporary solution
                     {

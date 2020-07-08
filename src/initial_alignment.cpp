@@ -47,7 +47,7 @@ void InitialAlignment::configParameters()
     _feature_radius = _normal_radius*1.20; // 20% higher
     _inlier_threshold = 2.5;
 
-    ROS_INFO("Parameters: \n\tnormal radius: %f, \n\tfeature radius: %f",_normal_radius, _feature_radius);
+    // ROS_INFO("Parameters: \n\tnormal radius: %f, \   n\tfeature radius: %f",_normal_radius, _feature_radius);
 }
 
 bool InitialAlignment::getNormals(PointCloudRGB::Ptr &cloud,
@@ -111,7 +111,7 @@ void InitialAlignment::getKeypointsAndFeatures(PointCloudRGB::Ptr cloud,
     pcl::MultiscaleFeaturePersistence<pcl::PointXYZRGB, pcl::FPFHSignature33> fper;
     boost::shared_ptr<std::vector<int> > keypoints(new std::vector<int>); // Interest points
     std::vector<float> scale_values = getScaleValues(cloud);
-    printScaleValues(scale_values);
+    // printScaleValues(scale_values);
     fper.setScalesVector(scale_values);
     fper.setAlpha(0.6f);
     fper.setFeatureEstimator(fest);
@@ -120,7 +120,7 @@ void InitialAlignment::getKeypointsAndFeatures(PointCloudRGB::Ptr cloud,
     ROS_INFO("3. Extracting keypoints");
     fper.determinePersistentFeatures(*features, keypoints);
 
-    ROS_INFO("keypoints: %zu", keypoints->size());   
+    // ROS_INFO("keypoints: %zu", keypoints->size());   
     bool success = keypoints->size()==features->size() ? true : false;
 
     pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_filter;
