@@ -14,27 +14,27 @@ Meshes and pointclouds are not updated online because they are confidential.
 
 ## Run order ##
 
-    rosrun leica_scanstation_utils main
+    rosrun leica_point_cloud_processing_utils main
 
-    rosrun leica_scanstation input_cloud
+    rosrun leica_point_cloud_processing input_cloud
 
     
 
 ## Usage ##
 
-    rosrun leica_scanstation filter_scan_noise conjunto_estranio_scan 5
+    rosrun leica_point_cloud_processing filter_scan_noise conjunto_estranio_scan 5
 
-    rosrun leica_scanstation filter_scan_floor conjunto_estranio_scan_no_noise 0.8
+    rosrun leica_point_cloud_processing filter_scan_floor conjunto_estranio_scan_no_noise 0.8
 
-    roslaunch leica_scanstation align.launch
+    roslaunch leica_point_cloud_processing align.launch
 
-    rosrun leica_scanstation cloud_to_mesh conjunto_estranio_scan_aligned 
+    rosrun leica_point_cloud_processing cloud_to_mesh conjunto_estranio_scan_aligned 
 
-    rosrun leica_scanstation differentiate_point_clouds 0.1
+    rosrun leica_point_cloud_processing differentiate_point_clouds 0.1
 
 ## Hacks ##
 
-    rosrun pcl_ros bag_to_pcd /media/catec/Datos/Bags/rosin_leica/assembly.bag /camera/depth/points /home/catec/catkin_ws/src/leica_scanstation/pointclouds
+    rosrun pcl_ros bag_to_pcd /media/catec/Datos/Bags/rosin_leica/assembly.bag /camera/depth/points /home/catec/catkin_ws/src/leica_point_cloud_processing/pointclouds
 
     pcl_viewer assembly.pcd
 

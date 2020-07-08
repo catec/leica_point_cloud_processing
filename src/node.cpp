@@ -173,7 +173,7 @@ int main(int argc, char** argv)
             ROS_INFO("input_cloud: Publishing clouds on topics: \n\t\t\t\t/cad/cloud_filtered \n\t\t\t\t/scan/cloud_aligned");
 
             bool publish_fods = false;
-            int num_of_fods=0;
+            int num_of_fods = 0;
             
             while(new_cad_pc && new_scan_pc && ros::ok())
             {

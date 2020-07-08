@@ -8,7 +8,7 @@ Utils::Utils()
 
 std::string Utils::getPCpath()
 {
-  std::string pkg_path = ros::package::getPath("leica_scanstation");
+  std::string pkg_path = ros::package::getPath("leica_point_cloud_processing");
 
   _pc_path = pkg_path + "/pointclouds/";
   return _pc_path;

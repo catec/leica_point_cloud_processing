@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(leica_scanstation)
+project(leica_point_cloud_processing)
 
 set(CMAKE_CXX_STANDARD 11)
 set(VTK_LEGACY_SILENT ON)

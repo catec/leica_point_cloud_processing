@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>leica_scanstation</name>
+  <name>leica_point_cloud_processing</name>
   <version>0.0.0</version>
   <description>The ROSIN LEICASS package</description>
 
