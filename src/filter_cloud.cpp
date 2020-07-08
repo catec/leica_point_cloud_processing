@@ -17,7 +17,6 @@
     - source pointcloud: result from scanning the same cad part in Gazebo with leica c5 simulator
 **/
 
-std::string FRAME_ID = "world";
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
 double leaf_size, noise_filter_threshold, floor_filter_threshold;
@@ -51,7 +50,7 @@ void cloudCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
 
     sensor_msgs::PointCloud2 cloud_msg;
     pcl::toROSMsg(*cloud_filtered,cloud_msg);
-    cloud_msg.header.frame_id = FRAME_ID;
+    cloud_msg.header.frame_id = Utils::_frame_id;
     cloud_msg.header.stamp = ros::Time::now();
 
     g_pub.publish(cloud_msg);

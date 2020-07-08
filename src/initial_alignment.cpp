@@ -174,6 +174,6 @@ void InitialAlignment::getAlignedCloud(PointCloudRGB::Ptr aligned_cloud)
 void InitialAlignment::getAlignedCloudROSMsg(sensor_msgs::PointCloud2 &aligned_cloud_msg)
 {   
     pcl::toROSMsg(*_aligned_cloud,aligned_cloud_msg);
-    aligned_cloud_msg.header.frame_id = "world";
+    aligned_cloud_msg.header.frame_id = Utils::_frame_id;
     aligned_cloud_msg.header.stamp = ros::Time::now();
 }

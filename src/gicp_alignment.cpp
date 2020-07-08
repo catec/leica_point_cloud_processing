@@ -40,7 +40,7 @@ void GICPAlignment::getAlignedCloud(PointCloudRGB::Ptr aligned_cloud)
 void GICPAlignment::getAlignedCloudROSMsg(sensor_msgs::PointCloud2 &aligned_cloud_msg)
 {   
     pcl::toROSMsg(*_aligned_cloud,aligned_cloud_msg);
-    aligned_cloud_msg.header.frame_id = "world";
+    aligned_cloud_msg.header.frame_id = Utils::_frame_id;
     aligned_cloud_msg.header.stamp = ros::Time::now();
 }
 
@@ -128,9 +128,10 @@ void GICPAlignment::iterateFineAlignment(PointCloudRGB::Ptr cloud)
 
     if (_gicp.hasConverged()) 
     {
-        ROS_INFO("Final transformation:");
+        ROS_INFO("Updated transform:");
         temp_tf = _gicp.getFinalTransformation();
         _fine_tf = temp_tf * _fine_tf;
+        Utils::printTransform(_fine_tf);
         ROS_INFO("Converged in %f",_gicp.getFitnessScore());
     }
     else

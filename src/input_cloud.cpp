@@ -11,8 +11,7 @@
     - source pointcloud: result from scanning the same cad part in Gazebo with leica c5 simulator
 **/
 
-std::string FRAME_ID = "world";
-int FREQ = 5; // Hz
+int FREQ = 1; // Hz
 
 int main(int argc, char** argv)
 {
@@ -50,11 +49,11 @@ int main(int argc, char** argv)
     sensor_msgs::PointCloud2 cad_cloud_msg, scan_cloud_msg;
     
     pcl::toROSMsg(*cad_pc_rgb,cad_cloud_msg);
-    cad_cloud_msg.header.frame_id = FRAME_ID;
+    cad_cloud_msg.header.frame_id = Utils::_frame_id;
     cad_cloud_msg.header.stamp = ros::Time::now();
 
     pcl::toROSMsg(*scan_pc_rgb,scan_cloud_msg);
-    scan_cloud_msg.header.frame_id = FRAME_ID;
+    scan_cloud_msg.header.frame_id = Utils::_frame_id;
     scan_cloud_msg.header.stamp = ros::Time::now();
 
     ROS_INFO("input_cloud: Publishing clouds on topics: \n\t/cad/cloud \n\t/scan/cloud");

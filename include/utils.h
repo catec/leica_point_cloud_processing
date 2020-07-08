@@ -13,12 +13,15 @@
 
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
+
 class Utils {
     public:
         Utils();
         ~Utils() {};
 
         std::string _pc_path;
+        
+        static std::string _frame_id;
 
         std::string getPCpath();
         static bool getNormals(PointCloudRGB::Ptr &cloud,
@@ -27,6 +30,8 @@ class Utils {
         static void cloudToXYZRGB(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
                                   pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb,
                                   int R, int G, int B);
+        static void cloudToROSMsg(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
+                                  sensor_msgs::PointCloud2 &cloud_msg);
         static double computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
         static double computeCloudResolution(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud);
         static void printTransform(Eigen::Matrix4f transform);
