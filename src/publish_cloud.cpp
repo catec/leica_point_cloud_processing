@@ -38,6 +38,10 @@ void getCADCloud(std::string file_name)
 bool serviceCb(leica_scanstation_msgs::PointCloudFile::Request &req, 
                leica_scanstation_msgs::PointCloudFile::Response &res)
 {
+    ROS_INFO("request to publish clouds");
+    LeicaUtils::ptx2pcd(req.file_name); //TODO ESTO NO VA AQUI
+    ros::Duration(1).sleep();
+
     PointCloudRGB::Ptr cloud(new PointCloudRGB);
     
     std::string f = LeicaUtils::getFilePath(req.file_name, ".pcd");
@@ -78,7 +82,6 @@ int main(int argc, char** argv)
     LeicaUtils::setPointCloudFolder(pointcloud_folder_path);
 
     // TODO: resolver la forma de coger el path a pointclouds
-
     ros::ServiceServer service = nh.advertiseService("publish_scan_file", serviceCb);
     ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("scan/cloud", 1);
     ros::Publisher cad_pub = nh.advertise<sensor_msgs::PointCloud2>("cad/cloud", 1);
