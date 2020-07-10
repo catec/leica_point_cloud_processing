@@ -17,6 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
   # pcl_conversions
   # pcl_ros
   sensor_msgs
+  leica_scanstation_msgs
+  leica_scanstation_utils
 )
 
 #catkin_python_setup()
@@ -30,7 +32,7 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
 )
 
-add_library(utils 
+add_library(${PROJECT_NAME} 
 src/utils.cpp
 src/filter.cpp
 src/viewer.cpp
@@ -38,8 +40,9 @@ src/initial_alignment.cpp
 src/gicp_alignment.cpp
 src/boolean_difference.cpp
 src/fod_detector.cpp
+src/cad_to_pointcloud.cpp
 )
-target_link_libraries(utils
+target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
 
@@ -51,7 +54,17 @@ src/cad_to_pointcloud.cpp
 target_link_libraries(node
   ${catkin_LIBRARIES} 
   ${PCL_LIBRARIES}
-  utils
+  ${PROJECT_NAME}
+)
+
+add_executable(publish_cloud 
+src/publish_cloud.cpp
+)
+
+target_link_libraries(publish_cloud
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${PROJECT_NAME}
 )
 
 
@@ -63,81 +76,5 @@ src/cad_to_pointcloud.cpp
 target_link_libraries(input_cloud
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
-  utils
+  ${PROJECT_NAME}
 )
-
-# add_executable(filter 
-# src/filter_cloud.cpp
-# )
-
-# target_link_libraries(filter
-#   ${catkin_LIBRARIES}
-#   ${PCL_LIBRARIES}
-#   utils
-# )
-
-# add_executable(3dscan_to_cad_align 
-# src/3dscan_to_cad_align.cpp
-# src/cad_to_pointcloud.cpp
-# src/viewer.cpp
-# )
-
-# target_link_libraries(3dscan_to_cad_align
-#   ${catkin_LIBRARIES}
-#   ${PCL_LIBRARIES}
-# )
-
-# add_executable(laserscan_to_pointcloud src/laserscan_to_pointcloud.cpp)
-# target_link_libraries(laserscan_to_pointcloud
-#   ${catkin_LIBRARIES}
-# )
-
-# add_executable(filter_scan_floor 
-# src/filter_scan_floor.cpp
-# src/cad_to_pointcloud.cpp
-# src/viewer.cpp
-# )
-# target_link_libraries(filter_scan_floor
-#   ${catkin_LIBRARIES}
-#   ${PCL_LIBRARIES}
-# )
-
-# add_executable(filter_scan_noise 
-# src/filter_scan_noise.cpp
-# src/cad_to_pointcloud.cpp
-# src/viewer.cpp
-# )
-# target_link_libraries(filter_scan_noise
-#   ${catkin_LIBRARIES}
-#   ${PCL_LIBRARIES}
-# )
-
-# add_executable(cloud_to_mesh 
-# src/cloud_to_mesh.cpp
-# src/cad_to_pointcloud.cpp
-# src/viewer.cpp
-# )
-# target_link_libraries(cloud_to_mesh
-#   ${catkin_LIBRARIES}
-#   ${PCL_LIBRARIES}
-# )
-
-# add_executable(differentiate_point_clouds 
-# src/differentiate_point_clouds.cpp
-# src/cad_to_pointcloud.cpp
-# src/viewer.cpp
-# )
-# target_link_libraries(differentiate_point_clouds
-#   ${catkin_LIBRARIES}
-#   ${PCL_LIBRARIES}
-# )
-
-# add_executable(fod_detector 
-# src/fod_detector.cpp
-# src/cad_to_pointcloud.cpp
-# src/viewer.cpp
-# )
-# target_link_libraries(fod_detector
-#   ${catkin_LIBRARIES}
-#   ${PCL_LIBRARIES}
-# )

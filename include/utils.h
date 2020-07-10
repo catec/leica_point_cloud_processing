@@ -27,13 +27,18 @@ class Utils {
         static bool getNormals(PointCloudRGB::Ptr &cloud,
                                double normal_radius,
                                pcl::PointCloud<pcl::Normal>::Ptr &normals);
-        static void cloudToXYZRGB(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
-                                  pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb,
+        static bool isValidCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
+        static bool isValidCloud(PointCloudRGB::Ptr cloud);
+        static bool isValidCloudMsg(sensor_msgs::PointCloud2 cloud_msg);
+        static void colorizeCloud(PointCloudRGB::Ptr cloud_rgb,
                                   int R, int G, int B);
-        static void cloudToROSMsg(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
+        static void cloudToXYZRGB(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+                                  PointCloudRGB::Ptr cloud_rgb,
+                                  int R, int G, int B);
+        static void cloudToROSMsg(PointCloudRGB::Ptr cloud,
                                   sensor_msgs::PointCloud2 &cloud_msg);
         static double computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
-        static double computeCloudResolution(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud);
+        static double computeCloudResolution(PointCloudRGB::Ptr cloud);
         static void printTransform(Eigen::Matrix4f transform);
         static void filterNanValues(PointCloudRGB::Ptr &cloud);
         static void filterNanValues(PointCloudRGB::Ptr &cloud, pcl::PointCloud<pcl::Normal>::Ptr &normals);

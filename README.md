@@ -74,6 +74,10 @@ Meshes and pointclouds are not updated online because they are confidential.
 
         pip3 install python-pcl
 
+6. [leica_scanstation_msgs](https://bitbucket.org/ayr_catec/leica_scanstation_msgs/src/master/)
+
+7. [leica_scanstation_utils](https://bitbucket.org/ayr_catec/leica_scanstation_utils/src/master/)
+
 ## RESULTS
 
 const Eigen::Vector4f downsampling_leaf_size(0.1f, 0.1f, 0.1f, 0.0f);

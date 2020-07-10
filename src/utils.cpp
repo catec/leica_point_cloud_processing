@@ -35,11 +35,38 @@ bool Utils::getNormals(PointCloudRGB::Ptr &cloud,
   return success;
 }
 
-void Utils::cloudToXYZRGB(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
-                          pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb,
+bool Utils::isValidCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
+{
+  if (cloud->size()<=0)
+  {
+    return false;
+  }
+  return true;
+}
+
+bool Utils::isValidCloud(PointCloudRGB::Ptr cloud)
+{
+  if (cloud->size()<=0)
+  {
+    return false;
+  }
+  return true;
+}
+
+bool Utils::isValidCloudMsg(sensor_msgs::PointCloud2 cloud_msg)
+{
+  // int len = sizeof(cloud_msg.data)/sizeof(cloud_msg.data[0]);  // not working
+  int len = cloud_msg.row_step * cloud_msg.height; 
+  if (len == 0)
+  {
+    return false;
+  }
+  return true;
+}
+
+void Utils::colorizeCloud(PointCloudRGB::Ptr cloud_rgb,
                           int R, int G, int B)
 {
-  pcl::copyPointCloud(*cloud, *cloud_rgb);
   for (size_t i = 0; i < cloud_rgb->points.size(); i++)
   {
     cloud_rgb->points[i].r = R;
@@ -48,11 +75,17 @@ void Utils::cloudToXYZRGB(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
   }
 }
 
-void Utils::cloudToROSMsg(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
+void Utils::cloudToXYZRGB(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+                          PointCloudRGB::Ptr cloud_rgb,
+                          int R, int G, int B)
+{
+  pcl::copyPointCloud(*cloud, *cloud_rgb);
+  colorizeCloud(cloud_rgb, R,G,B);
+}
+
+void Utils::cloudToROSMsg(PointCloudRGB::Ptr cloud,
                           sensor_msgs::PointCloud2 &cloud_msg)
 {
-  std::vector<sensor_msgs::PointCloud2> cluster_msg_array;
-
   pcl::toROSMsg(*cloud, cloud_msg);
   cloud_msg.header.frame_id = _frame_id;
   cloud_msg.header.stamp = ros::Time::now();
@@ -89,7 +122,7 @@ double Utils::computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
   return res;
 }
 
-double Utils::computeCloudResolution(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud)
+double Utils::computeCloudResolution(PointCloudRGB::Ptr cloud)
 {
   double res = 0.0;
   int n_points = 0;

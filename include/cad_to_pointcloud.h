@@ -12,12 +12,17 @@
  *      CADToPointCloud cad_to_pointcloud = CADToPointCloud("untitled.obj", pc);
  **/
 
+typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
+
 class CADToPointCloud {
     public:
         CADToPointCloud();
         CADToPointCloud(std::string pointcloud_path,
                         std::string cad_file, 
                         pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud, 
+                        bool big_file);
+        CADToPointCloud(std::string file_path, 
+                        PointCloudRGB::Ptr &cloud, 
                         bool big_file);
         ~CADToPointCloud() {};
 
@@ -27,8 +32,8 @@ class CADToPointCloud {
         std::string _pc_path;
         
         void setPCpath(std::string path);
-        void CADToMesh(std::string filename);
-        void MeshToPointCloud(std::string filename);
-        void MeshToPointCloud(pcl::PolygonMesh mesh);
-        void MeshToROSPointCloud(pcl::PolygonMesh mesh);
+        int CADToMesh(std::string file_path);
+        int MeshToPointCloud(std::string file_path);
+        int MeshToPointCloud(pcl::PolygonMesh mesh);
+        int MeshToROSPointCloud(pcl::PolygonMesh mesh);
 };
