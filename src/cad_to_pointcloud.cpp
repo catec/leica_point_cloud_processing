@@ -22,7 +22,7 @@ CADToPointCloud::CADToPointCloud(std::string pointcloud_path,
 CADToPointCloud::CADToPointCloud(std::string cad_file_path, 
                                  PointCloudRGB::Ptr cloud)
 {    
-    ROS_INFO("Converting file: %s.obj", cad_file_path.c_str());
+    ROS_INFO("Converting file: %s", cad_file_path.c_str());
 
     if (CADToMesh(cad_file_path) == 0) // here we get _CAD_mesh
     {

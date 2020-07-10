@@ -39,7 +39,7 @@ bool serviceCb(leica_scanstation_msgs::PointCloudFile::Request &req,
 {
     ROS_INFO("request to publish clouds");
     LeicaUtils::ptx2pcd(req.file_name); //TODO ESTO NO VA AQUI
-    ros::Duration(1).sleep();
+    ros::Duration(5).sleep();
 
     PointCloudRGB::Ptr cloud(new PointCloudRGB);
     
