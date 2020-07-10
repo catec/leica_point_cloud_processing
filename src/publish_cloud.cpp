@@ -18,15 +18,14 @@ sensor_msgs::PointCloud2 g_cloud_msg, g_cadcloud_msg;
 
 void getCADCloud(std::string file_name)
 {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    CADToPointCloud cad2pc = CADToPointCloud(LeicaUtils::getPointCloudFolder(), file_name, cloud, false);
+    PointCloudRGB::Ptr cloud(new PointCloudRGB);
+    CADToPointCloud cad2pc = CADToPointCloud(LeicaUtils::getFilePath(file_name, ""), cloud);
 
     if(Utils::isValidCloud(cloud))
     {
-        PointCloudRGB::Ptr cloud_rgb(new PointCloudRGB);
-        Utils::cloudToXYZRGB(cloud, cloud_rgb, 0, 0, 255); // cad cloud is blue
+        Utils::colorizeCloud(cloud, 0, 0, 255); // cad cloud is blue
 
-        Utils::cloudToROSMsg(cloud_rgb, g_cadcloud_msg);
+        Utils::cloudToROSMsg(cloud, g_cadcloud_msg);
 
         ROS_INFO("Received cad cloud");
     }

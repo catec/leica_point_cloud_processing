@@ -4,6 +4,10 @@
 #include "pcl_conversions/pcl_conversions.h"
 #include <pcl_ros/point_cloud.h> 
 #include <pcl/io/vtk_lib_io.h>
+#include <pcl/console/parse.h>
+#include <vtkTriangleFilter.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkTriangle.h>
 
 /** Example use:
  *      
@@ -19,11 +23,9 @@ class CADToPointCloud {
         CADToPointCloud();
         CADToPointCloud(std::string pointcloud_path,
                         std::string cad_file, 
-                        pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud, 
-                        bool big_file);
-        CADToPointCloud(std::string file_path, 
-                        PointCloudRGB::Ptr &cloud, 
-                        bool big_file);
+                        pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud);
+        CADToPointCloud(std::string cad_file_path, 
+                        PointCloudRGB::Ptr cloud);
         ~CADToPointCloud() {};
 
         pcl::PolygonMesh _CAD_mesh;
@@ -32,8 +34,16 @@ class CADToPointCloud {
         std::string _pc_path;
         
         void setPCpath(std::string path);
-        int CADToMesh(std::string file_path);
-        int MeshToPointCloud(std::string file_path);
+        int CADToMesh(std::string cad_file_path);
         int MeshToPointCloud(pcl::PolygonMesh mesh);
         int MeshToROSPointCloud(pcl::PolygonMesh mesh);
+
+    private:
+        /* 
+            Copyright of what's below:   pcl / tools / mesh_sampling.cpp
+        */
+        void uniform_sampling(vtkSmartPointer<vtkPolyData> polydata, size_t n_samples, pcl::PointCloud<pcl::PointXYZ> &cloud_out);
+        void randPSurface(vtkPolyData *polydata, std::vector<double> *cumulativeAreas, double totalArea, Eigen::Vector4f &p);    
+        void randomPointTriangle(float a1, float a2, float a3, float b1, float b2, float b3, float c1, float c2, float c3, Eigen::Vector4f &p);
+        double uniform_deviate(int seed);   
 };

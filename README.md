@@ -47,7 +47,7 @@ Meshes and pointclouds are not updated online because they are confidential.
 
         sudo apt-get install libboost1.58* libflann1.8 libeigen3-dev libopenni-dev libopenni2-dev
 
-2. VTK
+2. VTK > 6
 
         wget http://www.vtk.org/files/release/7.1/VTK-7.1.0.tar.gz
         tar -xf VTK-7.1.0.tar.gz
