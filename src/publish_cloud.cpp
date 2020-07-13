@@ -56,7 +56,7 @@ bool serviceCb(leica_scanstation_msgs::PointCloudFile::Request &req,
 
         ROS_INFO("Received scanned cloud");
 
-        getCADCloud(req.file_name + ".obj");
+        getCADCloud(req.cad_file_name + ".obj");
     }
     
     res.message = "Service to receive cloud is correct";

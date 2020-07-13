@@ -4,6 +4,7 @@
 #include <pcl_ros/point_cloud.h>
 #include <cad_to_pointcloud.h>
 #include <utils.h>
+#include "leica_scanstation_utils/LeicaUtils.h"
 
 /**
  * POINTCLOUDS:
@@ -22,8 +23,8 @@ int main(int argc, char** argv)
     pcl::PointCloud<pcl::PointXYZ>::Ptr scan_pc(new pcl::PointCloud<pcl::PointXYZ>);
 
     // PARAMETERS
-    std::string pointcloud_folder_path;
-    if (!nh.getParam("/pointcloud_folder", pointcloud_folder_path))   
+    std::string pc_path;
+    if (!nh.getParam("/pointcloud_folder", pc_path))   
     {
         ROS_ERROR("input_cloud: No pointcloud folder path on Param Server");
         return 0;
@@ -32,8 +33,8 @@ int main(int argc, char** argv)
     // POINTCLOUDS
     // cad_pc is the target pointcloud directly obtain from a part's cad
     // scan_pc is the source pointcloud created on gazebo with leica c5 simulator
-    CADToPointCloud cad_to_pointcloud = CADToPointCloud(pointcloud_folder_path,"conjunto_estranio_cad.obj",cad_pc, false);
-    std::string f = pointcloud_folder_path + "conjunto_estranio_scan.pcd";
+    CADToPointCloud cad2pc = CADToPointCloud(pc_path,"conjunto_estranio_cad.obj",cad_pc);
+    std::string f = pc_path + "conjunto_estranio_scan.pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
 
     // Colorize clouds

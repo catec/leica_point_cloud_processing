@@ -12,34 +12,40 @@ Meshes and pointclouds are not updated online because they are confidential.
 * Clone
 * Compile
 
-## Run order ##
+## Run ##
 
-    rosrun leica_point_cloud_processing_utils main
+    rosrun leica_scanstation main
 
     rosrun leica_point_cloud_processing input_cloud
 
+    rosrun leica_point_cloud_processing node
     
+OR
+
+    rosrun leica_scanstation main
+
+    wineconsole leica_scanstation_sdk_control/release/leica_scanstation_sdk_control_node.exe
+
+    rosrun leica_point_cloud_processing publish_cloud
+
+    rosrun leica_point_cloud_processing node 
+
 
 ## Usage ##
 
-    rosrun leica_point_cloud_processing filter_scan_noise conjunto_estranio_scan 5
+Both clouds should be available in ROS topics: `/cad/cloud` y `/scan/cloud`
 
-    rosrun leica_point_cloud_processing filter_scan_floor conjunto_estranio_scan_no_noise 0.8
+Then, the node starts calculating cloud alignment. After GICP, user could do more iterations
 
-    roslaunch leica_point_cloud_processing align.launch
+    rosservice call /iterate_gicp
 
-    rosrun leica_point_cloud_processing cloud_to_mesh conjunto_estranio_scan_aligned 
+If the results are wrong you can undo the last operation
 
-    rosrun leica_point_cloud_processing differentiate_point_clouds 0.1
+    rosservice call /undo_iteration
 
-## Hacks ##
+When both clouds are finally aligned, ask for the algorithm to look for FODs
 
-    rosrun pcl_ros bag_to_pcd /media/catec/Datos/Bags/rosin_leica/assembly.bag /camera/depth/points /home/catec/catkin_ws/src/leica_point_cloud_processing/pointclouds
-
-    pcl_viewer assembly.pcd
-
-* Downsample pointcloud     -> reduce the number of points of the pc
-* Apply passthrough filter  -> cut off values that are either inside or outside a given range (not useful for now)
+    rosservice call /get_fods
 
 ## Dependencies ##
 
@@ -77,20 +83,6 @@ Meshes and pointclouds are not updated online because they are confidential.
 6. [leica_scanstation_msgs](https://bitbucket.org/ayr_catec/leica_scanstation_msgs/src/master/)
 
 7. [leica_scanstation_utils](https://bitbucket.org/ayr_catec/leica_scanstation_utils/src/master/)
-
-## RESULTS
-
-const Eigen::Vector4f downsampling_leaf_size(0.1f, 0.1f, 0.1f, 0.0f);
-[ 0.5099,  0.5881, -0.6278,  -10.92]
-[-0.8591,  0.3851, -0.3371,   -3.87]
-[0.04355,  0.7112,  0.7016,   -4.63]
-[      0,       0,       0,       1]
-
-const Eigen::Vector4f downsampling_leaf_size(0.05f, 0.05f, 0.05f, 0.0f);
-[ 0.8794, -0.3988,  0.2599,  -10.46]
-[-0.3362, -0.1339,  0.9322, -0.3845]
-[ -0.337, -0.9072, -0.2518,  -0.315]
-[      0,       0,       0,       1]
 
 
 ## Help ##
