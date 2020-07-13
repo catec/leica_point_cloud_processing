@@ -1,13 +1,17 @@
-#include "ros/ros.h"
-#include "ros/package.h"
+// cad_to_pointcloud.h
+#pragma once
+#ifndef _CAD_TO_POINTCLOUD_H
+#define _CAD_TO_POINTCLOUD_H
+
 #include <sensor_msgs/PointCloud2.h>
 #include "pcl_conversions/pcl_conversions.h"
 #include <pcl_ros/point_cloud.h> 
 #include <pcl/io/vtk_lib_io.h>
-#include <pcl/console/parse.h>
 #include <vtkTriangleFilter.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkTriangle.h>
+
+#endif
 
 /** Example use:
  *      

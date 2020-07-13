@@ -1,10 +1,8 @@
-// BooleanDifference.h
+// boolean_difference.h
 #pragma once
-#ifndef _BooleanDifference_H
-#define _BooleanDifference_H
+#ifndef _BOOLEAN_DIFFERENCE_H
+#define _BOOLEAN_DIFFERENCE_H
 
-#include "ros/ros.h"
-#include "ros/package.h"
 #include "pcl_conversions/pcl_conversions.h"
 #include <pcl_ros/point_cloud.h> 
 #include <pcl/octree/octree_pointcloud_changedetector.h>

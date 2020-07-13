@@ -1,12 +1,13 @@
 #include "ros/ros.h"
 #include "ros/package.h"
 #include "std_srvs/Trigger.h"
+#include "std_msgs/Int16.h"
 #include "pcl_conversions/pcl_conversions.h"
 #include <pcl_ros/point_cloud.h>
 #include <cad_to_pointcloud.h>
-// #include <utils.h>
+#include <utils.h>
 #include <filter.h>
-// #include <initial_alignment.h>
+#include <initial_alignment.h>
 #include <gicp_alignment.h>
 #include <boolean_difference.h>
 #include <viewer.h>

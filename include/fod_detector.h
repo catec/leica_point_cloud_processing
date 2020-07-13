@@ -1,21 +1,14 @@
+// fod_detector.h
+#pragma once
+#ifndef _FOD_DETECTOR_H
+#define _FOD_DETECTOR_H
+
 #include <stdlib.h> 
 #include <string>
 #include <pcl_ros/point_cloud.h> 
-// #include "pcl/common/angles.h"
-// #include "pcl/sample_consensus/method_types.h"
-// #include "pcl/sample_consensus/model_types.h"
-// #include <pcl/filters/crop_box.h>
-// #include <pcl/surface/organized_fast_mesh.h>
-// #include <pcl/features/normal_3d.h>
-// #include <pcl/surface/mls.h>
-// #include <pcl/io/pcd_io.h>
-// #include <pcl/surface/gp3.h>
-// #include <pcl_ros/point_cloud.h> 
-// #include <pcl/filters/extract_indices.h>
-// #include <pcl/octree/octree_pointcloud_changedetector.h>
 #include <pcl/segmentation/extract_clusters.h>
-#include <std_msgs/Int16.h>
-#include <viewer.h>
+
+#endif
 
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 

@@ -1,5 +1,8 @@
-#include "ros/ros.h"
-#include "ros/package.h"
+// initial_alignment.h
+#pragma once
+#ifndef _INITIAL_ALIGNMENT_H
+#define _INITIAL_ALIGNMENT_H
+
 #include "pcl_conversions/pcl_conversions.h"
 #include <pcl_ros/point_cloud.h> 
 #include <pcl/features/fpfh.h>
@@ -11,6 +14,8 @@
 #include <pcl/registration/correspondence_rejection_sample_consensus.h>
 #include <pcl/registration/transformation_estimation_svd.h>
 #include <utils.h>
+
+#endif
 
 /**
  * POINTCLOUDS:

@@ -1,18 +1,16 @@
-#include "ros/ros.h"
-#include "ros/package.h"
+// gicp_alignment.h
+#pragma once
+#ifndef _GCIP_ALIGNMENT_H
+#define _GCIP_ALIGNMENT_H
+
 #include "pcl_conversions/pcl_conversions.h"
 #include <pcl_ros/point_cloud.h> 
-// #include <pcl/features/fpfh.h>
-// #include <pcl/features/multiscale_feature_persistence.h>
-// #include <pcl/features/normal_3d.h>
 #include <pcl/features/from_meshes.h>
 #include <pcl/filters/extract_indices.h>
-// #include <pcl/filters/voxel_grid.h>
-// #include <pcl/registration/correspondence_estimation.h>
-// #include <pcl/registration/correspondence_rejection_sample_consensus.h>
-// #include <pcl/registration/transformation_estimation_svd.h>
 #include <pcl/registration/gicp.h>
 #include <utils.h>
+
+#endif
 
 /**
  * POINTCLOUDS:

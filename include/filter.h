@@ -1,3 +1,8 @@
+// filter.h
+#pragma once
+#ifndef _FILTER_H
+#define _FILTER_H
+
 #include "ros/ros.h"
 #include "ros/package.h"
 #include <pcl_ros/point_cloud.h> 
@@ -5,11 +10,11 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/crop_box.h>
-#include <pcl/search/kdtree.h>
 #include "pcl/common/angles.h"
 #include "pcl/segmentation/sac_segmentation.h"
-// #include <utils.h>
-#include <initial_alignment.h>
+#include <utils.h>
+
+#endif
 
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
