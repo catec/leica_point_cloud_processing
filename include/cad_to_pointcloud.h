@@ -3,9 +3,9 @@
 #ifndef _CAD_TO_POINTCLOUD_H
 #define _CAD_TO_POINTCLOUD_H
 
+#include <utils.h>
+
 #include <sensor_msgs/PointCloud2.h>
-#include "pcl_conversions/pcl_conversions.h"
-#include <pcl_ros/point_cloud.h> 
 #include <pcl/io/vtk_lib_io.h>
 #include <vtkTriangleFilter.h>
 #include <vtkPolyDataMapper.h>

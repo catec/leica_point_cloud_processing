@@ -70,10 +70,7 @@ void GICPAlignment::getCovariances(PointCloudRGB::Ptr cloud,
     boost::shared_ptr<std::vector<int> > indices(new std::vector<int>); // Interest points
     pcl::removeNaNFromPointCloud(*cloud,*cloud,*indices);
     pcl::removeNaNNormalsFromPointCloud(*normals,*normals,*indices);
-    pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_filter;
-    extract_indices_filter.setInputCloud(cloud);
-    extract_indices_filter.setIndices(indices);
-    extract_indices_filter.filter(*cloud);
+    Utils::indicesFilter(cloud, cloud, indices);
 
     // get covariances
     pcl::features::computeApproximateCovariances(*cloud, *normals, *covs);

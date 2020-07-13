@@ -1,18 +1,15 @@
-#include "ros/ros.h"
-#include "ros/package.h"
-#include "std_srvs/Trigger.h"
-#include "std_msgs/Int16.h"
-#include "pcl_conversions/pcl_conversions.h"
-#include <pcl_ros/point_cloud.h>
-#include <cad_to_pointcloud.h>
 #include <utils.h>
+
+#include <cad_to_pointcloud.h>
 #include <filter.h>
 #include <initial_alignment.h>
 #include <gicp_alignment.h>
 #include <boolean_difference.h>
-#include <viewer.h>
 #include <fod_detector.h>
+// #include <viewer.h>
 
+#include "std_srvs/Trigger.h"
+#include "std_msgs/Int16.h"
 
 /**
  * POINTCLOUDS:
@@ -74,13 +71,11 @@ void cadCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
         ROS_INFO("Get CAD cloud");
         // Save cloud
         pcl::fromROSMsg(*msg, *g_cad_pc);
-        new_cad_pc = true;
 
-        if (g_cad_pc->size()<=0)
-        {
+        if (Utils::isValidCloud(g_cad_pc))
+            new_cad_pc = true;
+        else
             ROS_ERROR("Error loading CAD cloud from %s",TARGET_CLOUD_TOPIC.c_str());
-            new_scan_pc = false;
-        }
     }
 }
 
@@ -93,7 +88,7 @@ void scanCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
         pcl::fromROSMsg(*msg, *g_scan_pc);
         new_scan_pc = true;
 
-        if (g_scan_pc->size()<=0)
+        if (Utils::isValidCloud(g_scan_pc))
         {
             ROS_ERROR("Error loading SCAN cloud from %s",SOURCE_CLOUD_TOPIC.c_str());
             new_scan_pc = false;
@@ -208,7 +203,6 @@ int main(int argc, char** argv)
                     {
                         PointCloudRGB::Ptr scan_pc_substracted(new PointCloudRGB);
                         boolean_difference.getResultCloud(scan_pc_substracted);
-                        Viewer::visualizePointCloud<pcl::PointXYZRGB>(scan_pc_substracted);
                     
                         FODDetector fod_detector(boolean_difference.getVoxelResolution());
                         std::vector<pcl::PointIndices> cluster_indices; //This is a vector of cluster

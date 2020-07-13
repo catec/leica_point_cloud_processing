@@ -57,10 +57,11 @@ void BooleanDifference::setOctreeAndGetIndices(PointCloudRGB::Ptr cloud_to_subst
 int BooleanDifference::computeResultCloud()
 {
   PointCloudRGB::Ptr result_cloud(new PointCloudRGB);
-  pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_filter;
-  extract_indices_filter.setInputCloud(_cloud);
-  extract_indices_filter.setIndices(_diff_indices);
-  extract_indices_filter.filter(*result_cloud);
+  Utils::indicesFilter(_cloud, result_cloud, _diff_indices);
+  // pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_filter;
+  // extract_indices_filter.setInputCloud(_cloud);
+  // extract_indices_filter.setIndices(_diff_indices);
+  // extract_indices_filter.filter(*result_cloud);
 
   if (result_cloud->size() <= 0)
   {

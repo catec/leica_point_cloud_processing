@@ -1,9 +1,10 @@
+#include <utils.h>
+
 #include "ros/ros.h"
 #include "ros/package.h"
 #include "pcl_conversions/pcl_conversions.h"
 #include <pcl_ros/point_cloud.h>
 #include <cad_to_pointcloud.h>
-#include <utils.h>
 #include "leica_scanstation_utils/LeicaUtils.h"
 
 /**
@@ -33,9 +34,10 @@ int main(int argc, char** argv)
     // POINTCLOUDS
     // cad_pc is the target pointcloud directly obtain from a part's cad
     // scan_pc is the source pointcloud created on gazebo with leica c5 simulator
-    CADToPointCloud cad2pc = CADToPointCloud(pc_path,"conjunto_estranio_cad.obj",cad_pc);
-    std::string f = pc_path + "conjunto_estranio_scan.pcd";
+    CADToPointCloud cad2pc = CADToPointCloud(pc_path,"cajon_tumbado1.obj",cad_pc);
+    std::string f = pc_path + "cajon_tumbado1.pcd";
     pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
+    
 
     // Colorize clouds
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cad_pc_rgb(new pcl::PointCloud<pcl::PointXYZRGB>);

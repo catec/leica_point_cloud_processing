@@ -3,12 +3,11 @@
 #ifndef _BOOLEAN_DIFFERENCE_H
 #define _BOOLEAN_DIFFERENCE_H
 
-#include "pcl_conversions/pcl_conversions.h"
-#include <pcl_ros/point_cloud.h> 
-#include <pcl/octree/octree_pointcloud_changedetector.h>
-#include <pcl/filters/extract_indices.h>
 
 #include <utils.h>
+
+#include <pcl/octree/octree_pointcloud_changedetector.h>
+
 
 #endif 
 

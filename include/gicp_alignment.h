@@ -3,12 +3,10 @@
 #ifndef _GCIP_ALIGNMENT_H
 #define _GCIP_ALIGNMENT_H
 
-#include "pcl_conversions/pcl_conversions.h"
-#include <pcl_ros/point_cloud.h> 
-#include <pcl/features/from_meshes.h>
-#include <pcl/filters/extract_indices.h>
-#include <pcl/registration/gicp.h>
 #include <utils.h>
+
+#include <pcl/features/from_meshes.h>
+#include <pcl/registration/gicp.h>
 
 #endif
 

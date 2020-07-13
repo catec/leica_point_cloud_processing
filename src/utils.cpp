@@ -159,6 +159,15 @@ void Utils::printTransform(Eigen::Matrix4f transform)
   std::cout << transform.format(CleanFmt) << std::endl;
 }
 
+void Utils::indicesFilter(PointCloudRGB::Ptr cloud_in,
+                          PointCloudRGB::Ptr cloud_out, 
+                          boost::shared_ptr<std::vector<int> >  indices)
+{
+    pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_filter;
+    extract_indices_filter.setInputCloud(cloud_in);
+    extract_indices_filter.setIndices(indices);
+    extract_indices_filter.filter(*cloud_out);
+}
 
 // Initialization
 std::string Utils::_frame_id = "world";

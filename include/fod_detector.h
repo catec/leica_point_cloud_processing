@@ -3,9 +3,10 @@
 #ifndef _FOD_DETECTOR_H
 #define _FOD_DETECTOR_H
 
+#include <utils.h>
+
 #include <stdlib.h> 
 #include <string>
-#include <pcl_ros/point_cloud.h> 
 #include <pcl/segmentation/extract_clusters.h>
 
 #endif

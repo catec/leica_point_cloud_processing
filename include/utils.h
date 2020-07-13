@@ -8,6 +8,7 @@
 #include "pcl_conversions/pcl_conversions.h"
 #include <pcl_ros/point_cloud.h> 
 #include <pcl/features/normal_3d.h>
+#include <pcl/filters/extract_indices.h>
 
 #endif 
 
@@ -42,4 +43,7 @@ class Utils {
         static void printTransform(Eigen::Matrix4f transform);
         static void filterNanValues(PointCloudRGB::Ptr &cloud);
         static void filterNanValues(PointCloudRGB::Ptr &cloud, pcl::PointCloud<pcl::Normal>::Ptr &normals);
+        static void indicesFilter(PointCloudRGB::Ptr cloud_in,
+                                  PointCloudRGB::Ptr cloud_out, 
+                                  boost::shared_ptr<std::vector<int> > indices);
 };

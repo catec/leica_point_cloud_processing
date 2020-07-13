@@ -123,10 +123,11 @@ void InitialAlignment::getKeypointsAndFeatures(PointCloudRGB::Ptr cloud,
     // ROS_INFO("keypoints: %zu", keypoints->size());   
     bool success = keypoints->size()==features->size() ? true : false;
 
-    pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_filter;
-    extract_indices_filter.setInputCloud(cloud);
-    extract_indices_filter.setIndices(keypoints);
-    extract_indices_filter.filter(*keypoints_cloud);
+    Utils::indicesFilter(cloud, keypoints_cloud, keypoints);
+    // pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_filter;
+    // extract_indices_filter.setInputCloud(cloud);
+    // extract_indices_filter.setIndices(keypoints);
+    // extract_indices_filter.filter(*keypoints_cloud);
 }
 
 
