@@ -32,7 +32,7 @@ void BooleanDifference::getResultCloud(PointCloudRGB::Ptr result_cloud)
 void BooleanDifference::computeResolution(PointCloudRGB::Ptr cloud)
 {
   double res = Utils::computeCloudResolution(cloud);
-  _voxel_resolution = res * 3; // 6 times higher to cover more than two neighbors
+  _voxel_resolution = res * 3; // 3 times higher to cover more than two neighbors
   ROS_INFO("Voxelize octree with resolution: %f", _voxel_resolution);
 }
 

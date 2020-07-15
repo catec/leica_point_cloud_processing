@@ -81,7 +81,8 @@ int CADToPointCloud::MeshToPointCloud(pcl::PolygonMesh mesh)
 int CADToPointCloud::MeshToROSPointCloud(pcl::PolygonMesh mesh)
 {
     pcl_conversions::fromPCL( mesh.cloud, _CAD_cloud_msg);
-    // TODO: add frame id and timestamp
+    _CAD_cloud_msg.header.frame_id = Utils::_frame_id;
+    _CAD_cloud_msg.header.stamp = ros::Time::now();
 
     return 0;
 }
