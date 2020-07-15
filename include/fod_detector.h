@@ -11,20 +11,50 @@
 
 #endif
 
-typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
-
 class FODDetector 
 {
-    public:
-        FODDetector(double resolution);
-        ~FODDetector() {};
 
-        void clusterPossibleFODs(PointCloudRGB::Ptr cloud,
-                                 std::vector<pcl::PointIndices> &cluster_indices);
-        int clusterIndicesToROSMsg(std::vector<pcl::PointIndices> cluster_indices,
-                                   PointCloudRGB::Ptr cloud,
-                                   std::vector<sensor_msgs::PointCloud2> &cluster_msg_array);
+typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
-    private:
-        double _voxel_resolution;
+public:
+
+    /**
+     * @brief Construct a new FODDetector object with given resolution.
+     * 
+     * @param resolution 
+     */
+    FODDetector(double resolution);
+
+    /**
+     * @brief Destroy the FODDetector object
+     * 
+     */
+    ~FODDetector() {};
+
+    /**
+     * @brief Extract cluster indices from input cloud with resolution set. Each cluster is a possible FOD.
+     * 
+     * @param[in] cloud 
+     * @param[out] cluster_indices 
+     */
+    void clusterPossibleFODs(PointCloudRGB::Ptr cloud,
+                             std::vector<pcl::PointIndices> &cluster_indices);
+
+    /**
+     * @brief Save each cluster (possible FOD) in a PointCloud2 msg. Return an array of all generated msgs.
+     *        \n Returns the number of possible FODs.
+     * 
+     * @param[in] cluster_indices 
+     * @param[in] cloud 
+     * @param[out] cluster_msg_array 
+     * @return int number_of_fod
+     */
+    int clusterIndicesToROSMsg(std::vector<pcl::PointIndices> cluster_indices,
+                               PointCloudRGB::Ptr cloud,
+                               std::vector<sensor_msgs::PointCloud2> &cluster_msg_array);
+
+private:
+
+    /** @brief Resolution to set as cluster Tolerance. */
+    double _voxel_resolution;
 };
