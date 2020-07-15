@@ -14,7 +14,7 @@ Meshes and pointclouds are not updated online because they are confidential.
 
 ## Run ##
 
-    rosrun leica_scanstation main
+    rosrun leica_scanstation_utils main
 
     rosrun leica_point_cloud_processing input_cloud
 

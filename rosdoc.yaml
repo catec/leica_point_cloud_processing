@@ -1,0 +1,5 @@
+ - builder: doxygen
+   name: leica_point_cloud_processing
+  #  output_dir: doc
+   file_patterns: '*.c *.cpp *.h *.hpp'
+   exclude_patterns: '*/scripts*'

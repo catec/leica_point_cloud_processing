@@ -68,13 +68,13 @@ target_link_libraries(publish_cloud
 )
 
 
-# add_executable(input_cloud 
-# src/input_cloud.cpp
-# src/cad_to_pointcloud.cpp
-# )
+add_executable(input_cloud 
+src/input_cloud.cpp
+src/cad_to_pointcloud.cpp
+)
 
-# target_link_libraries(input_cloud
-#   ${catkin_LIBRARIES}
-#   ${PCL_LIBRARIES}
-#   ${PROJECT_NAME}
-# )
+target_link_libraries(input_cloud
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${PROJECT_NAME}
+)
