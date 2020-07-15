@@ -4,17 +4,17 @@
 CADToPointCloud::CADToPointCloud()
 {}
 
-CADToPointCloud::CADToPointCloud(std::string pointcloud_path, 
+CADToPointCloud:: CADToPointCloud(std::string cad_path, 
                                  std::string cad_file, 
-                                 pcl::PointCloud<pcl::PointXYZ>::Ptr &pointcloud)
+                                 pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud)
 {    
-    setPCpath(pointcloud_path);
+    setPCpath(cad_path);
 
-    if (CADToMesh(cad_file) == 0) // here we get _CAD_mesh
+    if (CADToMesh(cad_path+cad_file) == 0) // here we get _CAD_mesh
     {
         if(MeshToPointCloud(_CAD_mesh)==0) // here we get _CAD_cloud
         {
-            pointcloud = _CAD_cloud;
+            cloud = _CAD_cloud;
         } 
     } 
 }
@@ -81,9 +81,8 @@ int CADToPointCloud::MeshToPointCloud(pcl::PolygonMesh mesh)
 int CADToPointCloud::MeshToROSPointCloud(pcl::PolygonMesh mesh)
 {
     pcl_conversions::fromPCL( mesh.cloud, _CAD_cloud_msg);
+    // TODO: add frame id and timestamp
 
-    // Hay una función de pcl_ros muy util:
-    // rosrun pcl_ros pcd_to_pointcloud input.pcd periodo _frame_id:=/world
     return 0;
 }
 

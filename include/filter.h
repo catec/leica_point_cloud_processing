@@ -76,8 +76,8 @@ public:
 
     /**
      * @brief Downsample cloud. 
-     *        If noise threshold is specified, filter noise in cloud.
-     *        If floor threshold is specified, search the floor and remove it from cloud.
+     *        \n If noise threshold is specified, filter noise in cloud.
+     *        \n If floor threshold is specified, search the floor and remove it from cloud.
      * 
      * @param[in] cloud 
      * @param[out] cloud_filtered 
@@ -97,7 +97,7 @@ private:
 
     /**
      * @brief Apply _noise_filter_threshold to filter noise in cloud.
-     *        everything out of a box with given size (threshold) is consider noise.
+     *        \n Everything out of a box with given size (threshold) is consider noise.
      * 
      * @param[in] threshold 
      * @param[in] cloud 
@@ -107,7 +107,7 @@ private:
 
     /**
      * @brief Apply _floor_filter_threshold to search floor in cloud and filter it.
-     *        floor is consider a plane perpendicular to z axis.
+     *        \n Floor is consider a plane perpendicular to z axis.
      * 
      * @param[in] threshold 
      * @param[in] cloud 
