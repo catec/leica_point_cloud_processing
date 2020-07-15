@@ -1,17 +1,8 @@
 #include <utils.h>
 
-Utils::Utils()
+void Utils::setPCpath(std::string pointcloud_folder_path)
 {
-  _pc_path = getPCpath();
-  _frame_id = "world";
-}
-
-std::string Utils::getPCpath()
-{
-  std::string pkg_path = ros::package::getPath("leica_point_cloud_processing");
-
-  _pc_path = pkg_path + "/pointclouds/";
-  return _pc_path;
+  _pc_path = pointcloud_folder_path;
 }
 
 bool Utils::getNormals(PointCloudRGB::Ptr &cloud,
@@ -170,4 +161,5 @@ void Utils::indicesFilter(PointCloudRGB::Ptr cloud_in,
 }
 
 // Initialization
+std::string Utils::_pc_path = "";
 std::string Utils::_frame_id = "world";

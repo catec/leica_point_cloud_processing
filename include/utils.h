@@ -1,4 +1,14 @@
-// utils.h
+/**
+ * @file utils.h
+ * @author Ines Lara (imlara@catec.aero)
+ * @brief useful functions for point cloud processing
+ * @version 0.1
+ * @date 2020-07-14
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 #pragma once
 #ifndef _UTILS_H
 #define _UTILS_H
@@ -12,38 +22,152 @@
 
 #endif 
 
+
+class Utils {
+
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
 
-class Utils {
-    public:
-        Utils();
-        ~Utils() {};
+private:
 
-        std::string _pc_path;
-        
-        static std::string _frame_id;
+    /**
+     * @brief This class is not meant to be instantiated.
+     * 
+     */
+    Utils() {};
 
-        std::string getPCpath();
-        static bool getNormals(PointCloudRGB::Ptr &cloud,
-                               double normal_radius,
-                               pcl::PointCloud<pcl::Normal>::Ptr &normals);
-        static bool isValidCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
-        static bool isValidCloud(PointCloudRGB::Ptr cloud);
-        static bool isValidCloudMsg(sensor_msgs::PointCloud2 cloud_msg);
-        static void colorizeCloud(PointCloudRGB::Ptr cloud_rgb,
-                                  int R, int G, int B);
-        static void cloudToXYZRGB(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
-                                  PointCloudRGB::Ptr cloud_rgb,
-                                  int R, int G, int B);
-        static void cloudToROSMsg(PointCloudRGB::Ptr cloud,
-                                  sensor_msgs::PointCloud2 &cloud_msg);
-        static double computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
-        static double computeCloudResolution(PointCloudRGB::Ptr cloud);
-        static void printTransform(Eigen::Matrix4f transform);
-        static void filterNanValues(PointCloudRGB::Ptr &cloud);
-        static void filterNanValues(PointCloudRGB::Ptr &cloud, pcl::PointCloud<pcl::Normal>::Ptr &normals);
-        static void indicesFilter(PointCloudRGB::Ptr cloud_in,
-                                  PointCloudRGB::Ptr cloud_out, 
-                                  boost::shared_ptr<std::vector<int> > indices);
+    /**
+     * @brief This class is not meant to be instantiated.
+     * 
+     */
+    ~Utils() {};
+
+
+public:
+
+    /**
+     * @brief If set, point to specified pointcloud folder.
+     * 
+     */
+    static std::string _pc_path;
+    
+    /**
+     * @brief frame_id to add in PointCloud2. Default to "/world".
+     * 
+     */
+    static std::string _frame_id;
+
+    /**
+     * @brief Set the pointcloud folder path object.
+     * 
+     * @param pointcloud_folder_path 
+     */
+    static void setPCpath(std::string pointcloud_folder_path);
+
+    /**
+     * @brief Get the normals for input cloud with specified normal's radius.
+     * 
+     * @param[in] cloud 
+     * @param[in] normal_radius 
+     * @param[out] normals 
+     * @return true 
+     * @return false 
+     */
+    static bool getNormals(PointCloudRGB::Ptr &cloud,
+                            double normal_radius,
+                            pcl::PointCloud<pcl::Normal>::Ptr &normals);
+
+    /**
+     * @brief Check whether cloud contains data and is not empty.
+     * 
+     * @param cloud 
+     * @return true 
+     * @return false 
+     */
+    static bool isValidCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
+
+    /**
+     * @brief Check whether cloud contains data and is not empty.
+     * 
+     * @param cloud 
+     * @return true 
+     * @return false 
+     */
+    static bool isValidCloud(PointCloudRGB::Ptr cloud);
+
+    /**
+     * @brief Check whether PointCloud2 contains data and is not empty.
+     * 
+     * @param cloud_msg 
+     * @return true 
+     * @return false 
+     */
+    static bool isValidCloudMsg(sensor_msgs::PointCloud2 cloud_msg);
+
+    /**
+     * @brief Apply RGB values to cloud. 
+     * 
+     * @param[in-out] cloud_rgb 
+     * @param R 0~255
+     * @param G 0~255
+     * @param B 0~255
+     */
+    static void colorizeCloud(PointCloudRGB::Ptr cloud_rgb,
+                                int R, int G, int B);
+    
+    /**
+     * @brief Convert XYZ cloud to XYZRGB cloud with specified RGB values.
+     * 
+     * @param[in] cloud 
+     * @param R 0~255
+     * @param G 0~255
+     * @param B 0~255
+     * @param[out] cloud_rgb 
+     */
+    static void cloudToXYZRGB(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+                                PointCloudRGB::Ptr cloud_rgb,
+                                int R, int G, int B);
+
+    /**
+     * @brief Convert XYZRGB cloud to PointCloud2.
+     * 
+     * @param[in] cloud 
+     * @param[out] cloud_msg 
+     */
+    static void cloudToROSMsg(PointCloudRGB::Ptr cloud,
+                                sensor_msgs::PointCloud2 &cloud_msg);
+
+    /**
+     * @brief Obtain the resolution of the cloud.
+     * 
+     * @param cloud 
+     * @return double 
+     */
+    static double computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
+
+    /**
+     * @brief Obtain the resolution of the cloud.
+     * 
+     * @param cloud 
+     * @return double 
+     */
+    static double computeCloudResolution(PointCloudRGB::Ptr cloud);
+
+    /**
+     * @brief Print on console transform values with matrix format.
+     * 
+     * @param transform 
+     */
+    static void printTransform(Eigen::Matrix4f transform);
+
+    /**
+     * @brief Apply extract indices filter to input cloud with given indices.
+     * 
+     * @param[in] cloud_in 
+     * @param[in] indices 
+     * @param[out] cloud_out 
+     */
+    static void indicesFilter(PointCloudRGB::Ptr cloud_in,
+                                PointCloudRGB::Ptr cloud_out, 
+                                boost::shared_ptr<std::vector<int> > indices);
 };
