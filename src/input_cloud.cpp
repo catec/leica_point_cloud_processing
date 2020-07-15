@@ -7,6 +7,8 @@
 #include <cad_to_pointcloud.h>
 #include "leica_scanstation_utils/LeicaUtils.h"
 
+typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
+
 /**
  * POINTCLOUDS:
     - target pointcloud: directly obtain from downsampling a part's cad

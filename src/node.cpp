@@ -11,6 +11,8 @@
 #include "std_srvs/Trigger.h"
 #include "std_msgs/Int16.h"
 
+typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
+
 /**
  * POINTCLOUDS:
     - target pointcloud: directly obtain from downsampling a part's cad

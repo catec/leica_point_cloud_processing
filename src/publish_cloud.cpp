@@ -5,6 +5,7 @@
 
 #include <cad_to_pointcloud.h>
 
+typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
 int FREQ = 1; // Hz
 
