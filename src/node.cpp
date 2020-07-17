@@ -88,13 +88,11 @@ void scanCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
         ROS_INFO("Get SCAN cloud");
         // Save cloud
         pcl::fromROSMsg(*msg, *g_scan_pc);
-        new_scan_pc = true;
-
+        
         if (Utils::isValidCloud(g_scan_pc))
-        {
-            ROS_ERROR("Error loading SCAN cloud from %s",SOURCE_CLOUD_TOPIC.c_str());
-            new_scan_pc = false;
-        }
+            new_scan_pc = true;
+        else
+            ROS_ERROR("Error loading CAD cloud from %s",TARGET_CLOUD_TOPIC.c_str());
     }
 }
 
