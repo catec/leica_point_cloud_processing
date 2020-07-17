@@ -34,9 +34,6 @@ bool serviceCb(leica_scanstation_msgs::PointCloudFile::Request &req,
                leica_scanstation_msgs::PointCloudFile::Response &res)
 {
     ROS_INFO("request to publish clouds");
-    LeicaUtils::ptx2pcd(req.file_name); //TODO ESTO NO VA AQUI
-    ros::Duration(5).sleep();
-
     PointCloudRGB::Ptr cloud(new PointCloudRGB);
     
     std::string f = LeicaUtils::getFilePath(req.file_name, ".pcd");
