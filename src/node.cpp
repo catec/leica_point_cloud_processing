@@ -23,13 +23,13 @@ std::string TARGET_CLOUD_TOPIC = "/cad/cloud";
 std::string SOURCE_CLOUD_TOPIC = "/scan/cloud";
 
 // Pointclouds
-PointCloudRGB::Ptr g_cad_pc(new PointCloudRGB);
-PointCloudRGB::Ptr g_scan_pc(new PointCloudRGB);
+PointCloudRGB::Ptr g_cad_cloud(new PointCloudRGB);
+PointCloudRGB::Ptr g_scan_cloud(new PointCloudRGB);
 
 
 // Flags to control program flow
-bool new_cad_pc = false;
-bool new_scan_pc = false;
+bool new_cad_cloud = false;
+bool new_scan_cloud = false;
 bool iterate = false;
 bool undo_last_iteration = false;
 bool get_fods = false;
@@ -68,14 +68,14 @@ bool fodsCb(std_srvs::Trigger::Request  &req,
 
 void cadCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
-    if (!new_cad_pc)
+    if (!new_cad_cloud)
     {
         ROS_INFO("Get CAD cloud");
         // Save cloud
-        pcl::fromROSMsg(*msg, *g_cad_pc);
+        pcl::fromROSMsg(*msg, *g_cad_cloud);
 
-        if (Utils::isValidCloud(g_cad_pc))
-            new_cad_pc = true;
+        if (Utils::isValidCloud(g_cad_cloud))
+            new_cad_cloud = true;
         else
             ROS_ERROR("Error loading CAD cloud from %s",TARGET_CLOUD_TOPIC.c_str());
     }
@@ -83,14 +83,14 @@ void cadCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
 
 void scanCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
-    if (!new_scan_pc)
+    if (!new_scan_cloud)
     {
         ROS_INFO("Get SCAN cloud");
         // Save cloud
-        pcl::fromROSMsg(*msg, *g_scan_pc);
+        pcl::fromROSMsg(*msg, *g_scan_cloud);
         
-        if (Utils::isValidCloud(g_scan_pc))
-            new_scan_pc = true;
+        if (Utils::isValidCloud(g_scan_cloud))
+            new_scan_cloud = true;
         else
             ROS_ERROR("Error loading CAD cloud from %s",TARGET_CLOUD_TOPIC.c_str());
     }
@@ -113,9 +113,9 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    PointCloudRGB::Ptr cad_pc_filtered(new PointCloudRGB);
-    PointCloudRGB::Ptr scan_pc_filtered(new PointCloudRGB);
-    PointCloudRGB::Ptr scan_pc_aligned(new PointCloudRGB);
+    PointCloudRGB::Ptr cad_cloud_filtered(new PointCloudRGB);
+    PointCloudRGB::Ptr scan_cloud_filtered(new PointCloudRGB);
+    PointCloudRGB::Ptr scan_cloud_aligned(new PointCloudRGB);
 
     sensor_msgs::PointCloud2 cad_cloud_msg, scan_cloud_msg;
     std::vector<sensor_msgs::PointCloud2> cluster_msg_array;
@@ -132,27 +132,27 @@ int main(int argc, char** argv)
 
     while(ros::ok())
     {
-        if (new_cad_pc && new_scan_pc)
+        if (new_cad_cloud && new_scan_cloud)
         {
             ROS_INFO("Process started");
 
             // Filter clouds
             Filter cad_cloud_filter(0.05);
             Filter scan_cloud_filter(0.05, 10, 0.8);
-            cad_cloud_filter.run(g_cad_pc, cad_pc_filtered);
-            scan_cloud_filter.run(g_scan_pc, scan_pc_filtered);
+            cad_cloud_filter.run(g_cad_cloud, cad_cloud_filtered);
+            scan_cloud_filter.run(g_scan_cloud, scan_cloud_filtered);
             
             // Get initial alignment
-            InitialAlignment initial_alignment(cad_pc_filtered, scan_pc_filtered);
+            InitialAlignment initial_alignment(cad_cloud_filtered, scan_cloud_filtered);
             initial_alignment.run();
             Utils::printTransform(initial_alignment.getRigidTransform());
-            initial_alignment.getAlignedCloud(scan_pc_aligned);
+            initial_alignment.getAlignedCloud(scan_cloud_aligned);
 
             // Get fine alignment
-            GICPAlignment gicp_alignment(cad_pc_filtered, scan_pc_aligned);
+            GICPAlignment gicp_alignment(cad_cloud_filtered, scan_cloud_aligned);
             gicp_alignment.run();
             Utils::printTransform(gicp_alignment.getFineTransform());
-            gicp_alignment.getAlignedCloud(scan_pc_aligned);
+            gicp_alignment.getAlignedCloud(scan_cloud_aligned);
             ROS_INFO("Updated transform:");
             final_transform = gicp_alignment.getFineTransform() * initial_alignment.getRigidTransform();
             Utils::printTransform(final_transform);
@@ -163,15 +163,15 @@ int main(int argc, char** argv)
             ros::ServiceServer fods_service = nh.advertiseService("get_fods", fodsCb);
 
             // Convert to ROS data type
-            Utils::cloudToROSMsg(cad_pc_filtered, cad_cloud_msg);
-            Utils::cloudToROSMsg(scan_pc_aligned, scan_cloud_msg); 
+            Utils::cloudToROSMsg(cad_cloud_filtered, cad_cloud_msg);
+            Utils::cloudToROSMsg(scan_cloud_aligned, scan_cloud_msg); 
 
             ROS_INFO("input_cloud: Publishing clouds on topics: \n\t\t\t\t/cad/cloud_filtered \n\t\t\t\t/scan/cloud_aligned");
 
             bool publish_fods = false;
             int num_of_fods = 0;
             
-            while(new_cad_pc && new_scan_pc && ros::ok())
+            while(new_cad_cloud && new_scan_cloud && ros::ok())
             {
                 // Publish the data
                 cad_pub.publish(cad_cloud_msg);
@@ -196,20 +196,20 @@ int main(int argc, char** argv)
 
                 if (get_fods)
                 {
-                    gicp_alignment.getAlignedCloud(scan_pc_aligned);
-                    BooleanDifference boolean_difference(scan_pc_aligned);
-                    boolean_difference.substract(cad_pc_filtered);
+                    gicp_alignment.getAlignedCloud(scan_cloud_aligned);
+                    BooleanDifference boolean_difference(scan_cloud_aligned);
+                    boolean_difference.substract(cad_cloud_filtered);
                     if (!boolean_difference.substract_error)
                     {
-                        PointCloudRGB::Ptr scan_pc_substracted(new PointCloudRGB);
-                        boolean_difference.getResultCloud(scan_pc_substracted);
+                        PointCloudRGB::Ptr scan_cloud_substracted(new PointCloudRGB);
+                        boolean_difference.getResultCloud(scan_cloud_substracted);
                     
                         FODDetector fod_detector(boolean_difference.getVoxelResolution());
                         std::vector<pcl::PointIndices> cluster_indices; //This is a vector of cluster
-                        fod_detector.clusterPossibleFODs(scan_pc_substracted, cluster_indices);
+                        fod_detector.clusterPossibleFODs(scan_cloud_substracted, cluster_indices);
 
                         // iterate through cluster_indices to create a pc for each cluster
-                        num_of_fods = fod_detector.clusterIndicesToROSMsg(cluster_indices, scan_pc_substracted, cluster_msg_array);
+                        num_of_fods = fod_detector.clusterIndicesToROSMsg(cluster_indices, scan_cloud_substracted, cluster_msg_array);
                         n_fods_msg.data = num_of_fods;
                         ROS_INFO("Detected %d objects",num_of_fods);
                 
@@ -236,8 +236,8 @@ int main(int argc, char** argv)
                     }
                     npub.publish(n_fods_msg);
 
-                    new_cad_pc  = false; // TODO ESTO NO VA AQUI DEBE HABER ALGO Q LO ACTIVE
-                    new_scan_pc = false;
+                    new_cad_cloud  = false; // TODO ESTO NO VA AQUI DEBE HABER ALGO Q LO ACTIVE
+                    new_scan_cloud = false;
                 }
 
                 ros::spinOnce();

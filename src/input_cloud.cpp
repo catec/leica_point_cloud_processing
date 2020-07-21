@@ -22,8 +22,8 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "input_cloud");
     ros::NodeHandle nh;
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cad_pc(new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr scan_pc(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cad_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr scan_cloud(new pcl::PointCloud<pcl::PointXYZ>);
 
     // PARAMETERS
     std::string pc_path;
@@ -34,18 +34,18 @@ int main(int argc, char** argv)
     }
 
     // POINTCLOUDS
-    // cad_pc is the target pointcloud directly obtain from a part's cad
-    // scan_pc is the source pointcloud created on gazebo with leica c5 simulator
-    CADToPointCloud cad2pc = CADToPointCloud(pc_path,"cajon_tumbado1.obj",cad_pc);
+    // cad_cloud is the target pointcloud directly obtain from a part's cad
+    // scan_cloud is the source pointcloud created on gazebo with leica c5 simulator
+    CADToPointCloud cad2pc = CADToPointCloud(pc_path,"cajon_tumbado1.obj",cad_cloud);
     std::string f = pc_path + "cajon_tumbado1.pcd";
-    pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_pc);
+    pcl::io::loadPCDFile<pcl::PointXYZ> (f, *scan_cloud);
     
 
     // Colorize clouds
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cad_pc_rgb(new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr scan_pc_rgb(new pcl::PointCloud<pcl::PointXYZRGB>);
-    Utils::cloudToXYZRGB(cad_pc, cad_pc_rgb, 0, 0, 255);
-    Utils::cloudToXYZRGB(scan_pc, scan_pc_rgb, 255, 0, 128);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cad_cloud_rgb(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr scan_cloud_rgb(new pcl::PointCloud<pcl::PointXYZRGB>);
+    Utils::cloudToXYZRGB(cad_cloud, cad_cloud_rgb, 0, 0, 255);
+    Utils::cloudToXYZRGB(scan_cloud, scan_cloud_rgb, 255, 0, 128);
 
     // Convert to ROS data type
     ros::Publisher cad_pub = nh.advertise<sensor_msgs::PointCloud2>("/cad/cloud", 1);
@@ -53,11 +53,11 @@ int main(int argc, char** argv)
 
     sensor_msgs::PointCloud2 cad_cloud_msg, scan_cloud_msg;
     
-    pcl::toROSMsg(*cad_pc_rgb,cad_cloud_msg);
+    pcl::toROSMsg(*cad_cloud_rgb,cad_cloud_msg);
     cad_cloud_msg.header.frame_id = Utils::_frame_id;
     cad_cloud_msg.header.stamp = ros::Time::now();
 
-    pcl::toROSMsg(*scan_pc_rgb,scan_cloud_msg);
+    pcl::toROSMsg(*scan_cloud_rgb,scan_cloud_msg);
     scan_cloud_msg.header.frame_id = Utils::_frame_id;
     scan_cloud_msg.header.stamp = ros::Time::now();
 
