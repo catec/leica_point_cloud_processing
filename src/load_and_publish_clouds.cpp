@@ -12,7 +12,7 @@ int FREQ = 1; // Hz
 sensor_msgs::PointCloud2 g_cloud_msg, g_cadcloud_msg;
 
 
-void getCADCloud(std::string file_name)
+int getCADCloud(std::string file_name)
 {
     PointCloudRGB::Ptr cloud(new PointCloudRGB);
     CADToPointCloud cad2pc = CADToPointCloud(LeicaUtils::getFilePath(file_name, ""), cloud);
@@ -26,7 +26,37 @@ void getCADCloud(std::string file_name)
         ROS_INFO("Received cad cloud");
     }
     else
+    {
         ROS_ERROR("Couldn't read file %s", file_name.c_str());    
+        return -1;
+    }
+
+    return 0;
+}
+
+
+int getScanCloud(std::string file_name)
+{
+    PointCloudRGB::Ptr cloud(new PointCloudRGB);
+    
+    std::string f = LeicaUtils::getFilePath(file_name, ".pcd");
+    int r = pcl::io::loadPCDFile<pcl::PointXYZRGB>(f, *cloud);
+
+    if (r!=-1 && Utils::isValidCloud(cloud))
+    {
+        Utils::colorizeCloud(cloud, 255, 0, 128); // scanned cloud is pink
+
+        Utils::cloudToROSMsg(cloud, g_cloud_msg);
+
+        ROS_INFO("Received scanned cloud");
+    }
+    else 
+    {
+        ROS_ERROR("Couldn't read file %s", f.c_str());
+        return -1;
+    }        
+
+    return 0;
 }
 
 
@@ -34,30 +64,19 @@ bool serviceCb(leica_scanstation_msgs::PointCloudFile::Request &req,
                leica_scanstation_msgs::PointCloudFile::Response &res)
 {
     ROS_INFO("request to publish clouds");
-    PointCloudRGB::Ptr cloud(new PointCloudRGB);
-    
-    std::string f = LeicaUtils::getFilePath(req.file_name, ".pcd");
-    int r = pcl::io::loadPCDFile<pcl::PointXYZRGB>(f, *cloud);
 
-    if (r==-1) 
-        ROS_ERROR("Couldn't read file %s", f.c_str());
-    else 
+    int r = getScanCloud(req.file_name);
+    if (r == 0)
     {
-        Utils::colorizeCloud(cloud, 255, 0, 128); // scanned cloud is pink
-
-        Utils::cloudToROSMsg(cloud, g_cloud_msg);
-
-        ROS_INFO("Received scanned cloud");
-
-        getCADCloud(req.file_name + ".obj");
+        r = getCADCloud(req.file_name + ".obj");
+        ROS_INFO("Publishing clouds on topics: \n\t/cad/cloud \n\t/scan/cloud");
     }
-    
+
     res.message = "Service to receive cloud is correct";
 	res.success =  r==-1 ? false : true;
 
     return true; 
 }
-
 
 
 int main(int argc, char** argv)
