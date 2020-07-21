@@ -57,23 +57,12 @@ target_link_libraries(node
   ${PROJECT_NAME}
 )
 
-add_executable(publish_cloud 
-src/publish_cloud.cpp
-)
-
-target_link_libraries(publish_cloud
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-  ${PROJECT_NAME}
-)
-
-
-add_executable(input_cloud 
-src/input_cloud.cpp
+add_executable(load_and_publish_clouds 
+src/load_and_publish_clouds.cpp
 # src/cad_to_pointcloud.cpp
 )
 
-target_link_libraries(input_cloud
+target_link_libraries(load_and_publish_clouds
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   ${PROJECT_NAME}

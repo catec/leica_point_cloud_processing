@@ -12,28 +12,40 @@ Meshes and pointclouds are not updated online because they are confidential.
 * Clone
 * Compile
 
+## Files ##
+
+### node.cpp
+This node will perfom alignment between CAD and scanned clouds. 
+1. Create subscriber for cloud topics `/cad/cloud` and `/scan/cloud`. 
+2. Perform alignment between both clouds.
+3. Publish aligned cloud.
+4. Let user modify result as specified in [Usage](##usage)
+
+### load_and_publish_clouds.cpp
+This node will load and publish clouds on topic read by [node](##nodecpp).
+- Make sure cloud files are on the correct folder (default: package leica_scanstation_utils/pointclouds)
+- Supported formats: `.obj` for CAD file, `.pcd` for scan file.
+- Publisher start when service is called:
+    - Automatically done by leica_scanstation_sdk_control_node when scan is finished
+    - Manually call by user
+
+            rosservice call /publish_scan_file "file_name: '{file}'"
+
 ## Run ##
 
     rosrun leica_scanstation_utils main
 
-    rosrun leica_point_cloud_processing input_cloud
-
     rosrun leica_point_cloud_processing node
-    
-OR
 
-    rosrun leica_scanstation main
+    rosrun leica_point_cloud_processing load_and_publish_clouds
+
+If using Leica Scanstation C5
 
     wineconsole leica_scanstation_sdk_control/release/leica_scanstation_sdk_control_node.exe
 
-    rosrun leica_point_cloud_processing publish_cloud
-
-    rosrun leica_point_cloud_processing node 
-
-
 ## Usage ##
 
-Both clouds should be available in ROS topics: `/cad/cloud` y `/scan/cloud`
+Both clouds should be available in ROS topics: `/cad/cloud` and `/scan/cloud`
 
 Then, the node starts calculating cloud alignment. After GICP, user could do more iterations
 

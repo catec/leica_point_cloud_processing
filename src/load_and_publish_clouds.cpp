@@ -68,10 +68,11 @@ int main(int argc, char** argv)
     std::string pointcloud_folder_path;
     if (!nh.getParam("/pointcloud_folder", pointcloud_folder_path))   
     {
-        ROS_ERROR("input_cloud: No pointcloud folder path on Param Server");
+        ROS_ERROR("publish_cloud: No pointcloud folder path on Param Server");
         return 0;
     }
     LeicaUtils::setPointCloudFolder(pointcloud_folder_path);
+    ROS_INFO("publish_cloud: search for pointcloud in %s", pointcloud_folder_path.c_str());
 
     // TODO: resolver la forma de coger el path a pointclouds
     ros::ServiceServer service = nh.advertiseService("publish_scan_file", serviceCb);
