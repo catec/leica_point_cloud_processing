@@ -29,7 +29,7 @@ This node will load and publish clouds on topic read by [node](##nodecpp).
     - Automatically done by leica_scanstation_sdk_control_node when scan is finished
     - Manually call by user
 
-            rosservice call /publish_scan_file "file_name: '{file}'"
+            rosservice call /publish_clouds "file_name: '{file}'"
 
 ## Run ##
 

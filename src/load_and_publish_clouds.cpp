@@ -81,7 +81,7 @@ bool serviceCb(leica_scanstation_msgs::PointCloudFile::Request &req,
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "publish_cloud");
+    ros::init(argc, argv, "cloud_publisher");
     ros::NodeHandle nh;
 
     std::string pointcloud_folder_path;
@@ -94,11 +94,11 @@ int main(int argc, char** argv)
     ROS_INFO("publish_cloud: search for pointcloud in %s", pointcloud_folder_path.c_str());
 
     // TODO: resolver la forma de coger el path a pointclouds
-    ros::ServiceServer service = nh.advertiseService("publish_scan_file", serviceCb);
+    ros::ServiceServer service = nh.advertiseService("publish_clouds", serviceCb);
     ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("scan/cloud", 1);
     ros::Publisher cad_pub = nh.advertise<sensor_msgs::PointCloud2>("cad/cloud", 1);
 
-    ROS_INFO("Service client waiting for call to /publish_scan_file");
+    ROS_INFO("Service client waiting for call to /publish_clouds");
 
     ros::Rate r(FREQ);
     while(ros::ok())

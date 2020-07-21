@@ -99,7 +99,7 @@ void scanCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "point_cloud_processing");
+    ros::init(argc, argv, "cloud_align");
     ros::NodeHandle nh;
     ros::Rate r(FREQ);
 
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
     std::string pointcloud_folder_path;
     if (!nh.getParam("/pointcloud_folder", pointcloud_folder_path))   
     {
-        ROS_ERROR("input_cloud: No pointcloud folder path on Param Server");
+        ROS_ERROR("No pointcloud folder path on Param Server");
         return 0;
     }
 
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
             Utils::cloudToROSMsg(cad_cloud_filtered, cad_cloud_msg);
             Utils::cloudToROSMsg(scan_cloud_aligned, scan_cloud_msg); 
 
-            ROS_INFO("input_cloud: Publishing clouds on topics: \n\t\t\t\t/cad/cloud_filtered \n\t\t\t\t/scan/cloud_aligned");
+            ROS_INFO("Publishing clouds on topics: \n\t\t\t\t/cad/cloud_filtered \n\t\t\t\t/scan/cloud_aligned");
 
             bool publish_fods = false;
             int num_of_fods = 0;
