@@ -3,7 +3,7 @@
 #ifndef _FILTER_H
 #define _FILTER_H
 
-#include <utils.h>
+#include <Utils.h>
 
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/crop_box.h>

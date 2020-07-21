@@ -1,4 +1,4 @@
-#include <viewer.h>
+#include <Viewer.h>
 
 
 Viewer::Viewer()

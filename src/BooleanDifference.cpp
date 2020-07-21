@@ -1,4 +1,4 @@
-#include <boolean_difference.h>
+#include <BooleanDifference.h>
 
 BooleanDifference::BooleanDifference(PointCloudRGB::Ptr cloud)
       : _diff_indices(new IndicesVector), _result_cloud(new PointCloudRGB)

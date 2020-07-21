@@ -1,4 +1,4 @@
-#include <initial_alignment.h>
+#include <InitialAlignment.h>
 
 InitialAlignment::InitialAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRGB::Ptr source_cloud)
     : _aligned_cloud(new PointCloudRGB)

@@ -1,4 +1,4 @@
-#include <cad_to_pointcloud.h>
+#include <CADToPointCloud.h>
 
 
 CADToPointCloud::CADToPointCloud()

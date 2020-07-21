@@ -1,9 +1,9 @@
-#include <utils.h>
+#include <Utils.h>
 
 #include "leica_scanstation_msgs/PointCloudFile.h"
 #include "leica_scanstation_utils/LeicaUtils.h"
 
-#include <cad_to_pointcloud.h>
+#include <CADToPointCloud.h>
 
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 

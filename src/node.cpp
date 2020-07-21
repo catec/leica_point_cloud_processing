@@ -1,11 +1,11 @@
-#include <utils.h>
+#include <Utils.h>
 
-#include <cad_to_pointcloud.h>
-#include <filter.h>
-#include <initial_alignment.h>
-#include <gicp_alignment.h>
-#include <boolean_difference.h>
-#include <fod_detector.h>
+#include <CADToPointCloud.h>
+#include <Filter.h>
+#include <InitialAlignment.h>
+#include <GICPAlignment.h>
+#include <BooleanDifference.h>
+#include <FODDetector.h>
 // #include <viewer.h>
 
 #include "std_srvs/Trigger.h"

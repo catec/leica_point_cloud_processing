@@ -1,4 +1,4 @@
-#include <gicp_alignment.h>
+#include <GICPAlignment.h>
 
 GICPAlignment::GICPAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRGB::Ptr source_cloud)
     : _aligned_cloud(new PointCloudRGB), _backup_cloud(new PointCloudRGB)

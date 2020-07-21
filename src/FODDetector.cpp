@@ -1,4 +1,4 @@
-#include <fod_detector.h>
+#include <FODDetector.h>
 
 FODDetector::FODDetector(double resolution) 
 {

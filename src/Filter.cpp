@@ -1,4 +1,4 @@
-#include <filter.h>
+#include <Filter.h>
 
 Filter::Filter(double leaf_size)
 {

@@ -33,14 +33,14 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME} 
-src/utils.cpp
-src/filter.cpp
-src/viewer.cpp
-src/initial_alignment.cpp
-src/gicp_alignment.cpp
-src/boolean_difference.cpp
-src/fod_detector.cpp
-src/cad_to_pointcloud.cpp
+src/Utils.cpp
+src/Filter.cpp
+src/Viewer.cpp
+src/InitialAlignment.cpp
+src/GICPAlignment.cpp
+src/BooleanDifference.cpp
+src/FODDetector.cpp
+src/CADToPointCloud.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
@@ -48,7 +48,7 @@ target_link_libraries(${PROJECT_NAME}
 
 add_executable(node 
 src/node.cpp
-src/cad_to_pointcloud.cpp
+# src/cad_to_pointcloud.cpp
 )
 
 target_link_libraries(node
@@ -70,7 +70,7 @@ target_link_libraries(publish_cloud
 
 add_executable(input_cloud 
 src/input_cloud.cpp
-src/cad_to_pointcloud.cpp
+# src/cad_to_pointcloud.cpp
 )
 
 target_link_libraries(input_cloud

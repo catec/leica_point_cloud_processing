@@ -1,11 +1,11 @@
-#include <utils.h>
+#include <Utils.h>
 
 #include "ros/ros.h"
 #include "ros/package.h"
 #include "pcl_conversions/pcl_conversions.h"
 #include <pcl_ros/point_cloud.h>
-#include <cad_to_pointcloud.h>
 #include "leica_scanstation_utils/LeicaUtils.h"
+#include <CADToPointCloud.h>
 
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 

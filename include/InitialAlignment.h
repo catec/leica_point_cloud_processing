@@ -3,7 +3,7 @@
 #ifndef _INITIAL_ALIGNMENT_H
 #define _INITIAL_ALIGNMENT_H
 
-#include <utils.h>
+#include <Utils.h>
 
 #include <pcl/features/fpfh.h>
 #include <pcl/features/multiscale_feature_persistence.h>

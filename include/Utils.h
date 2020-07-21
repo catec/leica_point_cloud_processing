@@ -1,5 +1,5 @@
 /**
- * @file utils.h
+ * @file Utils.h
  * @author Ines Lara (imlara@catec.aero)
  * @brief useful functions for point cloud processing
  * @version 0.1

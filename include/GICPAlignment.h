@@ -3,7 +3,7 @@
 #ifndef _GCIP_ALIGNMENT_H
 #define _GCIP_ALIGNMENT_H
 
-#include <utils.h>
+#include <Utils.h>
 
 #include <pcl/features/from_meshes.h>
 #include <pcl/registration/gicp.h>

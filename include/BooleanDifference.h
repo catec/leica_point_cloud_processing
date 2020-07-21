@@ -3,7 +3,7 @@
 #ifndef _BOOLEAN_DIFFERENCE_H
 #define _BOOLEAN_DIFFERENCE_H
 
-#include <utils.h>
+#include <Utils.h>
 
 #include <pcl/octree/octree_pointcloud_changedetector.h>
 

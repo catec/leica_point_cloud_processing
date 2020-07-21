@@ -3,7 +3,7 @@
 #ifndef _CAD_TO_POINTCLOUD_H
 #define _CAD_TO_POINTCLOUD_H
 
-#include <utils.h>
+#include <Utils.h>
 
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl/io/vtk_lib_io.h>
