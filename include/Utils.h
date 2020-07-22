@@ -170,4 +170,10 @@ public:
     static void indicesFilter(PointCloudRGB::Ptr cloud_in,
                                 PointCloudRGB::Ptr cloud_out, 
                                 boost::shared_ptr<std::vector<int> > indices);
+
+    static void displaceCloud(PointCloudRGB::Ptr cloud_in,
+                                     PointCloudRGB::Ptr cloud_out, 
+                                     double x_offset=0, 
+                                     double y_offset=0, 
+                                     double z_offset=0);
 };

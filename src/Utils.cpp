@@ -160,6 +160,21 @@ void Utils::indicesFilter(PointCloudRGB::Ptr cloud_in,
     extract_indices_filter.filter(*cloud_out);
 }
 
+void Utils::displaceCloud(PointCloudRGB::Ptr cloud_in,
+                          PointCloudRGB::Ptr cloud_out, 
+                          double x_offset, 
+                          double y_offset, 
+                          double z_offset)
+{
+  pcl::copyPointCloud(*cloud_in, *cloud_out);
+  for (size_t i = 0; i < cloud_out->points.size(); i++)
+  {
+    cloud_out->points[i].x += x_offset;
+    cloud_out->points[i].y += y_offset;
+    cloud_out->points[i].z += z_offset;
+  }
+}
+
 // Initialization
 std::string Utils::_pc_path = "";
 std::string Utils::_frame_id = "world";
