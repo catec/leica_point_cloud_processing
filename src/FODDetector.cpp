@@ -39,7 +39,7 @@ int FODDetector::clusterIndicesToROSMsg(std::vector<pcl::PointIndices> cluster_i
 
         sensor_msgs::PointCloud2 cluster_msg;
         pcl::toROSMsg(*cloud_cluster,cluster_msg);
-        cluster_msg.header.frame_id = "world";
+        cluster_msg.header.frame_id = Utils::_frame_id;
         cluster_msg.header.stamp = ros::Time::now();
         cluster_msg_array.push_back(cluster_msg);
     }
