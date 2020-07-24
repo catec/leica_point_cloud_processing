@@ -90,7 +90,7 @@ int main(int argc, char** argv)
         ROS_ERROR("publish_cloud: No pointcloud folder path on Param Server");
         return 0;
     }
-    LeicaUtils::setPointCloudFolder(pointcloud_folder_path);
+    LeicaUtils::setPointCloudPath(pointcloud_folder_path);
     ROS_INFO("publish_cloud: search for pointcloud in %s", pointcloud_folder_path.c_str());
 
     // TODO: resolver la forma de coger el path a pointclouds
