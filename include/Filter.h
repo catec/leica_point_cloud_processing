@@ -51,6 +51,8 @@ public:
      */
     Filter(double leaf_size, double noise_threshold, double floor_threshold);
 
+    Filter(Eigen::Vector3f cloud_center, double leaf_size, double noise_threshold, double floor_threshold);
+    
     /**
      * @brief Destroy the Filter object.
      * 
@@ -65,7 +67,11 @@ public:
     double _noise_filter_threshold;
 
     /** @brief pcl::SACSegmentation distance threshold */
-        double _floor_filter_threshold;
+    double _floor_filter_threshold;
+
+    Eigen::Vector3f _cloud_center;
+
+    bool _user_given_center;
 
     /**
      * @brief Set the Leaf Size object.
@@ -93,7 +99,8 @@ private:
      * @param[in] cloud 
      * @param[out] cloud_downsampled 
      */
-    void downsampleCloud(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_downsampled);
+    void downsampleCloud(PointCloudRGB::Ptr cloud, 
+                         PointCloudRGB::Ptr cloud_downsampled);
 
     /**
      * @brief Apply _noise_filter_threshold to filter noise in cloud.
@@ -103,7 +110,14 @@ private:
      * @param[in] cloud 
      * @param[out] cloud_filtered 
      */
-    void filter_noise(double threshold, PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered);
+    void filter_noise(double threshold, 
+                      PointCloudRGB::Ptr cloud, 
+                      PointCloudRGB::Ptr cloud_filtered);
+
+    void filter_noise(Eigen::Vector3f cloud_center, 
+                      double threshold, 
+                      PointCloudRGB::Ptr cloud, 
+                      PointCloudRGB::Ptr cloud_filtered);
 
     /**
      * @brief Apply _floor_filter_threshold to search floor in cloud and filter it.
@@ -113,5 +127,7 @@ private:
      * @param[in] cloud 
      * @param[out] cloud_filtered 
      */
-    void filter_floor(double threshold, PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered);
+    void filter_floor(double threshold, 
+                      PointCloudRGB::Ptr cloud, 
+                      PointCloudRGB::Ptr cloud_filtered);
 };
