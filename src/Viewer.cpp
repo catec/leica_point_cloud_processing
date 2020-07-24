@@ -110,14 +110,14 @@ void Viewer::addNormalsToViewer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
     loopViewer();
 }
 
-void Viewer::addCorrespondencesToViewer(pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud,
-                                                     pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud,
+void Viewer::addCorrespondencesToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_cloud,
+                                                     pcl::PointCloud<pcl::PointXYZRGB>::Ptr target_cloud,
                                                      pcl::CorrespondencesPtr correspondences)
 {
     ROS_INFO("Add correspondences between clouds in Viewer");
     ROS_WARN("Press (X) on viewer to continue");
     _viewer->resetStoppedFlag();
-    _viewer->addCorrespondences<pcl::PointXYZ>(source_cloud,target_cloud,*correspondences);
+    _viewer->addCorrespondences<pcl::PointXYZRGB>(source_cloud,target_cloud,*correspondences);
     loopViewer();
     _viewer->removeCorrespondences();
 }
