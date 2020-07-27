@@ -7,6 +7,8 @@
 
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
+std::string TARGET_CLOUD_TOPIC = "/cad/cloud";
+std::string SOURCE_CLOUD_TOPIC = "/scan/cloud";
 int FREQ = 1; // Hz
 
 sensor_msgs::PointCloud2 g_cloud_msg, g_cadcloud_msg;
@@ -20,9 +22,7 @@ int getCADCloud(std::string file_name)
     if(Utils::isValidCloud(cloud))
     {
         Utils::colorizeCloud(cloud, 0, 0, 255); // cad cloud is blue
-
         Utils::cloudToROSMsg(cloud, g_cadcloud_msg);
-
         ROS_INFO("Received cad cloud");
     }
     else
@@ -45,9 +45,7 @@ int getScanCloud(std::string file_name)
     if (r!=-1 && Utils::isValidCloud(cloud))
     {
         Utils::colorizeCloud(cloud, 255, 0, 128); // scanned cloud is pink
-
         Utils::cloudToROSMsg(cloud, g_cloud_msg);
-
         ROS_INFO("Received scanned cloud");
     }
     else 
@@ -63,16 +61,16 @@ int getScanCloud(std::string file_name)
 bool serviceCb(leica_scanstation_msgs::PointCloudFile::Request &req, 
                leica_scanstation_msgs::PointCloudFile::Response &res)
 {
-    ROS_INFO("request to publish clouds");
+    ROS_INFO("Request to publish clouds");
 
     int r = getScanCloud(req.file_name);
     if (r == 0)
     {
         r = getCADCloud(req.file_name + ".obj");
-        ROS_INFO("Publishing clouds on topics: \n\t/cad/cloud \n\t/scan/cloud");
+        ROS_INFO("Publishing clouds on topics: \n\t%s \n\t%s", TARGET_CLOUD_TOPIC.c_str(), SOURCE_CLOUD_TOPIC.c_str());
     }
 
-    res.message = "Service to receive cloud is correct";
+    res.message = "Finished service to receive cloud";
 	res.success =  r==-1 ? false : true;
 
     return true; 
@@ -87,18 +85,17 @@ int main(int argc, char** argv)
     std::string pointcloud_folder_path;
     if (!nh.getParam("/pointcloud_folder", pointcloud_folder_path))   
     {
-        ROS_ERROR("publish_cloud: No pointcloud folder path on Param Server");
+        ROS_ERROR("No pointcloud folder path on Param Server");
         return 0;
     }
     LeicaUtils::setPointCloudPath(pointcloud_folder_path);
-    ROS_INFO("publish_cloud: search for pointcloud in %s", pointcloud_folder_path.c_str());
+    ROS_INFO("Search for pointcloud in %s", pointcloud_folder_path.c_str());
 
-    // TODO: resolver la forma de coger el path a pointclouds
     ros::ServiceServer service = nh.advertiseService("publish_clouds", serviceCb);
     ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("scan/cloud", 1);
     ros::Publisher cad_pub = nh.advertise<sensor_msgs::PointCloud2>("cad/cloud", 1);
 
-    ROS_INFO("Service client waiting for call to /publish_clouds");
+    ROS_INFO("Service waiting for call to /publish_clouds");
 
     ros::Rate r(FREQ);
     while(ros::ok())

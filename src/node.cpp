@@ -13,19 +13,17 @@
 
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
+std::string TARGET_CLOUD_TOPIC = "/cad/cloud";
+std::string SOURCE_CLOUD_TOPIC = "/scan/cloud";
+int FREQ = 5; // Hz
+
 /**
  * POINTCLOUDS:
     - target pointcloud: directly obtain from downsampling a part's cad
     - source pointcloud: result from scanning the same cad part in Gazebo with leica c5 simulator
 **/
-
-std::string TARGET_CLOUD_TOPIC = "/cad/cloud";
-std::string SOURCE_CLOUD_TOPIC = "/scan/cloud";
-
-// Pointclouds
 PointCloudRGB::Ptr g_cad_cloud(new PointCloudRGB);
 PointCloudRGB::Ptr g_scan_cloud(new PointCloudRGB);
-
 
 // Flags to control program flow
 bool new_cad_cloud = false;
@@ -33,10 +31,7 @@ bool new_scan_cloud = false;
 bool iterate = false;
 bool undo_last_iteration = false;
 bool get_fods = false;
-
-
-// Some parameters
-int FREQ = 5; // Hz
+bool stop_alignment = false;
 
 
 bool gicpCb(std_srvs::Trigger::Request  &req,
@@ -66,6 +61,15 @@ bool fodsCb(std_srvs::Trigger::Request  &req,
     res.message = "fods";
 }
 
+bool stopCb(std_srvs::Trigger::Request  &req,
+            std_srvs::Trigger::Response &res)
+{
+    stop_alignment = true; 
+
+    res.success = true;
+    res.message = "stop";
+}
+
 void cadCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
     if (!new_cad_cloud)
@@ -92,7 +96,7 @@ void scanCb(const sensor_msgs::PointCloud2::ConstPtr& msg)
         if (Utils::isValidCloud(g_scan_cloud))
             new_scan_cloud = true;
         else
-            ROS_ERROR("Error loading CAD cloud from %s",TARGET_CLOUD_TOPIC.c_str());
+            ROS_ERROR("Error loading SCAN cloud from %s",SOURCE_CLOUD_TOPIC.c_str());
     }
 }
 
@@ -127,6 +131,7 @@ int main(int argc, char** argv)
     ros::Publisher npub = nh.advertise<std_msgs::Int16>("/num_of_fods", 1);
     ros::Publisher cad_pub = nh.advertise<sensor_msgs::PointCloud2>("/cad/cloud_filtered", 1);
     ros::Publisher scan_pub = nh.advertise<sensor_msgs::PointCloud2>("/scan/cloud_aligned", 1);
+    std::vector<ros::Publisher> pub_array; // one publisher in array for each FOD detected
 
     Eigen::Matrix4f final_transform; 
 
@@ -155,7 +160,7 @@ int main(int argc, char** argv)
             cad_cloud_filter.run(g_cad_cloud, cad_cloud_filtered);
             scan_cloud_filter.run(g_scan_cloud, scan_cloud_filtered);
             
-            // Get initial alignment
+            // Perform initial alignment
             InitialAlignment initial_alignment(cad_cloud_filtered, scan_cloud_filtered);
             initial_alignment.run();
             Utils::printTransform(initial_alignment.getRigidTransform());
@@ -163,7 +168,7 @@ int main(int argc, char** argv)
             
             if (!Utils::isValidCloud(scan_cloud_aligned)) return 0;
 
-            // Get fine alignment   
+            // Perform fine alignment   
             GICPAlignment gicp_alignment(cad_cloud_filtered, scan_cloud_aligned);
             gicp_alignment.run();
             Utils::printTransform(gicp_alignment.getFineTransform());
@@ -172,12 +177,13 @@ int main(int argc, char** argv)
             final_transform = gicp_alignment.getFineTransform() * initial_alignment.getRigidTransform();
             Utils::printTransform(final_transform);
 
-            // Service para iterar gicp
+            // Services to communicate with node
             ros::ServiceServer gicp_service = nh.advertiseService("iterate_gicp", gicpCb);
             ros::ServiceServer undo_service = nh.advertiseService("undo_iteration", undoCb);
             ros::ServiceServer fods_service = nh.advertiseService("get_fods", fodsCb);
+            ros::ServiceServer stop_service = nh.advertiseService("stop_alignment", stopCb);
 
-            // Convert to ROS data type
+            // Convert cad cloud and aligned cloud to ROS data type
             Utils::cloudToROSMsg(cad_cloud_filtered, cad_cloud_msg);
             Utils::cloudToROSMsg(scan_cloud_aligned, scan_cloud_msg); 
 
@@ -188,10 +194,11 @@ int main(int argc, char** argv)
             
             while(new_cad_cloud && new_scan_cloud && ros::ok())
             {
-                // Publish the data
+                // Publish clouds
                 cad_pub.publish(cad_cloud_msg);
                 scan_pub.publish(scan_cloud_msg);
 
+                // Following functions will only apply if required by user (via ROS services)
                 if(iterate)
                 {
                     gicp_alignment.iterate();
@@ -227,7 +234,14 @@ int main(int argc, char** argv)
                         num_of_fods = fod_detector.clusterIndicesToROSMsg(cluster_indices, scan_cloud_substracted, cluster_msg_array);
                         n_fods_msg.data = num_of_fods;
                         ROS_INFO("Detected %d objects",num_of_fods);
-                
+
+                        for(int i=0; i<num_of_fods; i++) 
+                        {
+                            std::string topic_name = "/fod" + std::to_string(i);
+                            ROS_INFO("Publishing on topic %s", topic_name.c_str());
+                            ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>(topic_name, 1);
+                            pub_array.push_back(pub);
+                        }
                         publish_fods = true;
                     }
                     get_fods = false;
@@ -235,24 +249,20 @@ int main(int argc, char** argv)
 
                 if (publish_fods)
                 {
-                    std::vector<ros::Publisher> pub_array;
                     // publish each fod in a separated topic
-                    for(int i=0; i<num_of_fods; i++) // temporary solution
+                    for(int i=0; i<num_of_fods; i++)
                     {
-                        std::string topic_name = "/fod" + std::to_string(i);
-                        ROS_INFO("Publishing on topic %s", topic_name.c_str());
-                        ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>(topic_name, 1);
-                        pub_array.push_back(pub);
-                    }
-                    for(int i=0; i<num_of_fods; i++) // temporary solution
-                    {
-                        ROS_INFO("Point cloud size: %dx%d", cluster_msg_array[i].width, cluster_msg_array[i].height);
                         pub_array[i].publish(cluster_msg_array[i]);
                     }
                     npub.publish(n_fods_msg);
+                }
 
-                    new_cad_cloud  = false; // TODO ESTO NO VA AQUI DEBE HABER ALGO Q LO ACTIVE
+                if (stop_alignment)
+                {
+                    publish_fods = false;
+                    new_cad_cloud  = false;
                     new_scan_cloud = false;
+                    stop_alignment = false;
                 }
 
                 ros::spinOnce();
