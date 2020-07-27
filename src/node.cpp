@@ -136,27 +136,24 @@ int main(int argc, char** argv)
         {
             ROS_INFO("Process started");
 
-            // Get correct leaf_size
+            // Set correct leaf_size
             double cad_res = Utils::computeCloudResolution(g_cad_cloud);
             double scan_res = Utils::computeCloudResolution(g_scan_cloud);
             double leaf_size = 15 * std::max(cad_res, scan_res); // 15 times higher works well in most cases
-            ROS_INFO("Filtering with leaf size: %f", leaf_size);
 
-            // Filter parameters
-            double part_size = 0.9;
-            double floor_height = 0.35;
-            Eigen::Vector3f part_center;
-            part_center[0] = 0.05;
-            part_center[1] = -1.5;
-            part_center[2] = 0;
+            // Filter parameters (todo: set dynamically and from launch)
+            double part_size = 0.9;      // Larger side of the part
+            double floor_height = 0.35;  // Maximum height to search for floor  
+            Eigen::Vector3f part_center; // coordinates from LeicaScanstation frame
+            part_center[0] = 0.05; // x
+            part_center[1] = -1.5; // y
+            part_center[2] = 0;    // z
 
             // Filter clouds
             Filter cad_cloud_filter(leaf_size);
             Filter scan_cloud_filter(part_center, leaf_size, part_size, floor_height);
             cad_cloud_filter.run(g_cad_cloud, cad_cloud_filtered);
             scan_cloud_filter.run(g_scan_cloud, scan_cloud_filtered);
-
-            // Viewer::visualizePointCloud<pcl::PointXYZRGB>(scan_cloud_filtered);
             
             // Get initial alignment
             InitialAlignment initial_alignment(cad_cloud_filtered, scan_cloud_filtered);
@@ -164,7 +161,6 @@ int main(int argc, char** argv)
             Utils::printTransform(initial_alignment.getRigidTransform());
             initial_alignment.getAlignedCloud(scan_cloud_aligned);
             
-            // Viewer::visualizePointCloud<pcl::PointXYZRGB>(scan_cloud_aligned);
             if (!Utils::isValidCloud(scan_cloud_aligned)) return 0;
 
             // Get fine alignment   

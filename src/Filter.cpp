@@ -42,6 +42,7 @@ Filter::Filter(Eigen::Vector3f cloud_center,
 void Filter::downsampleCloud(PointCloudRGB::Ptr cloud, 
                              PointCloudRGB::Ptr cloud_downsampled)
 {
+    ROS_INFO("Filtering with leaf size: %f", _leaf_size);
     double res = Utils::computeCloudResolution(cloud);
     // ROS_INFO("Pointcloud size before downsampling: %zu",cloud->points.size());
     ROS_INFO("Pointcloud resolution before downsampling: %f",res);
@@ -169,7 +170,7 @@ void Filter::run(PointCloudRGB::Ptr cloud,
         else
             filter_noise(_noise_filter_threshold, cloud_filtered, cloud_filtered); 
     }  
-      
+
     // Downsample
     downsampleCloud(cloud_filtered, cloud_filtered);
 }
