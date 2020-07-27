@@ -153,8 +153,7 @@ void Filter::setLeafSize(double new_leaf_size)
 void Filter::run(PointCloudRGB::Ptr cloud, 
                  PointCloudRGB::Ptr cloud_filtered)
 {
-    // Downsample
-    downsampleCloud(cloud, cloud_filtered);
+    pcl::copyPointCloud(*cloud, *cloud_filtered);
     
     // Filter floor
     if (_floor_filter_threshold > 0)
@@ -169,5 +168,8 @@ void Filter::run(PointCloudRGB::Ptr cloud,
         // without given center
         else
             filter_noise(_noise_filter_threshold, cloud_filtered, cloud_filtered); 
-    }    
+    }  
+      
+    // Downsample
+    downsampleCloud(cloud_filtered, cloud_filtered);
 }
