@@ -4,6 +4,7 @@
 #define _INITIAL_ALIGNMENT_H
 
 #include <Utils.h>
+#include <Viewer.h>
 
 #include <pcl/features/fpfh.h>
 #include <pcl/features/multiscale_feature_persistence.h>

@@ -12,22 +12,38 @@ InitialAlignment::InitialAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRG
 
 void InitialAlignment::run()
 {
+    // Viewer v;
+    // v.addPCToViewer(_source_cloud, "source");
+    // v.addPCToViewer(_target_cloud, "target");
+    
     pcl::PointCloud<pcl::Normal>::Ptr source_normals(new pcl::PointCloud<pcl::Normal>);
     pcl::PointCloud<pcl::Normal>::Ptr target_normals(new pcl::PointCloud<pcl::Normal>);
     getNormals(_source_cloud, _normal_radius, source_normals);
     getNormals(_target_cloud, _normal_radius, target_normals);
 
+    // v.addNormalsToViewer(_source_cloud, source_normals, "n_source");
+    // v.addNormalsToViewer(_target_cloud, target_normals, "n_target");
+
     PointCloudRGB::Ptr target_keypoints(new PointCloudRGB);
     PointCloudRGB::Ptr source_keypoints(new PointCloudRGB);
-    pcl::PointCloud<pcl::FPFHSignature33>::Ptr target_features (new pcl::PointCloud<pcl::FPFHSignature33> ());
-    pcl::PointCloud<pcl::FPFHSignature33>::Ptr source_features (new pcl::PointCloud<pcl::FPFHSignature33> ());
+    pcl::PointCloud<pcl::FPFHSignature33>::Ptr target_features(new pcl::PointCloud<pcl::FPFHSignature33> ());
+    pcl::PointCloud<pcl::FPFHSignature33>::Ptr source_features(new pcl::PointCloud<pcl::FPFHSignature33> ());
     getKeypointsAndFeatures(_source_cloud, source_normals, source_keypoints, source_features);
     getKeypointsAndFeatures(_target_cloud, target_normals, target_keypoints, target_features);
+
+    Utils::colorizeCloud(source_keypoints, 0, 255, 0);
+    Utils::colorizeCloud(target_keypoints, 0, 255, 0);
+    // v.addPCToViewer(source_keypoints,"key");
+    // v.addPCToViewer(target_keypoints,"tkey");
 
     pcl::CorrespondencesPtr correspondences(new pcl::Correspondences);
     initialAlingment(source_features, target_features, source_keypoints, target_keypoints, correspondences);
 
     applyTFtoCloud();
+    
+    // v.addCorrespondencesToViewer(source_keypoints, target_keypoints, correspondences);
+    // v.deletePCFromViewer("source");
+    // v.addPCToViewer(_aligned_cloud,"aligned");
 }
 
 Eigen::Matrix4f InitialAlignment::getRigidTransform()
@@ -45,7 +61,7 @@ void InitialAlignment::configParameters()
 
     _normal_radius = (target_res + source_res) * 2.0; // 2 times higher
     _feature_radius = _normal_radius*1.20; // 20% higher
-    _inlier_threshold = 2.5;
+    _inlier_threshold = 1e-5;//2.5;
 
     // ROS_INFO("Parameters: \n\tnormal radius: %f, \   n\tfeature radius: %f",_normal_radius, _feature_radius);
 }
@@ -76,9 +92,13 @@ std::vector<float> InitialAlignment::getScaleValues(PointCloudRGB::Ptr cloud)
     std::vector<float> scale_values;
 
     double cloud_resolution = Utils::computeCloudResolution(cloud);
+    // scale_values.push_back((float)cloud_resolution*0.1);
+    scale_values.push_back((float)cloud_resolution*1);
     scale_values.push_back((float)cloud_resolution*2);
     scale_values.push_back((float)cloud_resolution*3);
     scale_values.push_back((float)cloud_resolution*4);
+    scale_values.push_back((float)cloud_resolution*5);
+    scale_values.push_back((float)cloud_resolution*6);
 
     return scale_values;
 }
@@ -124,10 +144,6 @@ void InitialAlignment::getKeypointsAndFeatures(PointCloudRGB::Ptr cloud,
     bool success = keypoints->size()==features->size() ? true : false;
 
     Utils::indicesFilter(cloud, keypoints_cloud, keypoints);
-    // pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_filter;
-    // extract_indices_filter.setInputCloud(cloud);
-    // extract_indices_filter.setIndices(keypoints);
-    // extract_indices_filter.filter(*keypoints_cloud);
 }
 
 
@@ -145,12 +161,11 @@ void InitialAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>::P
     cest.determineCorrespondences(*correspondences);
 
     ROS_INFO("5. Get correspondences with inlier threshold: %f",_inlier_threshold);
-    // pcl::CorrespondencesPtr corr_filtered(new pcl::Correspondences);
     pcl::registration::CorrespondenceRejectorSampleConsensus<pcl::PointXYZRGB> rejector;
     rejector.setInputSource(source_keypoints);
     rejector.setInputTarget(target_keypoints);
     rejector.setInlierThreshold(_inlier_threshold);
-    rejector.setMaximumIterations(100000);
+    rejector.setMaximumIterations(10000);
     rejector.setRefineModel(false);
     rejector.setInputCorrespondences(correspondences);
     rejector.getCorrespondences(*corr_filtered);

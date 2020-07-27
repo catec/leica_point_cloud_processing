@@ -6,7 +6,7 @@
 #include <GICPAlignment.h>
 #include <BooleanDifference.h>
 #include <FODDetector.h>
-// #include <viewer.h>
+#include <Viewer.h>
 
 #include "std_srvs/Trigger.h"
 #include "std_msgs/Int16.h"
@@ -132,23 +132,42 @@ int main(int argc, char** argv)
 
     while(ros::ok())
     {
-        if (new_cad_cloud && new_scan_cloud)
+        if (new_cad_cloud && new_scan_cloud && ros::ok())
         {
             ROS_INFO("Process started");
 
+            // Get correct leaf_size
+            double cad_res = Utils::computeCloudResolution(g_cad_cloud);
+            double scan_res = Utils::computeCloudResolution(g_scan_cloud);
+            double leaf_size = 15 * std::max(cad_res, scan_res); // 15 times higher works well in most cases
+            ROS_INFO("Filtering with leaf size: %f", leaf_size);
+
+            // Filter parameters
+            double part_size = 0.9;
+            double floor_height = 0.35;
+            Eigen::Vector3f part_center;
+            part_center[0] = 0.05;
+            part_center[1] = -1.5;
+            part_center[2] = 0;
+
             // Filter clouds
-            Filter cad_cloud_filter(0.05);
-            Filter scan_cloud_filter(0.05, 10, 0.8);
+            Filter cad_cloud_filter(leaf_size);
+            Filter scan_cloud_filter(part_center, leaf_size, part_size, floor_height);
             cad_cloud_filter.run(g_cad_cloud, cad_cloud_filtered);
             scan_cloud_filter.run(g_scan_cloud, scan_cloud_filtered);
+
+            // Viewer::visualizePointCloud<pcl::PointXYZRGB>(scan_cloud_filtered);
             
             // Get initial alignment
             InitialAlignment initial_alignment(cad_cloud_filtered, scan_cloud_filtered);
             initial_alignment.run();
             Utils::printTransform(initial_alignment.getRigidTransform());
             initial_alignment.getAlignedCloud(scan_cloud_aligned);
+            
+            // Viewer::visualizePointCloud<pcl::PointXYZRGB>(scan_cloud_aligned);
+            if (!Utils::isValidCloud(scan_cloud_aligned)) return 0;
 
-            // Get fine alignment
+            // Get fine alignment   
             GICPAlignment gicp_alignment(cad_cloud_filtered, scan_cloud_aligned);
             gicp_alignment.run();
             Utils::printTransform(gicp_alignment.getFineTransform());

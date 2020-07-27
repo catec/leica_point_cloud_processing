@@ -30,7 +30,7 @@ class Viewer {
         void addPCToViewer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color, std::string name);
         void addPCToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::string name);
         void deletePCFromViewer(std::string name);
-        void addNormalsToViewer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+        void addNormalsToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
                                 pcl::PointCloud<pcl::Normal>::Ptr normals,
                                 std::string name);
         void addCorrespondencesToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_cloud,

@@ -95,18 +95,19 @@ void Viewer::addPCToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::st
 void Viewer::deletePCFromViewer(std::string name)
 {
     _viewer->resetStoppedFlag();
+    ROS_INFO("Remove cloud from Viewer");
     _viewer->removePointCloud(name);
     loopViewer();
 }
 
-void Viewer::addNormalsToViewer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+void Viewer::addNormalsToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
                                              pcl::PointCloud<pcl::Normal>::Ptr normals,
                                              std::string name)
 {
     ROS_INFO("Add normals to cloud in Viewer");
     ROS_WARN("Press (X) on viewer to continue");
     _viewer->resetStoppedFlag();
-    _viewer->addPointCloudNormals<pcl::PointXYZ, pcl::Normal>(cloud,normals,1,0.02,name);
+    _viewer->addPointCloudNormals<pcl::PointXYZRGB, pcl::Normal>(cloud,normals,1,0.02,name);
     loopViewer();
 }
 
