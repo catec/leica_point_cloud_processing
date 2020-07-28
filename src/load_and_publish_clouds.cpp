@@ -40,6 +40,7 @@ int getScanCloud(std::string file_name)
     PointCloudRGB::Ptr cloud(new PointCloudRGB);
     
     std::string f = LeicaUtils::getFilePath(file_name, ".pcd");
+    ROS_ERROR("Converting file: %s", f.c_str());
     int r = pcl::io::loadPCDFile<pcl::PointXYZRGB>(f, *cloud);
 
     if (r!=-1 && Utils::isValidCloud(cloud))

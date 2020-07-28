@@ -48,7 +48,6 @@ target_link_libraries(${PROJECT_NAME}
 
 add_executable(node 
 src/node.cpp
-# src/cad_to_pointcloud.cpp
 )
 
 target_link_libraries(node
@@ -59,7 +58,6 @@ target_link_libraries(node
 
 add_executable(load_and_publish_clouds 
 src/load_and_publish_clouds.cpp
-# src/cad_to_pointcloud.cpp
 )
 
 target_link_libraries(load_and_publish_clouds
