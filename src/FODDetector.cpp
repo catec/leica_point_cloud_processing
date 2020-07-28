@@ -20,9 +20,9 @@ void FODDetector::clusterPossibleFODs(PointCloudRGB::Ptr cloud,
     ec.extract(cluster_indices);
 }
 
-int FODDetector::clusterIndicesToROSMsg(std::vector<pcl::PointIndices> cluster_indices,
-                                         PointCloudRGB::Ptr cloud,
-                                         std::vector<sensor_msgs::PointCloud2> &cluster_msg_array)
+int FODDetector::clusterIndicesToROSMsg(const std::vector<pcl::PointIndices> &cluster_indices,
+                                        PointCloudRGB::Ptr cloud,
+                                        std::vector<sensor_msgs::PointCloud2> &cluster_msg_array)
 {
     int n_fods=0;
     for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin(); it != cluster_indices.end(); ++it)

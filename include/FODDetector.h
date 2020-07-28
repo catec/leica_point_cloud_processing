@@ -50,7 +50,7 @@ public:
      * @param[out] cluster_msg_array 
      * @return int number_of_fod
      */
-    int clusterIndicesToROSMsg(std::vector<pcl::PointIndices> cluster_indices,
+    int clusterIndicesToROSMsg(const std::vector<pcl::PointIndices> &cluster_indices,
                                PointCloudRGB::Ptr cloud,
                                std::vector<sensor_msgs::PointCloud2> &cluster_msg_array);
 
