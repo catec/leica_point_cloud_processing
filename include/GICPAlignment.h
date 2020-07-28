@@ -32,7 +32,8 @@ public:
      * @param[in] target_cloud 
      * @param[in] source_cloud 
      */
-    GICPAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRGB::Ptr source_cloud);
+    GICPAlignment(PointCloudRGB::Ptr target_cloud, 
+                  PointCloudRGB::Ptr source_cloud);
     
     /**
      * @brief Destroy the GICPAlignment object

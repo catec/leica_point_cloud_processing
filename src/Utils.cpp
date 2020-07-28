@@ -1,6 +1,6 @@
 #include <Utils.h>
 
-void Utils::setPCpath(std::string pointcloud_folder_path)
+void Utils::setPCpath(const std::string &pointcloud_folder_path)
 {
   _pc_path = pointcloud_folder_path;
 }
@@ -44,7 +44,7 @@ bool Utils::isValidCloud(PointCloudRGB::Ptr cloud)
   return true;
 }
 
-bool Utils::isValidCloudMsg(sensor_msgs::PointCloud2 cloud_msg)
+bool Utils::isValidCloudMsg(const sensor_msgs::PointCloud2 &cloud_msg)
 {
   // int len = sizeof(cloud_msg.data)/sizeof(cloud_msg.data[0]);  // not working
   int len = cloud_msg.row_step * cloud_msg.height; 
@@ -144,7 +144,7 @@ double Utils::computeCloudResolution(PointCloudRGB::Ptr cloud)
   return res;
 }
 
-void Utils::printTransform(Eigen::Matrix4f transform)
+void Utils::printTransform(const Eigen::Matrix4f &transform)
 {
   Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "\t\t\t\t[", "]");
   std::cout << transform.format(CleanFmt) << std::endl;

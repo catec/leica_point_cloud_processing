@@ -64,7 +64,7 @@ public:
      * 
      * @param pointcloud_folder_path 
      */
-    static void setPCpath(std::string pointcloud_folder_path);
+    static void setPCpath(const std::string &pointcloud_folder_path);
 
     /**
      * @brief Get the normals for input cloud with specified normal's radius.
@@ -76,8 +76,8 @@ public:
      * @return false 
      */
     static bool getNormals(PointCloudRGB::Ptr &cloud,
-                            double normal_radius,
-                            pcl::PointCloud<pcl::Normal>::Ptr &normals);
+                           double normal_radius,
+                           pcl::PointCloud<pcl::Normal>::Ptr &normals);
 
     /**
      * @brief Check whether cloud contains data and is not empty.
@@ -104,7 +104,7 @@ public:
      * @return true 
      * @return false 
      */
-    static bool isValidCloudMsg(sensor_msgs::PointCloud2 cloud_msg);
+    static bool isValidCloudMsg(const sensor_msgs::PointCloud2 &cloud_msg);
 
     /**
      * @brief Apply RGB values to cloud. 
@@ -115,7 +115,7 @@ public:
      * @param B 0~255
      */
     static void colorizeCloud(PointCloudRGB::Ptr cloud_rgb,
-                                int R, int G, int B);
+                              int R, int G, int B);
     
     /**
      * @brief Convert XYZ cloud to XYZRGB cloud with specified RGB values.
@@ -127,8 +127,8 @@ public:
      * @param[out] cloud_rgb 
      */
     static void cloudToXYZRGB(PointCloudXYZ::Ptr cloud,
-                                PointCloudRGB::Ptr cloud_rgb,
-                                int R, int G, int B);
+                              PointCloudRGB::Ptr cloud_rgb,
+                              int R, int G, int B);
 
     /**
      * @brief Convert XYZRGB cloud to PointCloud2.
@@ -137,7 +137,7 @@ public:
      * @param[out] cloud_msg 
      */
     static void cloudToROSMsg(PointCloudRGB::Ptr cloud,
-                                sensor_msgs::PointCloud2 &cloud_msg);
+                              sensor_msgs::PointCloud2 &cloud_msg);
 
     /**
      * @brief Obtain the resolution of the cloud.
@@ -160,7 +160,7 @@ public:
      * 
      * @param transform 
      */
-    static void printTransform(Eigen::Matrix4f transform);
+    static void printTransform(const Eigen::Matrix4f &transform);
 
     /**
      * @brief Apply extract indices filter to input cloud with given indices.
@@ -170,12 +170,12 @@ public:
      * @param[out] cloud_out 
      */
     static void indicesFilter(PointCloudRGB::Ptr cloud_in,
-                                PointCloudRGB::Ptr cloud_out, 
-                                boost::shared_ptr<std::vector<int> > indices);
+                              PointCloudRGB::Ptr cloud_out, 
+                              boost::shared_ptr<std::vector<int> > indices);
 
     static void displaceCloud(PointCloudRGB::Ptr cloud_in,
-                                     PointCloudRGB::Ptr cloud_out, 
-                                     double x_offset=0, 
-                                     double y_offset=0, 
-                                     double z_offset=0);
+                              PointCloudRGB::Ptr cloud_out, 
+                              double x_offset=0, 
+                              double y_offset=0, 
+                              double z_offset=0);
 };

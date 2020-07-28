@@ -44,7 +44,6 @@ void GICPAlignment::getAlignedCloudROSMsg(sensor_msgs::PointCloud2 &aligned_clou
 
 void GICPAlignment::configParameters()
 {
-    // si los parametros son el mismo para ambas tiene que depender de las dos
     double target_res = Utils::computeCloudResolution(_target_cloud);
     double source_res = Utils::computeCloudResolution(_source_cloud);
 

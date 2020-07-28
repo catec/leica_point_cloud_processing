@@ -37,7 +37,7 @@ void InitialAlignment::run()
     // v.addPCToViewer(target_keypoints,"tkey");
 
     pcl::CorrespondencesPtr correspondences(new pcl::Correspondences);
-    initialAlingment(source_features, target_features, source_keypoints, target_keypoints, correspondences);
+    performInitialAlingment(source_features, target_features, source_keypoints, target_keypoints, correspondences);
 
     applyTFtoCloud();
     
@@ -103,7 +103,7 @@ std::vector<float> InitialAlignment::getScaleValues(PointCloudRGB::Ptr cloud)
     return scale_values;
 }
 
-void InitialAlignment::printScaleValues(std::vector<float> scale_values)
+void InitialAlignment::printScaleValues(const std::vector<float> &scale_values)
 {
     ROS_INFO("scale:");
     for (int i=0; i<scale_values.size(); i++)
@@ -113,9 +113,9 @@ void InitialAlignment::printScaleValues(std::vector<float> scale_values)
 }
 
 void InitialAlignment::getKeypointsAndFeatures(PointCloudRGB::Ptr cloud, 
-                                                pcl::PointCloud<pcl::Normal>::Ptr normals,
-                                                PointCloudRGB::Ptr keypoints_cloud,
-                                                pcl::PointCloud<pcl::FPFHSignature33>::Ptr features)
+                                               pcl::PointCloud<pcl::Normal>::Ptr normals,
+                                               PointCloudRGB::Ptr keypoints_cloud,
+                                               pcl::PointCloud<pcl::FPFHSignature33>::Ptr features)
 {
     // SELECTED DESCRIPTOR: FPFH
     ROS_INFO("1. Set descriptor FPFH with radius: %f",_feature_radius);
@@ -147,11 +147,11 @@ void InitialAlignment::getKeypointsAndFeatures(PointCloudRGB::Ptr cloud,
 }
 
 
-void InitialAlignment::initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>::Ptr source_features,
-                                           pcl::PointCloud<pcl::FPFHSignature33>::Ptr target_features,
-                                           PointCloudRGB::Ptr source_keypoints,
-                                           PointCloudRGB::Ptr target_keypoints,
-                                           pcl::CorrespondencesPtr corr_filtered)
+void InitialAlignment::performInitialAlingment(pcl::PointCloud<pcl::FPFHSignature33>::Ptr source_features,
+                                               pcl::PointCloud<pcl::FPFHSignature33>::Ptr target_features,
+                                               PointCloudRGB::Ptr source_keypoints,
+                                               PointCloudRGB::Ptr target_keypoints,
+                                               pcl::CorrespondencesPtr corr_filtered)
 {
     ROS_INFO("4. Use descriptor FPFH to compute correspondences");
     pcl::CorrespondencesPtr correspondences(new pcl::Correspondences);

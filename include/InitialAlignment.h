@@ -46,7 +46,8 @@ public:
      * @param[in] target_cloud 
      * @param[in] source_cloud 
      */
-    InitialAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRGB::Ptr source_cloud);
+    InitialAlignment(PointCloudRGB::Ptr target_cloud, 
+                     PointCloudRGB::Ptr source_cloud);
     
     /**
      * @brief Destroy the Initial Alignment object.
@@ -128,7 +129,7 @@ private:
      * 
      * @param scale_values 
      */
-    void printScaleValues(std::vector<float> scale_values);
+    void printScaleValues(const std::vector<float> &scale_values);
 
     /**
      * @brief Compute the cloud normals with given radius. Return false if error
@@ -165,11 +166,11 @@ private:
      * @param[in] target_keypoints 
      * @param[out] correspondences 
      */
-    void initialAlingment(pcl::PointCloud<pcl::FPFHSignature33>::Ptr source_features,
-                          pcl::PointCloud<pcl::FPFHSignature33>::Ptr target_features,
-                          PointCloudRGB::Ptr source_keypoints,
-                          PointCloudRGB::Ptr target_keypoints,
-                          pcl::CorrespondencesPtr correspondences);
+    void performInitialAlingment(pcl::PointCloud<pcl::FPFHSignature33>::Ptr source_features,
+                                 pcl::PointCloud<pcl::FPFHSignature33>::Ptr target_features,
+                                 PointCloudRGB::Ptr source_keypoints,
+                                 PointCloudRGB::Ptr target_keypoints,
+                                 pcl::CorrespondencesPtr correspondences);
 
     /**
      * @brief Once initial alignment is finished, apply rigid transformation to source cloud.
