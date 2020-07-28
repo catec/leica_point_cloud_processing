@@ -40,9 +40,9 @@ public:
      * @param[in] cad_file Supported formats: .OBJ
      * @param[out] cloud XYZ
      */
-    CADToPointCloud(std::string cad_path,
-                    std::string cad_file, 
-                    PointCloudXYZ::Ptr &cloud);
+    CADToPointCloud(const std::string &cad_path,
+                    const std::string &cad_file, 
+                    PointCloudXYZ::Ptr cloud);
     
     /**
      * @brief Construct a new CADToPointCloud object
@@ -50,7 +50,7 @@ public:
      * @param[in] cad_file_path Supported formats: .OBJ
      * @param[out] cloud XYZRGB
      */
-    CADToPointCloud(std::string cad_file_path, 
+    CADToPointCloud(const std::string &cad_file_path, 
                     PointCloudRGB::Ptr cloud);
     
     /**
@@ -61,7 +61,7 @@ public:
 
 
     /** @brief pcl::PolygonMesh to store mesh from CAD file. */
-    pcl::PolygonMesh _CAD_mesh;
+    pcl::PolygonMesh::Ptr _CAD_mesh{new pcl::PolygonMesh};
 
     /** @brief pcl::Pointcloud to store XYZ cloud from CAD file. */
     PointCloudXYZ::Ptr _CAD_cloud{new PointCloudXYZ};
@@ -78,7 +78,7 @@ public:
      * 
      * @param path 
      */
-    void setPCpath(std::string path);
+    void setPCpath(const std::string &path);
 
     /**
      * @brief Load specified file into CAD_mesh object. 
@@ -87,7 +87,7 @@ public:
      * @param cad_file_path Supported formats: .OBJ
      * @return int 
      */
-    int CADToMesh(std::string cad_file_path);
+    int CADToMesh(const std::string &cad_file_path);
 
     /**
      * @brief Convert mesh to CAD_cloud object.
@@ -95,7 +95,7 @@ public:
      * @param mesh 
      * @return int 
      */
-    int MeshToPointCloud(pcl::PolygonMesh mesh);
+    int MeshToPointCloud(pcl::PolygonMesh::Ptr mesh);
 
     /**
      * @brief Convert mesh to CAD_cloud_msg object.
@@ -103,7 +103,7 @@ public:
      * @param mesh 
      * @return int 
      */
-    int MeshToROSPointCloud(pcl::PolygonMesh mesh);
+    int MeshToROSPointCloud(pcl::PolygonMesh::Ptr mesh);
 
 
 private:

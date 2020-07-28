@@ -4,9 +4,9 @@
 CADToPointCloud::CADToPointCloud()
 {}
 
-CADToPointCloud:: CADToPointCloud(std::string cad_path, 
-                                 std::string cad_file, 
-                                 PointCloudXYZ::Ptr &cloud)
+CADToPointCloud::CADToPointCloud(const std::string &cad_path,
+                                 const std::string &cad_file, 
+                                 PointCloudXYZ::Ptr cloud)
 {    
     setPCpath(cad_path);
 
@@ -14,12 +14,13 @@ CADToPointCloud:: CADToPointCloud(std::string cad_path,
     {
         if(MeshToPointCloud(_CAD_mesh)==0) // here we get _CAD_cloud
         {
-            cloud = _CAD_cloud;
+            pcl::copyPointCloud(*_CAD_cloud, *cloud);
+            ROS_INFO("File converted");
         } 
     } 
 }
 
-CADToPointCloud::CADToPointCloud(std::string cad_file_path, 
+CADToPointCloud::CADToPointCloud(const std::string &cad_file_path, 
                                  PointCloudRGB::Ptr cloud)
 {    
     ROS_INFO("Converting file: %s", cad_file_path.c_str());
@@ -34,7 +35,7 @@ CADToPointCloud::CADToPointCloud(std::string cad_file_path,
     } 
 }
 
-int CADToPointCloud::CADToMesh(std::string cad_file_path)
+int CADToPointCloud::CADToMesh(const std::string &cad_file_path)
 {
     pcl::PolygonMesh mesh;
     pcl::io::loadPolygonFile(cad_file_path,mesh);
@@ -43,19 +44,18 @@ int CADToPointCloud::CADToMesh(std::string cad_file_path)
     if (len == 0)
         return -1;
 
-    _CAD_mesh = mesh;
+    *_CAD_mesh = mesh;
     
     return 0;
-    // visualizeMesh(_CAD_mesh);
 }
 
-int CADToPointCloud::MeshToPointCloud(pcl::PolygonMesh mesh)
+int CADToPointCloud::MeshToPointCloud(pcl::PolygonMesh::Ptr mesh)
 {
     int SAMPLE_POINTS_ = 500000;
     float leaf_size = 0.01f;
 
     vtkSmartPointer<vtkPolyData> polydata1 = vtkSmartPointer<vtkPolyData>::New();
-    pcl::io::mesh2vtk(mesh, polydata1);
+    pcl::io::mesh2vtk(*mesh, polydata1);
 
 
     // vtkSmartPointer<vtkOBJReader> readerQuery = vtkSmartPointer<vtkOBJReader>::New();
@@ -78,16 +78,16 @@ int CADToPointCloud::MeshToPointCloud(pcl::PolygonMesh mesh)
     return 0;
 }
 
-int CADToPointCloud::MeshToROSPointCloud(pcl::PolygonMesh mesh)
+int CADToPointCloud::MeshToROSPointCloud(pcl::PolygonMesh::Ptr mesh)
 {
-    pcl_conversions::fromPCL( mesh.cloud, _CAD_cloud_msg);
+    pcl_conversions::fromPCL( mesh->cloud, _CAD_cloud_msg);
     _CAD_cloud_msg.header.frame_id = Utils::_frame_id;
     _CAD_cloud_msg.header.stamp = ros::Time::now();
 
     return 0;
 }
 
-void CADToPointCloud::setPCpath(std::string path)
+void CADToPointCloud::setPCpath(const std::string &path)
 {
     _pc_path = path;
 }
