@@ -1,0 +1,17 @@
+<launch>
+
+  <!-- Part position with respecto to Leica Scanstation C5 -->
+  <arg name="part_pos_x" default="0"/>
+  <arg name="part_pos_y" default="0"/>
+  <arg name="part_pos_z" default="0"/>
+
+  <!-- Larger side of the part -->
+  <arg name="part_size" default="0.9"/>
+
+  <!-- Above parameters not implemented yet -->
+
+
+  <!-- Launch node -->
+  <node name="node" pkg="leica_point_cloud_processing" type="node" output="screen"/>
+
+</launch>
