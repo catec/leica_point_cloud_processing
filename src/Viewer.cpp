@@ -47,7 +47,7 @@ void Viewer::loopViewer()
     } 
 }
 
-void Viewer::addPCToViewer(PointCloudXYZ::Ptr cloud, pc_color color, std::string name)
+void Viewer::addPCToViewer(PointCloudXYZ::Ptr cloud, pc_color color, const std::string &name)
 {
     configViewer();
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
@@ -70,7 +70,7 @@ void Viewer::addPCToViewer(PointCloudXYZ::Ptr cloud, pc_color color, std::string
     loopViewer();
 }
 
-void Viewer::addPCToViewer(PointCloudRGB::Ptr cloud, std::string name)
+void Viewer::addPCToViewer(PointCloudRGB::Ptr cloud, const std::string &name)
 {
     configViewer();
     _viewer->resetStoppedFlag();
@@ -92,7 +92,7 @@ void Viewer::addPCToViewer(PointCloudRGB::Ptr cloud, std::string name)
     loopViewer();
 }
 
-void Viewer::deletePCFromViewer(std::string name)
+void Viewer::deletePCFromViewer(const std::string &name)
 {
     _viewer->resetStoppedFlag();
     ROS_INFO("Remove cloud from Viewer");
@@ -102,7 +102,7 @@ void Viewer::deletePCFromViewer(std::string name)
 
 void Viewer::addNormalsToViewer(PointCloudRGB::Ptr cloud,
                                              pcl::PointCloud<pcl::Normal>::Ptr normals,
-                                             std::string name)
+                                             const std::string &name)
 {
     ROS_INFO("Add normals to cloud in Viewer");
     ROS_WARN("Press (X) on viewer to continue");
@@ -146,4 +146,22 @@ void Viewer::visualizeMesh(pcl::PolygonMesh mesh)
         mesh_viewer->spinOnce(100);
         boost::this_thread::sleep(boost::posix_time::microseconds (100000));
     }
+}
+
+template <typename PointT>
+void Viewer::visualizePointCloud(typename pcl::PointCloud<PointT>::Ptr cloud)
+{
+    ROS_INFO("Display cloud in Viewer");
+    ROS_WARN("Press (X) on viewer to continue");
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> pc_viewer(new pcl::visualization::PCLVisualizer ("Pointcloud viewer"));
+    pc_viewer->setBackgroundColor(0, 0, 0);
+    pc_viewer->addPointCloud<PointT>(cloud,"cloud");
+    pc_viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE,3);
+    pc_viewer->addCoordinateSystem(1.0);
+    pc_viewer->initCameraParameters();
+
+    while (!pc_viewer->wasStopped()){
+        pc_viewer->spinOnce(100);
+        boost::this_thread::sleep(boost::posix_time::microseconds (100000));
+    } 
 }
