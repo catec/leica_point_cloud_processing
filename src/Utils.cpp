@@ -26,7 +26,7 @@ bool Utils::getNormals(PointCloudRGB::Ptr &cloud,
   return success;
 }
 
-bool Utils::isValidCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
+bool Utils::isValidCloud(PointCloudXYZ::Ptr cloud)
 {
   if (cloud->size()<=0)
   {
@@ -66,7 +66,7 @@ void Utils::colorizeCloud(PointCloudRGB::Ptr cloud_rgb,
   }
 }
 
-void Utils::cloudToXYZRGB(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+void Utils::cloudToXYZRGB(PointCloudXYZ::Ptr cloud,
                           PointCloudRGB::Ptr cloud_rgb,
                           int R, int G, int B)
 {
@@ -82,7 +82,7 @@ void Utils::cloudToROSMsg(PointCloudRGB::Ptr cloud,
   cloud_msg.header.stamp = ros::Time::now();
 }
 
-double Utils::computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
+double Utils::computeCloudResolution(PointCloudXYZ::Ptr cloud)
 {
   double res = 0.0;
   int n_points = 0;

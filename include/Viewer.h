@@ -8,6 +8,9 @@
 
 #endif 
 
+typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
+typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
+
 class Viewer {
     public:
         Viewer();
@@ -27,14 +30,14 @@ class Viewer {
         void keyboardCallback(const pcl::visualization::KeyboardEvent& event, void* nothing);
         void checkForSpaceKeyPressed();
         
-        void addPCToViewer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color, std::string name);
-        void addPCToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::string name);
+        void addPCToViewer(PointCloudXYZ::Ptr cloud, pc_color color, std::string name);
+        void addPCToViewer(PointCloudRGB::Ptr cloud, std::string name);
         void deletePCFromViewer(std::string name);
-        void addNormalsToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
+        void addNormalsToViewer(PointCloudRGB::Ptr cloud,
                                 pcl::PointCloud<pcl::Normal>::Ptr normals,
                                 std::string name);
-        void addCorrespondencesToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_cloud,
-                                        pcl::PointCloud<pcl::PointXYZRGB>::Ptr target_cloud,
+        void addCorrespondencesToViewer(PointCloudRGB::Ptr source_cloud,
+                                        PointCloudRGB::Ptr target_cloud,
                                         pcl::CorrespondencesPtr correspondences);
         
         void resetViewer();

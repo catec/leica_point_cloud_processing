@@ -6,7 +6,7 @@ CADToPointCloud::CADToPointCloud()
 
 CADToPointCloud:: CADToPointCloud(std::string cad_path, 
                                  std::string cad_file, 
-                                 pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud)
+                                 PointCloudXYZ::Ptr &cloud)
 {    
     setPCpath(cad_path);
 
@@ -99,7 +99,7 @@ void CADToPointCloud::setPCpath(std::string path)
 
 */
 
-void CADToPointCloud::uniform_sampling(vtkSmartPointer<vtkPolyData> polydata, size_t n_samples, pcl::PointCloud<pcl::PointXYZ> &cloud_out)
+void CADToPointCloud::uniform_sampling(vtkSmartPointer<vtkPolyData> polydata, size_t n_samples, PointCloudXYZ &cloud_out)
 {
     polydata->BuildCells();
     vtkSmartPointer<vtkCellArray> cells = polydata->GetPolys();

@@ -21,6 +21,7 @@
  */
 class CADToPointCloud {
 
+typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
 
@@ -41,7 +42,7 @@ public:
      */
     CADToPointCloud(std::string cad_path,
                     std::string cad_file, 
-                    pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud);
+                    PointCloudXYZ::Ptr &cloud);
     
     /**
      * @brief Construct a new CADToPointCloud object
@@ -63,7 +64,7 @@ public:
     pcl::PolygonMesh _CAD_mesh;
 
     /** @brief pcl::Pointcloud to store XYZ cloud from CAD file. */
-    pcl::PointCloud<pcl::PointXYZ>::Ptr _CAD_cloud{new pcl::PointCloud<pcl::PointXYZ>};
+    PointCloudXYZ::Ptr _CAD_cloud{new PointCloudXYZ};
     
     /** @brief PointCloud2 to store XYZ cloud from CAD file. Ready to be published. */
     sensor_msgs::PointCloud2 _CAD_cloud_msg; 
@@ -109,7 +110,7 @@ private:
 
     /** @brief Extracted from Point Cloud Library (PCL)  --> pcl/tools/mesh_sampling.cpp
      *         \n Copyright (c) 2010-2011, Willow Garage, Inc. */
-    void uniform_sampling(vtkSmartPointer<vtkPolyData> polydata, size_t n_samples, pcl::PointCloud<pcl::PointXYZ> &cloud_out);
+    void uniform_sampling(vtkSmartPointer<vtkPolyData> polydata, size_t n_samples, PointCloudXYZ &cloud_out);
 
     /** @brief Extracted from Point Cloud Library (PCL)  --> pcl/tools/mesh_sampling.cpp
      *         \n Copyright (c) 2010-2011, Willow Garage, Inc. */

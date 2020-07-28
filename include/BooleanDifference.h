@@ -12,6 +12,7 @@
 
 class BooleanDifference {
 
+typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 typedef std::vector<int> IndicesVector;
 typedef boost::shared_ptr<IndicesVector> IndicesVectorPtr;

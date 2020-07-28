@@ -23,8 +23,10 @@
 #endif 
 
 
-class Utils {
+class Utils 
+{
 
+typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
 
@@ -84,7 +86,7 @@ public:
      * @return true 
      * @return false 
      */
-    static bool isValidCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
+    static bool isValidCloud(PointCloudXYZ::Ptr cloud);
 
     /**
      * @brief Check whether cloud contains data and is not empty.
@@ -124,7 +126,7 @@ public:
      * @param B 0~255
      * @param[out] cloud_rgb 
      */
-    static void cloudToXYZRGB(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
+    static void cloudToXYZRGB(PointCloudXYZ::Ptr cloud,
                                 PointCloudRGB::Ptr cloud_rgb,
                                 int R, int G, int B);
 
@@ -143,7 +145,7 @@ public:
      * @param cloud 
      * @return double 
      */
-    static double computeCloudResolution(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud);
+    static double computeCloudResolution(PointCloudXYZ::Ptr cloud);
 
     /**
      * @brief Obtain the resolution of the cloud.

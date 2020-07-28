@@ -47,7 +47,7 @@ void Viewer::loopViewer()
     } 
 }
 
-void Viewer::addPCToViewer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color color, std::string name)
+void Viewer::addPCToViewer(PointCloudXYZ::Ptr cloud, pc_color color, std::string name)
 {
     configViewer();
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> cloud_rgb(cloud, color.r, color.g, color.b); 
@@ -70,7 +70,7 @@ void Viewer::addPCToViewer(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pc_color c
     loopViewer();
 }
 
-void Viewer::addPCToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, std::string name)
+void Viewer::addPCToViewer(PointCloudRGB::Ptr cloud, std::string name)
 {
     configViewer();
     _viewer->resetStoppedFlag();
@@ -100,7 +100,7 @@ void Viewer::deletePCFromViewer(std::string name)
     loopViewer();
 }
 
-void Viewer::addNormalsToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
+void Viewer::addNormalsToViewer(PointCloudRGB::Ptr cloud,
                                              pcl::PointCloud<pcl::Normal>::Ptr normals,
                                              std::string name)
 {
@@ -111,8 +111,8 @@ void Viewer::addNormalsToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
     loopViewer();
 }
 
-void Viewer::addCorrespondencesToViewer(pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_cloud,
-                                                     pcl::PointCloud<pcl::PointXYZRGB>::Ptr target_cloud,
+void Viewer::addCorrespondencesToViewer(PointCloudRGB::Ptr source_cloud,
+                                                     PointCloudRGB::Ptr target_cloud,
                                                      pcl::CorrespondencesPtr correspondences)
 {
     ROS_INFO("Add correspondences between clouds in Viewer");

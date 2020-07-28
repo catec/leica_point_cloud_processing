@@ -34,6 +34,7 @@
 class InitialAlignment 
 {
 
+typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
 

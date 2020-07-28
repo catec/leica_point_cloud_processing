@@ -5,6 +5,7 @@
 
 #include <CADToPointCloud.h>
 
+typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
 std::string TARGET_CLOUD_TOPIC = "/cad/cloud";
