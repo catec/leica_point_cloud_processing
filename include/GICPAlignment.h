@@ -88,7 +88,13 @@ public:
      */
     void getAlignedCloudROSMsg(sensor_msgs::PointCloud2 &aligned_cloud_msg);
 
-
+    /**
+     * @brief Once GICP is finished, apply fine transformation to source cloud.
+     * 
+     * @param[out] cloud 
+     */
+    void applyTFtoCloud(PointCloudRGB::Ptr cloud);
+    
 private:
 
     /** @brief Transformation matrix as result of GICP alignment. */
@@ -139,13 +145,6 @@ private:
      * @param[out] cloud 
      */
     void iterateFineAlignment(PointCloudRGB::Ptr cloud);
-
-    /**
-     * @brief Once GICP is finished, apply fine transformation to source cloud.
-     * 
-     * @param[out] cloud 
-     */
-    void applyTFtoCloud(PointCloudRGB::Ptr cloud);
 
     /**
      * @brief Store cloud as backup cloud
