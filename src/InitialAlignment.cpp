@@ -170,7 +170,7 @@ void InitialAlignment::performInitialAlingment(pcl::PointCloud<pcl::FPFHSignatur
     rejector.setInputCorrespondences(correspondences);
     rejector.getCorrespondences(*corr_filtered);
     
-    ROS_INFO("6. Get rigid transformation: ");
+    ROS_INFO("6. Get rigid transformation");
     pcl::registration::TransformationEstimationSVD<pcl::PointXYZRGB, pcl::PointXYZRGB> trans_est;
     trans_est.estimateRigidTransformation(*source_keypoints,*target_keypoints, 
                                           *corr_filtered, _rigid_tf);
@@ -181,6 +181,12 @@ void InitialAlignment::applyTFtoCloud()
 {
     pcl::transformPointCloud(*_source_cloud,*_aligned_cloud,_rigid_tf);
 }
+
+void InitialAlignment::applyTFtoCloud(PointCloudRGB::Ptr cloud)
+{
+    pcl::transformPointCloud(*cloud,*cloud,_rigid_tf);
+}
+
 
 void InitialAlignment::getAlignedCloud(PointCloudRGB::Ptr aligned_cloud)
 {

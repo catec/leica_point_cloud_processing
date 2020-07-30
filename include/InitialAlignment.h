@@ -85,6 +85,12 @@ public:
      */
     void getAlignedCloudROSMsg(sensor_msgs::PointCloud2 &aligned_cloud_msg);
 
+    /**
+     * @brief Once initial alignment is finished, apply rigid transformation to given cloud.
+     * 
+     * @param[in] cloud 
+     */
+    void applyTFtoCloud(PointCloudRGB::Ptr cloud);
 
 private:
 
