@@ -13,16 +13,16 @@ InitialAlignment::InitialAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRG
 void InitialAlignment::run()
 {
     // Viewer v;
-    // v.addPCToViewer(_source_cloud, "source");
-    // v.addPCToViewer(_target_cloud, "target");
+    // v.addPCToViewer<pcl::PointXYZRGB>(_source_cloud, "source");
+    // v.addPCToViewer<pcl::PointXYZRGB>(_target_cloud, "target");
     
     pcl::PointCloud<pcl::Normal>::Ptr source_normals(new pcl::PointCloud<pcl::Normal>);
     pcl::PointCloud<pcl::Normal>::Ptr target_normals(new pcl::PointCloud<pcl::Normal>);
     getNormals(_source_cloud, _normal_radius, source_normals);
     getNormals(_target_cloud, _normal_radius, target_normals);
 
-    // v.addNormalsToViewer(_source_cloud, source_normals, "n_source");
-    // v.addNormalsToViewer(_target_cloud, target_normals, "n_target");
+    // v.addNormalsToViewer<pcl::PointXYZRGB, pcl::Normal>(_source_cloud, source_normals, "n_source");
+    // v.addNormalsToViewer<pcl::PointXYZRGB, pcl::Normal>(_target_cloud, target_normals, "n_target");
 
     PointCloudRGB::Ptr target_keypoints(new PointCloudRGB);
     PointCloudRGB::Ptr source_keypoints(new PointCloudRGB);
@@ -33,17 +33,17 @@ void InitialAlignment::run()
 
     Utils::colorizeCloud(source_keypoints, 0, 255, 0);
     Utils::colorizeCloud(target_keypoints, 0, 255, 0);
-    // v.addPCToViewer(source_keypoints,"key");
-    // v.addPCToViewer(target_keypoints,"tkey");
+    // v.addPCToViewer<pcl::PointXYZRGB>(source_keypoints,"key");
+    // v.addPCToViewer<pcl::PointXYZRGB>(target_keypoints,"tkey");
 
     pcl::CorrespondencesPtr correspondences(new pcl::Correspondences);
     performInitialAlingment(source_features, target_features, source_keypoints, target_keypoints, correspondences);
 
     applyTFtoCloud();
     
-    // v.addCorrespondencesToViewer(source_keypoints, target_keypoints, correspondences);
+    // v.addCorrespondencesToViewer<pcl::PointXYZRGB>(source_keypoints, target_keypoints, correspondences);
     // v.deletePCFromViewer("source");
-    // v.addPCToViewer(_aligned_cloud,"aligned");
+    // v.addPCToViewer<pcl::PointXYZRGB>(_aligned_cloud,"aligned");
 }
 
 Eigen::Matrix4f InitialAlignment::getRigidTransform()

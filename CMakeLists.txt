@@ -35,7 +35,8 @@ include_directories(
 add_library(${PROJECT_NAME} 
 src/Utils.cpp
 src/Filter.cpp
-src/Viewer.cpp
+# src/Viewer.cpp
+include/Viewer.h
 src/InitialAlignment.cpp
 src/GICPAlignment.cpp
 src/BooleanDifference.cpp
