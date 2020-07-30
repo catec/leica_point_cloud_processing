@@ -13,7 +13,7 @@ void FODDetector::clusterPossibleFODs(PointCloudRGB::Ptr cloud,
 
     pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
     ec.setClusterTolerance(_voxel_resolution);
-    ec.setMinClusterSize(10);
+    ec.setMinClusterSize(100);
     ec.setMaxClusterSize(1000);
     ec.setSearchMethod(tree);
     ec.setInputCloud(cloud);
