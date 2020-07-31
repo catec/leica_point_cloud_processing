@@ -1,13 +1,11 @@
 #include <Utils.h>
 
-void Utils::setPCpath(const std::string &pointcloud_folder_path)
+void Utils::setPCpath(const std::string& pointcloud_folder_path)
 {
   _pc_path = pointcloud_folder_path;
 }
 
-bool Utils::getNormals(PointCloudRGB::Ptr &cloud,
-                       double normal_radius,
-                       pcl::PointCloud<pcl::Normal>::Ptr &normals)
+bool Utils::getNormals(PointCloudRGB::Ptr& cloud, double normal_radius, pcl::PointCloud<pcl::Normal>::Ptr& normals)
 {
   ROS_INFO("Computing normals with radius: %f", normal_radius);
   pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> ne;
@@ -28,7 +26,7 @@ bool Utils::getNormals(PointCloudRGB::Ptr &cloud,
 
 bool Utils::isValidCloud(PointCloudXYZ::Ptr cloud)
 {
-  if (cloud->size()<=0)
+  if (cloud->size() <= 0)
   {
     return false;
   }
@@ -37,17 +35,17 @@ bool Utils::isValidCloud(PointCloudXYZ::Ptr cloud)
 
 bool Utils::isValidCloud(PointCloudRGB::Ptr cloud)
 {
-  if (cloud->size()<=0)
+  if (cloud->size() <= 0)
   {
     return false;
   }
   return true;
 }
 
-bool Utils::isValidCloudMsg(const sensor_msgs::PointCloud2 &cloud_msg)
+bool Utils::isValidCloudMsg(const sensor_msgs::PointCloud2& cloud_msg)
 {
   // int len = sizeof(cloud_msg.data)/sizeof(cloud_msg.data[0]);  // not working
-  int len = cloud_msg.row_step * cloud_msg.height; 
+  int len = cloud_msg.row_step * cloud_msg.height;
   if (len == 0)
   {
     return false;
@@ -55,8 +53,7 @@ bool Utils::isValidCloudMsg(const sensor_msgs::PointCloud2 &cloud_msg)
   return true;
 }
 
-void Utils::colorizeCloud(PointCloudRGB::Ptr cloud_rgb,
-                          int R, int G, int B)
+void Utils::colorizeCloud(PointCloudRGB::Ptr cloud_rgb, int R, int G, int B)
 {
   for (size_t i = 0; i < cloud_rgb->points.size(); i++)
   {
@@ -66,16 +63,13 @@ void Utils::colorizeCloud(PointCloudRGB::Ptr cloud_rgb,
   }
 }
 
-void Utils::cloudToXYZRGB(PointCloudXYZ::Ptr cloud,
-                          PointCloudRGB::Ptr cloud_rgb,
-                          int R, int G, int B)
+void Utils::cloudToXYZRGB(PointCloudXYZ::Ptr cloud, PointCloudRGB::Ptr cloud_rgb, int R, int G, int B)
 {
   pcl::copyPointCloud(*cloud, *cloud_rgb);
-  colorizeCloud(cloud_rgb, R,G,B);
+  colorizeCloud(cloud_rgb, R, G, B);
 }
 
-void Utils::cloudToROSMsg(PointCloudRGB::Ptr cloud,
-                          sensor_msgs::PointCloud2 &cloud_msg)
+void Utils::cloudToROSMsg(PointCloudRGB::Ptr cloud, sensor_msgs::PointCloud2& cloud_msg)
 {
   pcl::toROSMsg(*cloud, cloud_msg);
   cloud_msg.header.frame_id = _frame_id;
@@ -98,7 +92,7 @@ double Utils::computeCloudResolution(PointCloudXYZ::Ptr cloud)
     {
       continue;
     }
-    //Considering the second neighbor since the first is the point itself.
+    // Considering the second neighbor since the first is the point itself.
     nres = tree.nearestKSearch(i, 2, indices, sqr_distances);
     if (nres == 2)
     {
@@ -129,7 +123,7 @@ double Utils::computeCloudResolution(PointCloudRGB::Ptr cloud)
     {
       continue;
     }
-    //Considering the second neighbor since the first is the point itself.
+    // Considering the second neighbor since the first is the point itself.
     nres = tree.nearestKSearch(i, 2, indices, sqr_distances);
     if (nres == 2)
     {
@@ -144,26 +138,22 @@ double Utils::computeCloudResolution(PointCloudRGB::Ptr cloud)
   return res;
 }
 
-void Utils::printTransform(const Eigen::Matrix4f &transform)
+void Utils::printTransform(const Eigen::Matrix4f& transform)
 {
   Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "\t\t\t\t[", "]");
   std::cout << transform.format(CleanFmt) << std::endl;
 }
 
-void Utils::indicesFilter(PointCloudRGB::Ptr cloud_in,
-                          PointCloudRGB::Ptr cloud_out, 
-                          boost::shared_ptr<std::vector<int> >  indices)
+void Utils::indicesFilter(PointCloudRGB::Ptr cloud_in, PointCloudRGB::Ptr cloud_out,
+                          boost::shared_ptr<std::vector<int> > indices)
 {
-    pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_filter;
-    extract_indices_filter.setInputCloud(cloud_in);
-    extract_indices_filter.setIndices(indices);
-    extract_indices_filter.filter(*cloud_out);
+  pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_filter;
+  extract_indices_filter.setInputCloud(cloud_in);
+  extract_indices_filter.setIndices(indices);
+  extract_indices_filter.filter(*cloud_out);
 }
 
-void Utils::displaceCloud(PointCloudRGB::Ptr cloud_in,
-                          PointCloudRGB::Ptr cloud_out, 
-                          double x_offset, 
-                          double y_offset, 
+void Utils::displaceCloud(PointCloudRGB::Ptr cloud_in, PointCloudRGB::Ptr cloud_out, double x_offset, double y_offset,
                           double z_offset)
 {
   pcl::copyPointCloud(*cloud_in, *cloud_out);

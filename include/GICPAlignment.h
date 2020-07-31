@@ -12,144 +12,136 @@
 
 /**
  * @brief Perform a fine alignment from source to target cloud with Generalized Iterative Closest Point.
- * 
+ *
  * POINTCLOUDS:
  * - \b target pointcloud: should be obtained from converting a part's CAD. Use CADToPointCloud.
  * - \b source pointcloud: obtained from Leica scan and previously aligned with target using InitialAlignment.
  */
-class GICPAlignment 
+class GICPAlignment
 {
-
-typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
-typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
-typedef std::vector<Eigen::Matrix3d, Eigen::aligned_allocator<Eigen::Matrix3d>> CovariancesVector;
+  typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
+  typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
+  typedef std::vector<Eigen::Matrix3d, Eigen::aligned_allocator<Eigen::Matrix3d>> CovariancesVector;
 
 public:
+  /**
+   * @brief Construct a new GICPAlignment object
+   *
+   * @param[in] target_cloud
+   * @param[in] source_cloud
+   */
+  GICPAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRGB::Ptr source_cloud);
 
-    /**
-     * @brief Construct a new GICPAlignment object
-     * 
-     * @param[in] target_cloud 
-     * @param[in] source_cloud 
-     */
-    GICPAlignment(PointCloudRGB::Ptr target_cloud, 
-                  PointCloudRGB::Ptr source_cloud);
-    
-    /**
-     * @brief Destroy the GICPAlignment object
-     * 
-     */
-    ~GICPAlignment() {};
+  /**
+   * @brief Destroy the GICPAlignment object
+   *
+   */
+  ~GICPAlignment(){};
 
+  /** @brief If true, fine transformation is finished. */
+  bool transform_exists;
 
-    /** @brief If true, fine transformation is finished. */
-    bool transform_exists;
+  /** @brief GICP object. */
+  pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> _gicp;
 
-    /** @brief GICP object. */
-    pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> _gicp;
+  /**
+   * @brief Perform GICP alignment
+   *
+   */
+  void run();
 
+  /**
+   * @brief Do more iterations of GICP alignment
+   *
+   */
+  void iterate();
 
-    /**
-     * @brief Perform GICP alignment
-     * 
-     */
-    void run();
+  /**
+   * @brief Undo last iteration and back up results
+   *
+   */
+  void undo();
 
-    /**
-     * @brief Do more iterations of GICP alignment
-     * 
-     */
-    void iterate();
+  /**
+   * @brief Get the fine transform object
+   *
+   * @return Eigen::Matrix4f
+   */
+  Eigen::Matrix4f getFineTransform();
 
-    /**
-     * @brief Undo last iteration and back up results
-     * 
-     */
-    void undo();
+  /**
+   * @brief Get the aligned cloud object
+   *
+   * @param[out] aligned_cloud
+   */
+  void getAlignedCloud(PointCloudRGB::Ptr aligned_cloud);
 
-    /**
-     * @brief Get the fine transform object
-     * 
-     * @return Eigen::Matrix4f 
-     */
-    Eigen::Matrix4f getFineTransform();
+  /**
+   * @brief Get the aligned cloud msg in PointCloud2 format
+   *
+   * @param[out] aligned_cloud_msg
+   */
+  void getAlignedCloudROSMsg(sensor_msgs::PointCloud2& aligned_cloud_msg);
 
-    /**
-     * @brief Get the aligned cloud object
-     * 
-     * @param[out] aligned_cloud 
-     */
-    void getAlignedCloud(PointCloudRGB::Ptr aligned_cloud);
+  /**
+   * @brief Once GICP is finished, apply fine transformation to source cloud.
+   *
+   * @param[out] cloud
+   */
+  void applyTFtoCloud(PointCloudRGB::Ptr cloud);
 
-    /**
-     * @brief Get the aligned cloud msg in PointCloud2 format
-     * 
-     * @param[out] aligned_cloud_msg 
-     */
-    void getAlignedCloudROSMsg(sensor_msgs::PointCloud2 &aligned_cloud_msg);
-
-    /**
-     * @brief Once GICP is finished, apply fine transformation to source cloud.
-     * 
-     * @param[out] cloud 
-     */
-    void applyTFtoCloud(PointCloudRGB::Ptr cloud);
-    
 private:
+  /** @brief Transformation matrix as result of GICP alignment. */
+  Eigen::Matrix4f _fine_tf;
 
-    /** @brief Transformation matrix as result of GICP alignment. */
-    Eigen::Matrix4f _fine_tf;
+  /** @brief Radius to compute normals. */
+  double _normal_radius;
 
-    /** @brief Radius to compute normals. */
-    double _normal_radius;
+  /** @brief Target pointcloud. */
+  PointCloudRGB::Ptr _target_cloud;
 
-    /** @brief Target pointcloud. */
-    PointCloudRGB::Ptr _target_cloud;
+  /** @brief Source pointcloud. */
+  PointCloudRGB::Ptr _source_cloud;
 
-    /** @brief Source pointcloud. */
-    PointCloudRGB::Ptr _source_cloud;
-    
-    /** @brief Source pointcloud aligned with target cloud. */
-    PointCloudRGB::Ptr _aligned_cloud;
+  /** @brief Source pointcloud aligned with target cloud. */
+  PointCloudRGB::Ptr _aligned_cloud;
 
-    /** @brief Save aligned pointcloud to restore if undo. */
-    PointCloudRGB::Ptr _backup_cloud;
+  /** @brief Save aligned pointcloud to restore if undo. */
+  PointCloudRGB::Ptr _backup_cloud;
 
-    /**
-     * @brief Will set parameters to compute GICP alignment based on clouds data.
-     * 
-     */
-    void configParameters();
+  /**
+   * @brief Will set parameters to compute GICP alignment based on clouds data.
+   *
+   */
+  void configParameters();
 
-    /**
-     * @brief Apply covariances to perform fine alignment.
-     * 
-     * @param[in] source_cloud 
-     * @param[in] target_cloud 
-     */
-    void fineAlignment(PointCloudRGB::Ptr source_cloud,
-                       PointCloudRGB::Ptr target_cloud);
-    
-    /**
-     * @brief Get the covariances from cloud
-     * 
-     * @param[in] cloud 
-     * @param[out] covs 
-     */
-    void getCovariances(PointCloudRGB::Ptr cloud,
-                        boost::shared_ptr<CovariancesVector> covs);
+  /**
+   * @brief Apply covariances to perform fine alignment.
+   *
+   * @param[in] source_cloud
+   * @param[in] target_cloud
+   */
+  void fineAlignment(PointCloudRGB::Ptr source_cloud, PointCloudRGB::Ptr target_cloud);
 
-    /**
-     * @brief Re-iterate GICP and save new aligned cloud.
-     * 
-     * @param[out] cloud 
-     */
-    void iterateFineAlignment(PointCloudRGB::Ptr cloud);
+  /**
+   * @brief Get the covariances from cloud
+   *
+   * @param[in] cloud
+   * @param[out] covs
+   */
+  void getCovariances(PointCloudRGB::Ptr cloud, boost::shared_ptr<CovariancesVector> covs);
 
-    /**
-     * @brief Store cloud as backup cloud
-     * 
-     * @param[in] cloud 
-     */
-    void backUp(PointCloudRGB::Ptr cloud);
+  /**
+   * @brief Re-iterate GICP and save new aligned cloud.
+   *
+   * @param[out] cloud
+   */
+  void iterateFineAlignment(PointCloudRGB::Ptr cloud);
+
+  /**
+   * @brief Store cloud as backup cloud
+   *
+   * @param[in] cloud
+   */
+  void backUp(PointCloudRGB::Ptr cloud);
 };
