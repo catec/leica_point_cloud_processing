@@ -1,16 +1,18 @@
-# LEICA SCANSTATION C5 #
+# LEICA POINT CLOUD PROCESSING #
 
 This package has been developed to help identifying [FODs](https://www.fodcontrol.com/what-is-fod/) in aeronautical structures. 
 
 Using point cloud analysis techniques, this software aims to compare the current state of the structure with its CAD to identify possible foreign objects. 
 
-It has been designed to be used in combination with the *leica_scanstation* (link aqui) package, which allows to control the scanstation to make a scan of an aeronautical part. When the scan is finished, you get the point cloud that proceeds to be analyzed. 
+It has been designed to be used in combination with the [leica_scanstation](https://github.com/fada-catec/leica_scanstation) package, which allows to control the scanstation to make a scan of an aeronautical part. When the scan is finished, you get the point cloud that proceeds to be analyzed. 
+
+It is involved in the ROSIN project [Large_3D_inspection](http://wiki.ros.org/large_3d_inspection)
 
 ## Set up ##
 1. Create a workspace and clone *leica_scanstation* (for listed dependencies)
 
         mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src
-        git clone https://imlara@bitbucket.org/ayr_catec/leica_scanstation.git
+        git clone https://github.com/fada-catec/leica_scanstation.git
 
 2. Remove package *leica_scanstation_ros* to avoid compilation errors.
 
@@ -19,7 +21,7 @@ It has been designed to be used in combination with the *leica_scanstation* (lin
 3. Clone this repo and Compile
 
         cd ~/catkin_ws/src
-        git clone https://imlara@bitbucket.org/ayr_catec/leica_point_cloud_processing.git
+        git clone https://github.com/fada-catec/leica_point_cloud_processing.git
         cd ~/catkin_ws/
         catkin_make
 
@@ -35,7 +37,7 @@ Supported formats: `.obj` for CAD files and `.pcd` for scanned files. NOTE: both
 
 ## Usage ##
 
-If you plan to use it with Leica Scanstation C5 visit [ros.wiki](link aqui) to get more info. 
+If you plan to use it with Leica Scanstation C5 visit [ros.wiki](http://wiki.ros.org/leica_scanstation) to get more info. 
 
     rosrun leica_scanstation_utils main
 
@@ -94,13 +96,15 @@ When both clouds are finally aligned, ask for the algorithm to look for FODs
 
         pip3 install python-pcl
 
-7. [leica_scanstation_msgs](https://bitbucket.org/ayr_catec/leica_scanstation_msgs/src/master/)
+7. [leica_scanstation_msgs](https://github.com/fada-catec/leica_scanstation/tree/master/leica_scanstation_msgs)
 
-8. [leica_scanstation_utils](https://bitbucket.org/ayr_catec/leica_scanstation_utils/src/master/)
+8. [leica_scanstation_utils](https://github.com/fada-catec/leica_scanstation/tree/master/leica_scanstation_utils)
 
 ## Code API ##
 
 [Topics, Services](http://wiki.ros.org/leica_point_cloud_processing#Code_API)
+
+Read documentation `leica_point_cloud_processing/doc/html/index.html`
 
 ## Help ##
 Ines M. Lara - imlara@catec.aero
