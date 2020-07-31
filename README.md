@@ -98,6 +98,9 @@ When both clouds are finally aligned, ask for the algorithm to look for FODs
 
 8. [leica_scanstation_utils](https://bitbucket.org/ayr_catec/leica_scanstation_utils/src/master/)
 
+## Code API ##
+
+[Topics, Services](http://wiki.ros.org/leica_point_cloud_processing#Code_API)
 
 ## Help ##
 Ines M. Lara - imlara@catec.aero

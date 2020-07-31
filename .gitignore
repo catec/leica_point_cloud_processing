@@ -3,6 +3,3 @@
 *.ptx
 *.pcd
 .vscode/
-meshes/*
-pointclouds/*
-doc/*

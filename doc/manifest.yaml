@@ -1,0 +1,19 @@
+actions: []
+authors: Ines Lara Sicilia <imlara@catec.aero>
+brief: ''
+bugtracker: ''
+depends:
+- catkin
+- roscpp
+- sensor_msgs
+- std_msgs
+- rospy
+- tf
+description: The leica_point_cloud_processing package
+license: Apache 2.0
+maintainers: Ines Lara Sicilia <imlara@catec.aero>
+msgs: []
+package_type: package
+repo_url: ''
+srvs: []
+url: ''
