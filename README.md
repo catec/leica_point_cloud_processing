@@ -8,6 +8,8 @@ It has been designed to be used in combination with the [leica_scanstation](http
 
 It is involved in the ROSIN project [Large_3D_inspection](http://wiki.ros.org/large_3d_inspection)
 
+NOTE: the following release is an alpha experimental release corresponding to Milestone 1 of the ROSIN project.
+
 ## Set up ##
 1. Create a workspace and clone *leica_scanstation* (for listed dependencies)
 
