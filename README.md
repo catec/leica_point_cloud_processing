@@ -1,49 +1,49 @@
 # LEICA SCANSTATION C5 #
 
-This repo contains source code to develop a library for controlling Leica Scanstation C5.
-This is involved in a ROSIN project.
+This package has been developed to help identifying [FODs](https://www.fodcontrol.com/what-is-fod/) in aeronautical structures. 
 
-Meshes and pointclouds are not updated online because they are confidential.
+Using point cloud analysis techniques, this software aims to compare the current state of the structure with its CAD to identify possible foreign objects. 
 
-![process](alignment_process.gif)
+It has been designed to be used in combination with the *leica_scanstation* (link aqui) package, which allows to control the scanstation to make a scan of an aeronautical part. When the scan is finished, you get the point cloud that proceeds to be analyzed. 
 
 ## Set up ##
+1. Create a workspace and clone *leica_scanstation* (for listed dependencies)
 
-* Clone
-* Compile
+        mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src
+        git clone https://imlara@bitbucket.org/ayr_catec/leica_scanstation.git
 
-## Files ##
+2. Remove package *leica_scanstation_ros* to avoid compilation errors.
 
-### node.cpp
-This node will perfom alignment between CAD and scanned clouds. 
-1. Create subscriber for cloud topics `/cad/cloud` and `/scan/cloud`. 
-2. Perform alignment between both clouds.
-3. Publish aligned cloud.
-4. Let user modify result as specified in [Usage](##usage)
+        rm -r leica_scanstation/leica_scanstation_ros
 
-### load_and_publish_clouds.cpp
-This node will load and publish clouds on topic read by [node](##nodecpp).
-- Make sure cloud files are on the correct folder (default: package leica_scanstation_utils/pointclouds)
-- Supported formats: `.obj` for CAD file, `.pcd` for scan file.
-- Publisher start when service is called:
-    - Automatically done by leica_scanstation_sdk_control_node when scan is finished
-    - Manually call by user
+3. Clone this repo and Compile
 
-            rosservice call /publish_clouds "file_name: '{file}'"
+        cd ~/catkin_ws/src
+        git clone https://imlara@bitbucket.org/ayr_catec/leica_point_cloud_processing.git
+        cd ~/catkin_ws/
+        catkin_make
 
-## Run ##
+## Nodes ##
+
+**load_and_publish_clouds** node will load both scanned and CAD clouds into ROS topics: `/cad/cloud` and `/scan/cloud`. This is done after calling rosservice `/publish_clouds`.
+
+Make sure pointcloud files are on the correct folder, specified in ROS param server as `/pointcloud_folder` (default: package leica_scanstation_utils/pointclouds).
+
+Supported formats: `.obj` for CAD files and `.pcd` for scanned files. NOTE: both files *must* have the same name.
+
+**node** is the main node that perform alignment and FOD detection. It opens subscribers to clouds topics and start process.
+
+## Usage ##
+
+If you plan to use it with Leica Scanstation C5 visit [ros.wiki](link aqui) to get more info. 
 
     rosrun leica_scanstation_utils main
 
-    rosrun leica_point_cloud_processing node
-
     rosrun leica_point_cloud_processing load_and_publish_clouds
 
-If using Leica Scanstation C5
+    rosrun leica_point_cloud_processing node
 
-    wineconsole leica_scanstation_sdk_control/release/leica_scanstation_sdk_control_node.exe
-
-## Usage ##
+    rosservice call /publish_clouds "file_name: '{file}'"
 
 Both clouds should be available in ROS topics: `/cad/cloud` and `/scan/cloud`
 
@@ -61,11 +61,13 @@ When both clouds are finally aligned, ask for the algorithm to look for FODs
 
 ## Dependencies ##
 
-1. Boost, Flann, Eigen3, OpenNI, OpenNI2
+1. [ROS for Ubuntu](http://wiki.ros.org/Installation/Ubuntu)
+
+2. Boost, Flann, Eigen3, OpenNI, OpenNI2
 
         sudo apt-get install libboost1.58* libflann1.8 libeigen3-dev libopenni-dev libopenni2-dev
 
-2. VTK > 6
+3. VTK > 6
 
         wget http://www.vtk.org/files/release/7.1/VTK-7.1.0.tar.gz
         tar -xf VTK-7.1.0.tar.gz
@@ -74,7 +76,7 @@ When both clouds are finally aligned, ask for the algorithm to look for FODs
         make                                                                   
         sudo make install
 
-3. PCL >1.8.1
+4. PCL >1.8.1
 
         wget https://github.com/PointCloudLibrary/pcl/archive/pcl-1.8.1.tar.gz
         tar -xf pcl-1.8.1.tar.gz
@@ -83,20 +85,19 @@ When both clouds are finally aligned, ask for the algorithm to look for FODs
         make
         sudo make install
 
-4. PCL-ROS
+5. PCL-ROS
 
         sudo apt-get install ros-kinetic-pcl-*
         sudo apt-get install pcl-tools
 
-5. PYTHON-PCL
+6. PYTHON-PCL
 
         pip3 install python-pcl
 
-6. [leica_scanstation_msgs](https://bitbucket.org/ayr_catec/leica_scanstation_msgs/src/master/)
+7. [leica_scanstation_msgs](https://bitbucket.org/ayr_catec/leica_scanstation_msgs/src/master/)
 
-7. [leica_scanstation_utils](https://bitbucket.org/ayr_catec/leica_scanstation_utils/src/master/)
+8. [leica_scanstation_utils](https://bitbucket.org/ayr_catec/leica_scanstation_utils/src/master/)
 
 
 ## Help ##
 Ines M. Lara - imlara@catec.aero
-Other community or team contact
