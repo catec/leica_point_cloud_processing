@@ -19,7 +19,7 @@
 
 FODDetector::FODDetector(double resolution)
 {
-  _voxel_resolution = resolution;
+  voxel_resolution_ = resolution;
 }
 
 void FODDetector::clusterPossibleFODs(PointCloudRGB::Ptr cloud, std::vector<pcl::PointIndices>& cluster_indices)
@@ -28,7 +28,7 @@ void FODDetector::clusterPossibleFODs(PointCloudRGB::Ptr cloud, std::vector<pcl:
   tree->setInputCloud(cloud);
 
   pcl::EuclideanClusterExtraction<pcl::PointXYZRGB> ec;
-  ec.setClusterTolerance(_voxel_resolution);
+  ec.setClusterTolerance(voxel_resolution_);
   ec.setMinClusterSize(100);
   ec.setMaxClusterSize(1000);
   ec.setSearchMethod(tree);
@@ -54,7 +54,7 @@ int FODDetector::clusterIndicesToROSMsg(const std::vector<pcl::PointIndices>& cl
 
     sensor_msgs::PointCloud2 cluster_msg;
     pcl::toROSMsg(*cloud_cluster, cluster_msg);
-    cluster_msg.header.frame_id = Utils::_frame_id;
+    cluster_msg.header.frame_id = Utils::frame_id_;
     cluster_msg.header.stamp = ros::Time::now();
     cluster_msg_array.push_back(cluster_msg);
   }

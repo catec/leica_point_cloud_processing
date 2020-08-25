@@ -19,47 +19,47 @@
 
 Filter::Filter(double leaf_size)
 {
-  _leaf_size = leaf_size;
-  _noise_filter_threshold = 0;
-  _floor_filter_threshold = 0;
-  _user_given_center = false;
+  leaf_size_ = leaf_size;
+  noise_filter_threshold_ = 0;
+  floor_filter_threshold_ = 0;
+  user_given_center_ = false;
 }
 
 Filter::Filter(double leaf_size, double noise_threshold)
 {
-  _leaf_size = leaf_size;
-  _noise_filter_threshold = noise_threshold;
-  _floor_filter_threshold = 0;
-  _user_given_center = false;
+  leaf_size_ = leaf_size;
+  noise_filter_threshold_ = noise_threshold;
+  floor_filter_threshold_ = 0;
+  user_given_center_ = false;
 }
 
 Filter::Filter(double leaf_size, double noise_threshold, double floor_threshold)
 {
-  _leaf_size = leaf_size;
-  _noise_filter_threshold = noise_threshold;
-  _floor_filter_threshold = floor_threshold;
-  _user_given_center = false;
+  leaf_size_ = leaf_size;
+  noise_filter_threshold_ = noise_threshold;
+  floor_filter_threshold_ = floor_threshold;
+  user_given_center_ = false;
 }
 
 Filter::Filter(Eigen::Vector3f cloud_center, double leaf_size, double noise_threshold, double floor_threshold)
 {
-  _cloud_center = cloud_center;
-  _leaf_size = leaf_size;
-  _noise_filter_threshold = noise_threshold;
-  _floor_filter_threshold = floor_threshold;
-  _user_given_center = true;
+  cloud_center_ = cloud_center;
+  leaf_size_ = leaf_size;
+  noise_filter_threshold_ = noise_threshold;
+  floor_filter_threshold_ = floor_threshold;
+  user_given_center_ = true;
 }
 
 void Filter::downsampleCloud(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_downsampled)
 {
-  ROS_INFO("Filtering with leaf size: %f", _leaf_size);
+  ROS_INFO("Filtering with leaf size: %f", leaf_size_);
   double res = Utils::computeCloudResolution(cloud);
   // ROS_INFO("Pointcloud size before downsampling: %zu",cloud->points.size());
   ROS_INFO("Pointcloud resolution before downsampling: %f", res);
 
   pcl::VoxelGrid<pcl::PointXYZRGB> downsampling_filter;
   downsampling_filter.setInputCloud(cloud);
-  const Eigen::Vector4f downsampling_leaf_size(_leaf_size, _leaf_size, _leaf_size, 0.0f);
+  const Eigen::Vector4f downsampling_leaf_size(leaf_size_, leaf_size_, leaf_size_, 0.0f);
   downsampling_filter.setLeafSize(downsampling_leaf_size);
   downsampling_filter.filter(*cloud_downsampled);
 
@@ -153,7 +153,7 @@ void Filter::filter_floor(double threshold, PointCloudRGB::Ptr cloud, PointCloud
 
 void Filter::setLeafSize(double new_leaf_size)
 {
-  _leaf_size = new_leaf_size;
+  leaf_size_ = new_leaf_size;
 }
 
 void Filter::run(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered)
@@ -161,18 +161,18 @@ void Filter::run(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered)
   pcl::copyPointCloud(*cloud, *cloud_filtered);
 
   // Filter floor
-  if (_floor_filter_threshold > 0)
-    filter_floor(_floor_filter_threshold, cloud_filtered, cloud_filtered);
+  if (floor_filter_threshold_ > 0)
+    filter_floor(floor_filter_threshold_, cloud_filtered, cloud_filtered);
 
   // Filter noise
-  if (_noise_filter_threshold > 0)
+  if (noise_filter_threshold_ > 0)
   {
     // with given center
-    if (_user_given_center)
-      filter_noise(_cloud_center, _noise_filter_threshold, cloud_filtered, cloud_filtered);
+    if (user_given_center_)
+      filter_noise(cloud_center_, noise_filter_threshold_, cloud_filtered, cloud_filtered);
     // without given center
     else
-      filter_noise(_noise_filter_threshold, cloud_filtered, cloud_filtered);
+      filter_noise(noise_filter_threshold_, cloud_filtered, cloud_filtered);
   }
 
   // Downsample

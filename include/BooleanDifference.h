@@ -47,7 +47,7 @@ public:
   ~BooleanDifference(){};
 
   /** @brief If true, substracting process failed. */
-  bool substract_error;
+  bool substract_error_;
 
   /**
    * @brief Implement substraction between cloud and cloud_to_substract. Store result cloud.
@@ -72,16 +72,16 @@ public:
 
 private:
   /** @brief Base cloud */
-  PointCloudRGB::Ptr _cloud;
+  PointCloudRGB::Ptr cloud_;
 
-  /** @brief Result cloud from differenciating _cloud and other */
-  PointCloudRGB::Ptr _result_cloud;
+  /** @brief Result cloud from differenciating cloud_ and other */
+  PointCloudRGB::Ptr result_cloud_;
 
   /** @brief The Voxel Resolution to set OcTree */
-  double _voxel_resolution;
+  double voxel_resolution_;
 
   /** @brief Indices of differences found */
-  IndicesVectorPtr _diff_indices;
+  IndicesVectorPtr diff_indices_;
 
   /**
    * @brief Compute cloud resolution and set voxel resolution.

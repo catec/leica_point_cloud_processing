@@ -18,68 +18,68 @@
 #include <GICPAlignment.h>
 
 GICPAlignment::GICPAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRGB::Ptr source_cloud)
-  : _aligned_cloud(new PointCloudRGB), _backup_cloud(new PointCloudRGB)
+  : aligned_cloud_(new PointCloudRGB), backup_cloud_(new PointCloudRGB)
 {
-  _target_cloud = target_cloud;
-  _source_cloud = source_cloud;
-  transform_exists = false;
-  _fine_tf = Eigen::Matrix4f::Zero();
+  target_cloud_ = target_cloud;
+  source_cloud_ = source_cloud;
+  transform_exists_ = false;
+  fine_tf_ = Eigen::Matrix4f::Zero();
 
   configParameters();
 }
 
 void GICPAlignment::run()
 {
-  fineAlignment(_source_cloud, _target_cloud);
+  fineAlignment(source_cloud_, target_cloud_);
 
-  applyTFtoCloud(_source_cloud);
+  applyTFtoCloud(source_cloud_);
 }
 
 void GICPAlignment::iterate()
 {
-  iterateFineAlignment(_aligned_cloud);
+  iterateFineAlignment(aligned_cloud_);
 }
 
 Eigen::Matrix4f GICPAlignment::getFineTransform()
 {
-  if (!transform_exists)
+  if (!transform_exists_)
     ROS_ERROR("No transform yet. Please run algorithm");
-  return _fine_tf;
+  return fine_tf_;
 }
 
 void GICPAlignment::getAlignedCloud(PointCloudRGB::Ptr aligned_cloud)
 {
-  pcl::copyPointCloud(*_aligned_cloud, *aligned_cloud);
+  pcl::copyPointCloud(*aligned_cloud_, *aligned_cloud);
 }
 
 void GICPAlignment::getAlignedCloudROSMsg(sensor_msgs::PointCloud2& aligned_cloud_msg)
 {
-  pcl::toROSMsg(*_aligned_cloud, aligned_cloud_msg);
-  aligned_cloud_msg.header.frame_id = Utils::_frame_id;
+  pcl::toROSMsg(*aligned_cloud_, aligned_cloud_msg);
+  aligned_cloud_msg.header.frame_id = Utils::frame_id_;
   aligned_cloud_msg.header.stamp = ros::Time::now();
 }
 
 void GICPAlignment::configParameters()
 {
-  double target_res = Utils::computeCloudResolution(_target_cloud);
-  double source_res = Utils::computeCloudResolution(_source_cloud);
+  double target_res = Utils::computeCloudResolution(target_cloud_);
+  double source_res = Utils::computeCloudResolution(source_cloud_);
 
-  _normal_radius = (target_res + source_res) * 2.0;     // 2 times higher
+  normal_radius_ = (target_res + source_res) * 2.0;     // 2 times higher
   double threshold = (target_res + source_res) * 0.95;  // just below resolution
 
   // setup Generalized-ICP
-  _gicp.setMaxCorrespondenceDistance(100 * threshold);
-  _gicp.setMaximumIterations(100);
-  _gicp.setEuclideanFitnessEpsilon(1);   // divergence criterion
-  _gicp.setTransformationEpsilon(1e-9);  // convergence criterion
-  _gicp.setRANSACOutlierRejectionThreshold(threshold);
+  gicp_.setMaxCorrespondenceDistance(100 * threshold);
+  gicp_.setMaximumIterations(100);
+  gicp_.setEuclideanFitnessEpsilon(1);   // divergence criterion
+  gicp_.setTransformationEpsilon(1e-9);  // convergence criterion
+  gicp_.setRANSACOutlierRejectionThreshold(threshold);
 }
 
 void GICPAlignment::getCovariances(PointCloudRGB::Ptr cloud, boost::shared_ptr<CovariancesVector> covs)
 {
   pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
   // pcl::features::computeApproximateNormals(*cloud, mesh->polygons, *normals); // NOT WORKING
-  Utils::getNormals(cloud, _normal_radius, normals);
+  Utils::getNormals(cloud, normal_radius_, normals);
   // filter NaN values
   boost::shared_ptr<std::vector<int> > indices(new std::vector<int>);  // Interest points
   pcl::removeNaNFromPointCloud(*cloud, *cloud, *indices);
@@ -100,26 +100,26 @@ void GICPAlignment::fineAlignment(PointCloudRGB::Ptr source_cloud, PointCloudRGB
   getCovariances(source_cloud, source_covariances);
   getCovariances(target_cloud, target_covariances);
 
-  ROS_INFO("8. Perform GICP with %d iterations", _gicp.getMaximumIterations());
+  ROS_INFO("8. Perform GICP with %d iterations", gicp_.getMaximumIterations());
   ros::Time begin = ros::Time::now();
-  _gicp.setInputSource(source_cloud);
-  _gicp.setInputTarget(target_cloud);
-  _gicp.setSourceCovariances(source_covariances);
-  _gicp.setTargetCovariances(target_covariances);
+  gicp_.setInputSource(source_cloud);
+  gicp_.setInputTarget(target_cloud);
+  gicp_.setSourceCovariances(source_covariances);
+  gicp_.setTargetCovariances(target_covariances);
   // run Alignment and get transformation
   PointCloudRGB::Ptr aligned_cloud(new PointCloudRGB);
-  _gicp.align(*aligned_cloud);
+  gicp_.align(*aligned_cloud);
 
   ros::Duration exec_time = ros::Time::now() - begin;
   ROS_INFO("GICP time: %lf s", exec_time.toSec());
 
-  if (_gicp.hasConverged())
+  if (gicp_.hasConverged())
   {
-    ROS_INFO("Converged in %f", _gicp.getFitnessScore());
-    _fine_tf = _gicp.getFinalTransformation();
+    ROS_INFO("Converged in %f", gicp_.getFitnessScore());
+    fine_tf_ = gicp_.getFinalTransformation();
     ROS_INFO("9. Transform result of gicp: ");
-    transform_exists = true;
-    _gicp.setMaximumIterations(10);  // for future iterations
+    transform_exists_ = true;
+    gicp_.setMaximumIterations(10);  // for future iterations
   }
   else
   {
@@ -133,14 +133,14 @@ void GICPAlignment::iterateFineAlignment(PointCloudRGB::Ptr cloud)
 
   Eigen::Matrix4f temp_tf;
   ROS_INFO("Computing iteration...");
-  _gicp.align(*cloud);
+  gicp_.align(*cloud);
 
-  if (_gicp.hasConverged())
+  if (gicp_.hasConverged())
   {
-    temp_tf = _gicp.getFinalTransformation();
-    _fine_tf = temp_tf * _fine_tf;
-    // Utils::printTransform(_fine_tf);
-    ROS_INFO("Converged in %f", _gicp.getFitnessScore());
+    temp_tf = gicp_.getFinalTransformation();
+    fine_tf_ = temp_tf * fine_tf_;
+    // Utils::printTransform(fine_tf_);
+    ROS_INFO("Converged in %f", gicp_.getFitnessScore());
   }
   else
   {
@@ -150,15 +150,15 @@ void GICPAlignment::iterateFineAlignment(PointCloudRGB::Ptr cloud)
 
 void GICPAlignment::backUp(PointCloudRGB::Ptr cloud)
 {
-  pcl::copyPointCloud(*cloud, *_backup_cloud);
+  pcl::copyPointCloud(*cloud, *backup_cloud_);
 }
 
 void GICPAlignment::undo()
 {
-  pcl::copyPointCloud(*_backup_cloud, *_aligned_cloud);
+  pcl::copyPointCloud(*backup_cloud_, *aligned_cloud_);
 }
 
 void GICPAlignment::applyTFtoCloud(PointCloudRGB::Ptr cloud)
 {
-  pcl::transformPointCloud(*cloud, *_aligned_cloud, _fine_tf);
+  pcl::transformPointCloud(*cloud, *aligned_cloud_, fine_tf_);
 }

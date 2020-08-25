@@ -68,5 +68,5 @@ public:
 
 private:
   /** @brief Resolution to set as cluster Tolerance. */
-  double _voxel_resolution;
+  double voxel_resolution_;
 };

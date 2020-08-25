@@ -70,7 +70,7 @@ public:
   ~InitialAlignment(){};
 
   /** @brief If true, rigid transformation is complete. */
-  bool transform_exists;
+  bool transform_exists_;
 
   /**
    * @brief Perform initial alignment.
@@ -108,25 +108,25 @@ public:
 
 private:
   /** @brief Transformation matrix as result of initial alignment. */
-  Eigen::Matrix4f _rigid_tf;
+  Eigen::Matrix4f rigid_tf_;
 
   /** @brief Radius to compute normals. */
-  double _normal_radius;
+  double normal_radius_;
 
   /** @brief Radius to compute feature. */
-  double _feature_radius;
+  double feature_radius_;
 
   /** @brief Threshold to compute correspondences. */
-  double _inlier_threshold;
+  double inlier_threshold_;
 
   /** @brief Target pointcloud. */
-  PointCloudRGB::Ptr _target_cloud;
+  PointCloudRGB::Ptr target_cloud_;
 
   /** @brief Source pointcloud. */
-  PointCloudRGB::Ptr _source_cloud;
+  PointCloudRGB::Ptr source_cloud_;
 
   /** @brief Source pointcloud aligned with target cloud. */
-  PointCloudRGB::Ptr _aligned_cloud;
+  PointCloudRGB::Ptr aligned_cloud_;
 
   /**
    * @brief Will set parameters to compute initial alignment based on clouds data.

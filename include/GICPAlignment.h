@@ -55,10 +55,10 @@ public:
   ~GICPAlignment(){};
 
   /** @brief If true, fine transformation is finished. */
-  bool transform_exists;
+  bool transform_exists_;
 
   /** @brief GICP object. */
-  pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> _gicp;
+  pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> gicp_;
 
   /**
    * @brief Perform GICP alignment
@@ -108,22 +108,22 @@ public:
 
 private:
   /** @brief Transformation matrix as result of GICP alignment. */
-  Eigen::Matrix4f _fine_tf;
+  Eigen::Matrix4f fine_tf_;
 
   /** @brief Radius to compute normals. */
-  double _normal_radius;
+  double normal_radius_;
 
   /** @brief Target pointcloud. */
-  PointCloudRGB::Ptr _target_cloud;
+  PointCloudRGB::Ptr target_cloud_;
 
   /** @brief Source pointcloud. */
-  PointCloudRGB::Ptr _source_cloud;
+  PointCloudRGB::Ptr source_cloud_;
 
   /** @brief Source pointcloud aligned with target cloud. */
-  PointCloudRGB::Ptr _aligned_cloud;
+  PointCloudRGB::Ptr aligned_cloud_;
 
   /** @brief Save aligned pointcloud to restore if undo. */
-  PointCloudRGB::Ptr _backup_cloud;
+  PointCloudRGB::Ptr backup_cloud_;
 
   /**
    * @brief Will set parameters to compute GICP alignment based on clouds data.

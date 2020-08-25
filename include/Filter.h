@@ -74,17 +74,17 @@ public:
   ~Filter(){};
 
   /** @brief pcl::VoxelGrid leaf size */
-  double _leaf_size;
+  double leaf_size_;
 
   /** @brief pcl::CropBox size */
-  double _noise_filter_threshold;
+  double noise_filter_threshold_;
 
   /** @brief pcl::SACSegmentation distance threshold */
-  double _floor_filter_threshold;
+  double floor_filter_threshold_;
 
-  Eigen::Vector3f _cloud_center;
+  Eigen::Vector3f cloud_center_;
 
-  bool _user_given_center;
+  bool user_given_center_;
 
   /**
    * @brief Set the Leaf Size object.
@@ -105,7 +105,7 @@ public:
 
 private:
   /**
-   * @brief Apply _leaf_size to downsample input cloud.
+   * @brief Apply leaf_size_ to downsample input cloud.
    *
    * @param[in] cloud
    * @param[out] cloud_downsampled
@@ -113,7 +113,7 @@ private:
   void downsampleCloud(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_downsampled);
 
   /**
-   * @brief Apply _noise_filter_threshold to filter noise in cloud.
+   * @brief Apply noise_filter_threshold_ to filter noise in cloud.
    *        \n Everything out of a box with given size (threshold) is consider noise.
    *
    * @param[in] threshold
@@ -126,7 +126,7 @@ private:
                     PointCloudRGB::Ptr cloud_filtered);
 
   /**
-   * @brief Apply _floor_filter_threshold to search floor in cloud and filter it.
+   * @brief Apply floor_filter_threshold_ to search floor in cloud and filter it.
    *        \n Floor is consider a plane perpendicular to z axis.
    *
    * @param[in] threshold

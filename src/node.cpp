@@ -234,7 +234,7 @@ int main(int argc, char** argv)
           gicp_alignment.getAlignedCloud(scan_cloud_aligned);
           BooleanDifference boolean_difference(scan_cloud_aligned);
           boolean_difference.substract(cad_cloud_filtered);
-          if (!boolean_difference.substract_error)
+          if (!boolean_difference.substract_error_)
           {
             PointCloudRGB::Ptr scan_cloud_substracted(new PointCloudRGB);
             boolean_difference.getResultCloud(scan_cloud_substracted);

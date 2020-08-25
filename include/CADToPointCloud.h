@@ -70,16 +70,16 @@ public:
   ~CADToPointCloud(){};
 
   /** @brief pcl::PolygonMesh to store mesh from CAD file. */
-  pcl::PolygonMesh::Ptr _CAD_mesh{ new pcl::PolygonMesh };
+  pcl::PolygonMesh::Ptr CAD_mesh_{ new pcl::PolygonMesh };
 
   /** @brief pcl::Pointcloud to store XYZ cloud from CAD file. */
-  PointCloudXYZ::Ptr _CAD_cloud{ new PointCloudXYZ };
+  PointCloudXYZ::Ptr CAD_cloud_{ new PointCloudXYZ };
 
   /** @brief PointCloud2 to store XYZ cloud from CAD file. Ready to be published. */
-  sensor_msgs::PointCloud2 _CAD_cloud_msg;
+  sensor_msgs::PointCloud2 CAD_cloud_msg_;
 
   /** @brief Absolute path to pointcloud folder. */
-  std::string _pc_path;
+  std::string pc_path_;
 
   /**
    * @brief Set path to pointcloud folder.

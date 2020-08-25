@@ -51,13 +51,13 @@ public:
    * @brief If set, point to specified pointcloud folder.
    *
    */
-  static std::string _pc_path;
+  static std::string pc_path_;
 
   /**
    * @brief frame_id to add in PointCloud2. Default to "/world".
    *
    */
-  static std::string _frame_id;
+  static std::string frame_id_;
 
   /**
    * @brief Set the pointcloud folder path object.

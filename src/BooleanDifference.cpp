@@ -18,11 +18,11 @@
 #include <BooleanDifference.h>
 
 BooleanDifference::BooleanDifference(PointCloudRGB::Ptr cloud)
-  : _diff_indices(new IndicesVector), _result_cloud(new PointCloudRGB)
+  : diff_indices_(new IndicesVector), result_cloud_(new PointCloudRGB)
 {
-  _cloud = cloud;
+  cloud_ = cloud;
   computeResolution(cloud);
-  substract_error = false;
+  substract_error_ = false;
 }
 
 void BooleanDifference::substract(PointCloudRGB::Ptr cloud_to_substract)
@@ -30,49 +30,49 @@ void BooleanDifference::substract(PointCloudRGB::Ptr cloud_to_substract)
   setOctreeAndGetIndices(cloud_to_substract);
   int res = computeResultCloud();
   if (res != 0)
-    substract_error = true;
+    substract_error_ = true;
 }
 
 double BooleanDifference::getVoxelResolution()
 {
-  return _voxel_resolution;
+  return voxel_resolution_;
 }
 
 void BooleanDifference::getResultCloud(PointCloudRGB::Ptr result_cloud)
 {
-  pcl::copyPointCloud(*_result_cloud, *result_cloud);
+  pcl::copyPointCloud(*result_cloud_, *result_cloud);
 }
 
 void BooleanDifference::computeResolution(PointCloudRGB::Ptr cloud)
 {
   double res = Utils::computeCloudResolution(cloud);
-  _voxel_resolution = res * 3;  // 3 times higher to cover more than two neighbors
-  ROS_INFO("Voxelize octree with resolution: %f", _voxel_resolution);
+  voxel_resolution_ = res * 3;  // 3 times higher to cover more than two neighbors
+  ROS_INFO("Voxelize octree with resolution: %f", voxel_resolution_);
 }
 
 void BooleanDifference::setOctreeAndGetIndices(PointCloudRGB::Ptr cloud_to_substract)
 {
-  pcl::octree::OctreePointCloudChangeDetector<pcl::PointXYZRGB> octree(_voxel_resolution);
+  pcl::octree::OctreePointCloudChangeDetector<pcl::PointXYZRGB> octree(voxel_resolution_);
   octree.setInputCloud(cloud_to_substract);
   octree.addPointsFromInputCloud();
 
   // Switch octree buffers: This resets octree but keeps previous tree structure in memory.
   octree.switchBuffers();
 
-  octree.setInputCloud(_cloud);
+  octree.setInputCloud(cloud_);
   octree.addPointsFromInputCloud();
 
   ROS_INFO("Extracting differences");
-  octree.getPointIndicesFromNewVoxels(*_diff_indices);  // Diferentiated points
+  octree.getPointIndicesFromNewVoxels(*diff_indices_);  // Diferentiated points
 }
 
 int BooleanDifference::computeResultCloud()
 {
   PointCloudRGB::Ptr result_cloud(new PointCloudRGB);
-  Utils::indicesFilter(_cloud, result_cloud, _diff_indices);
+  Utils::indicesFilter(cloud_, result_cloud, diff_indices_);
   // pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_filter;
-  // extract_indices_filter.setInputCloud(_cloud);
-  // extract_indices_filter.setIndices(_diff_indices);
+  // extract_indices_filter.setInputCloud(cloud_);
+  // extract_indices_filter.setIndices(diff_indices_);
   // extract_indices_filter.filter(*result_cloud);
 
   if (result_cloud->size() <= 0)
@@ -81,6 +81,6 @@ int BooleanDifference::computeResultCloud()
     return -1;
   }
 
-  pcl::copyPointCloud(*result_cloud, *_result_cloud);
+  pcl::copyPointCloud(*result_cloud, *result_cloud_);
   return 0;
 }

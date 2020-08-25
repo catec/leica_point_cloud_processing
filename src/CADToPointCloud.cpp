@@ -26,11 +26,11 @@ CADToPointCloud::CADToPointCloud(const std::string& cad_path, const std::string&
 {
   setPCpath(cad_path);
 
-  if (CADToMesh(cad_path + cad_file) == 0)  // here we get _CAD_mesh
+  if (CADToMesh(cad_path + cad_file) == 0)  // here we get CAD_mesh_
   {
-    if (MeshToPointCloud(_CAD_mesh) == 0)  // here we get _CAD_cloud
+    if (MeshToPointCloud(CAD_mesh_) == 0)  // here we get CAD_cloud_
     {
-      pcl::copyPointCloud(*_CAD_cloud, *cloud);
+      pcl::copyPointCloud(*CAD_cloud_, *cloud);
       ROS_INFO("File converted");
     }
   }
@@ -40,11 +40,11 @@ CADToPointCloud::CADToPointCloud(const std::string& cad_file_path, PointCloudRGB
 {
   ROS_INFO("Converting file: %s", cad_file_path.c_str());
 
-  if (CADToMesh(cad_file_path) == 0)  // here we get _CAD_mesh
+  if (CADToMesh(cad_file_path) == 0)  // here we get CAD_mesh_
   {
-    if (MeshToPointCloud(_CAD_mesh) == 0)  // here we get _CAD_cloud
+    if (MeshToPointCloud(CAD_mesh_) == 0)  // here we get CAD_cloud_
     {
-      pcl::copyPointCloud(*_CAD_cloud, *cloud);
+      pcl::copyPointCloud(*CAD_cloud_, *cloud);
       ROS_INFO("File converted");
     }
   }
@@ -59,7 +59,7 @@ int CADToPointCloud::CADToMesh(const std::string& cad_file_path)
   if (len == 0)
     return -1;
 
-  *_CAD_mesh = mesh;
+  *CAD_mesh_ = mesh;
 
   return 0;
 }
@@ -87,23 +87,23 @@ int CADToPointCloud::MeshToPointCloud(pcl::PolygonMesh::Ptr mesh)
   // triangleMapper->Update();
   // polydata1 = triangleMapper->GetInput();
 
-  uniform_sampling(polydata1, SAMPLE_POINTS_, *_CAD_cloud);
+  uniform_sampling(polydata1, SAMPLE_POINTS_, *CAD_cloud_);
 
   return 0;
 }
 
 int CADToPointCloud::MeshToROSPointCloud(pcl::PolygonMesh::Ptr mesh)
 {
-  pcl_conversions::fromPCL(mesh->cloud, _CAD_cloud_msg);
-  _CAD_cloud_msg.header.frame_id = Utils::_frame_id;
-  _CAD_cloud_msg.header.stamp = ros::Time::now();
+  pcl_conversions::fromPCL(mesh->cloud, CAD_cloud_msg_);
+  CAD_cloud_msg_.header.frame_id = Utils::frame_id_;
+  CAD_cloud_msg_.header.stamp = ros::Time::now();
 
   return 0;
 }
 
 void CADToPointCloud::setPCpath(const std::string& path)
 {
-  _pc_path = path;
+  pc_path_ = path;
 }
 
 // Following methods are extracted from Point Cloud Library (PCL)

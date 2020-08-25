@@ -20,7 +20,7 @@
 
 void Utils::setPCpath(const std::string& pointcloud_folder_path)
 {
-  _pc_path = pointcloud_folder_path;
+  pc_path_ = pointcloud_folder_path;
 }
 
 bool Utils::getNormals(PointCloudRGB::Ptr& cloud, double normal_radius, pcl::PointCloud<pcl::Normal>::Ptr& normals)
@@ -90,7 +90,7 @@ void Utils::cloudToXYZRGB(PointCloudXYZ::Ptr cloud, PointCloudRGB::Ptr cloud_rgb
 void Utils::cloudToROSMsg(PointCloudRGB::Ptr cloud, sensor_msgs::PointCloud2& cloud_msg)
 {
   pcl::toROSMsg(*cloud, cloud_msg);
-  cloud_msg.header.frame_id = _frame_id;
+  cloud_msg.header.frame_id = frame_id_;
   cloud_msg.header.stamp = ros::Time::now();
 }
 
@@ -184,5 +184,5 @@ void Utils::displaceCloud(PointCloudRGB::Ptr cloud_in, PointCloudRGB::Ptr cloud_
 }
 
 // Initialization
-std::string Utils::_pc_path = "";
-std::string Utils::_frame_id = "world";
+std::string Utils::pc_path_ = "";
+std::string Utils::frame_id_ = "world";

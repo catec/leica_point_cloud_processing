@@ -39,8 +39,8 @@ public:
     int r, g, b;
   };
   pc_color RED, GREEN, BLUE, PINK, ORANGE, WHITE;
-  double _point_size;
-  bool _pressed_space;
+  double point_size_;
+  bool pressed_space_;
 
   boost::shared_ptr<pcl::visualization::PCLVisualizer> _viewer{ new pcl::visualization::PCLVisualizer("Pointcloud "
                                                                                                       "Viewer") };
@@ -79,7 +79,7 @@ public:
 
 Viewer::Viewer()
 {
-  _point_size = 2;
+  point_size_ = 2;
   setColors();
   // configViewer();
 }
@@ -89,7 +89,7 @@ void Viewer::setColors()
   RED = { 255, 0, 0 };
   GREEN = { 0, 255, 0 };
   BLUE = { 0, 0, 255 };
-  PINK = { 255, 0, 128 };
+  PINK  = { 255, 0, 128 };
   ORANGE = { 255, 128, 0 };
   WHITE = { 255, 255, 255 };
 }
@@ -97,15 +97,15 @@ void Viewer::setColors()
 void Viewer::configViewer()
 {
   _viewer->setBackgroundColor(0, 0, 0);
-  // _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, _point_size);
+  // _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, point_size_);
   _viewer->addCoordinateSystem(1.0);
   _viewer->initCameraParameters();
 }
 
 void Viewer::setPointSize(int point_size)
 {
-  _point_size = point_size;
-  _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, _point_size);
+  point_size_ = point_size;
+  _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, point_size_);
 }
 
 void Viewer::resetViewer()
@@ -136,13 +136,13 @@ inline void Viewer::addPCToViewer(typename pcl::PointCloud<PointT>::Ptr cloud, c
   {
     ROS_INFO("Update cloud in Viewer");
     _viewer->updatePointCloud(cloud, cloud_rgb, name);
-    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, _point_size, name);
+    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, point_size_, name);
   }
   else
   {
     ROS_INFO("Add cloud in Viewer");
     _viewer->addPointCloud<PointT>(cloud, cloud_rgb, name);
-    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, _point_size, name);
+    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, point_size_, name);
   }
   ROS_WARN("Press (X) on viewer to continue");
 
@@ -159,13 +159,13 @@ inline void Viewer::addPCToViewer(typename pcl::PointCloud<PointT>::Ptr cloud, c
   {
     ROS_INFO("Update cloud in Viewer");
     _viewer->updatePointCloud(cloud, name);
-    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, _point_size, name);
+    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, point_size_, name);
   }
   else
   {
     ROS_INFO("Add cloud in Viewer");
     _viewer->addPointCloud<PointT>(cloud, name);
-    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, _point_size, name);
+    _viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, point_size_, name);
   }
   ROS_WARN("Press (X) on viewer to continue");
 
@@ -236,7 +236,7 @@ void Viewer::deletePCFromViewer(const std::string& name)
 void Viewer::keyboardCallback(const pcl::visualization::KeyboardEvent& event, void* nothing)
 {
   if (event.getKeySym() == "space" && event.keyDown())
-    _pressed_space = true;
+    pressed_space_ = true;
 }
 
 void Viewer::checkForSpaceKeyPressed()
