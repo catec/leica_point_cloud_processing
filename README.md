@@ -1,5 +1,8 @@
 # LEICA POINT CLOUD PROCESSING #
 
+[![Build Status](https://travis-ci.com/fada-catec/leica_point_cloud_processing.svg?branch=master)](https://travis-ci.com/fada-catec/leica_point_cloud_processing)
+[![License](https://img.shields.io/badge/License-Apache%202-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 This package has been developed to help identifying [FODs](https://www.fodcontrol.com/what-is-fod/) in aeronautical structures. 
 
 Using point cloud analysis techniques, this software aims to compare the current state of the structure with its CAD to identify possible foreign objects. 
@@ -16,16 +19,14 @@ NOTE: the following release is an alpha experimental release corresponding to Mi
         mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src
         git clone https://github.com/fada-catec/leica_scanstation.git
 
-2. Remove package *leica_scanstation_ros* to avoid compilation errors.
-
-        rm -r leica_scanstation/leica_scanstation_ros
-
-3. Clone this repo and Compile
+2. Clone this repo
 
         cd ~/catkin_ws/src
         git clone https://github.com/fada-catec/leica_point_cloud_processing.git
+
+3. Compile (be careful: package *leica_scanstation_ros* is meant to be compiled on Windows) 
         cd ~/catkin_ws/
-        catkin_make
+        catkin_make -DCATKIN_BLACKLIST_PACKAGES="leica_scanstation_ros"
 
 ## Nodes ##
 

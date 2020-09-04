@@ -66,3 +66,36 @@ target_link_libraries(load_and_publish_clouds
   ${PCL_LIBRARIES}
   ${PROJECT_NAME}
 )
+
+
+catkin_add_gtest(test_utils test/test_utils.cpp)
+
+target_link_libraries(test_utils
+  ${catkin_LIBRARIES} 
+  ${PCL_LIBRARIES}
+  ${PROJECT_NAME}
+)
+
+# catkin_add_gtest(test_cad_to_pointcloud test/test_cad_to_pointcloud.cpp)
+
+# target_link_libraries(test_cad_to_pointcloud
+#   ${catkin_LIBRARIES} 
+#   ${PCL_LIBRARIES}
+#   ${PROJECT_NAME}
+# )
+
+catkin_add_gtest(test_initial_alignment test/test_initial_alignment.cpp)
+
+target_link_libraries(test_initial_alignment
+  ${catkin_LIBRARIES} 
+  ${PCL_LIBRARIES}
+  ${PROJECT_NAME}
+)
+
+catkin_add_gtest(test_gicp_alignment test/test_gicp_alignment.cpp)
+
+target_link_libraries(test_gicp_alignment
+  ${catkin_LIBRARIES} 
+  ${PCL_LIBRARIES}
+  ${PROJECT_NAME}
+)
