@@ -1,0 +1,1 @@
+-DCATKIN_BLACKLIST_PACKAGES=leica_scanstation_ros;
