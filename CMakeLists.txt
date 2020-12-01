@@ -58,8 +58,8 @@ add_executable(load_clouds src/load_and_publish_clouds.cpp)
 target_link_libraries(load_clouds ${PROJECT_NAME})
 
 # Testing
-# catkin_add_gtest(test_utils test/test_utils.cpp)
-# target_link_libraries(test_utils ${PROJECT_NAME})
+catkin_add_gtest(test_utils test/test_utils.cpp)
+target_link_libraries(test_utils ${PROJECT_NAME})
 
 # catkin_add_gtest(test_cad_to_pointcloud test/test_cad_to_pointcloud.cpp)
 # target_link_libraries(test_cad_to_pointcloud ${PROJECT_NAME})
