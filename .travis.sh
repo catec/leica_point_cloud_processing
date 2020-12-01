@@ -40,10 +40,3 @@ source /opt/ros/$ROS_DISTRO/setup.bash
 cd ~/catkin_ws
 catkin_make $( [ -f $CATKIN_OPTIONS ] && cat $CATKIN_OPTIONS ) # catkin_make looks for flags on catkin.option file
 catkin_make $( [ -f $CATKIN_OPTIONS ] && cat $CATKIN_OPTIONS ) run_tests && catkin_test_results # run tests
-
-# catkin build -p1 -j1
-# catkin run_tests -p1 -j1
-# catkin_test_results --all build
-# catkin clean -b --yes
-# catkin config --install
-# catkin build -p1 -j1

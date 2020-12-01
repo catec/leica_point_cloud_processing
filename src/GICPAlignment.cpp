@@ -16,28 +16,136 @@
  */
 
 #include <GICPAlignment.h>
+#include <Filter.h>
+#include <pcl/features/from_meshes.h>
+#include <pcl/filters/filter.h>
 
-GICPAlignment::GICPAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRGB::Ptr source_cloud)
+GICPAlignment::GICPAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRGB::Ptr source_cloud, bool use_covariances)
   : aligned_cloud_(new PointCloudRGB), backup_cloud_(new PointCloudRGB)
 {
   target_cloud_ = target_cloud;
   source_cloud_ = source_cloud;
+  covariances_ = use_covariances;
+  tf_epsilon_ = 4e-3;
+  max_iter_ = 100;
+  max_corresp_distance_ = 4e-2;
+  ransac_outlier_th_ = 1.0;
   transform_exists_ = false;
-  fine_tf_ = Eigen::Matrix4f::Zero();
-
-  configParameters();
+  fine_tf_ = Eigen::Matrix4f::Identity();
 }
 
 void GICPAlignment::run()
 {
-  fineAlignment(source_cloud_, target_cloud_);
+  configParameters();
 
+  if(covariances_)
+    applyCovariances();
+
+  fineAlignment();
   applyTFtoCloud(source_cloud_);
+}
+
+void GICPAlignment::configParameters()
+{
+  gicp_.setMaximumIterations(max_iter_);
+  gicp_.setMaxCorrespondenceDistance(max_corresp_distance_);
+  gicp_.setTransformationEpsilon(tf_epsilon_);  
+  gicp_.setRANSACOutlierRejectionThreshold(ransac_outlier_th_); 
+}
+
+void GICPAlignment::getCovariances(PointCloudRGB::Ptr cloud, boost::shared_ptr<CovariancesVector> covs)
+{
+  double target_res = Utils::computeCloudResolution(target_cloud_);
+  double source_res = Utils::computeCloudResolution(source_cloud_);
+  double normal_radius = (target_res + source_res) * 2.0; // doubled
+
+  PointCloudNormal::Ptr normals(new PointCloudNormal);
+  Utils::getNormals(cloud, normal_radius, normals);
+
+  // TODO do this filter on utils
+  pcl::IndicesPtr indices(new std::vector<int>);  // Interest points
+  pcl::removeNaNFromPointCloud(*cloud, *cloud, *indices);
+  pcl::removeNaNNormalsFromPointCloud(*normals, *normals, *indices);
+  Filter::extractIndices(cloud, cloud, indices); 
+
+  // get covariances
+  pcl::features::computeApproximateCovariances(*cloud, *normals, *covs);
+}
+
+void GICPAlignment::applyCovariances()
+{
+  boost::shared_ptr<CovariancesVector> source_covariances(new CovariancesVector);
+  boost::shared_ptr<CovariancesVector> target_covariances(new CovariancesVector);
+
+  ROS_INFO("Extract covariances from clouds");
+  getCovariances(source_cloud_, source_covariances);
+  getCovariances(target_cloud_, target_covariances);
+
+  gicp_.setSourceCovariances(source_covariances);
+  gicp_.setTargetCovariances(target_covariances);
+}
+
+void GICPAlignment::fineAlignment()
+{
+  ROS_INFO("Perform GICP with %d iterations", gicp_.getMaximumIterations());
+  gicp_.setInputSource(source_cloud_);
+  gicp_.setInputTarget(target_cloud_);
+
+  ros::Time begin = ros::Time::now();
+  
+  PointCloudRGB::Ptr aligned_cloud(new PointCloudRGB);
+  ROS_INFO("This step may take a while ...");
+  gicp_.align(*aligned_cloud);
+  
+  ros::Duration exec_time = ros::Time::now() - begin;
+  ROS_INFO("GICP time: %lf s", exec_time.toSec());
+
+  if (gicp_.hasConverged())
+  {
+    ROS_INFO("Converged in %f FitnessScore", gicp_.getFitnessScore());
+    fine_tf_ = gicp_.getFinalTransformation();
+    transform_exists_ = Utils::isValidTransform(fine_tf_);
+  }
+  else
+    ROS_ERROR("GICP no converge");
+}
+
+void GICPAlignment::iterateFineAlignment(PointCloudRGB::Ptr cloud)
+{
+  backUp(cloud);  // save a copy to restore in case iteration give wrong results
+
+  ROS_INFO("Computing iteration...");
+  gicp_.align(*cloud);
+
+  if (gicp_.hasConverged())
+  {
+    Eigen::Matrix4f temp_tf = gicp_.getFinalTransformation();
+    fine_tf_ = temp_tf * fine_tf_;
+    Utils::printTransform(fine_tf_);
+    ROS_INFO("Converged in %f FitnessScore", gicp_.getFitnessScore());
+  }
+  else
+    ROS_ERROR("GICP no converge");
 }
 
 void GICPAlignment::iterate()
 {
   iterateFineAlignment(aligned_cloud_);
+}
+
+void GICPAlignment::backUp(PointCloudRGB::Ptr cloud)
+{
+  pcl::copyPointCloud(*cloud, *backup_cloud_);
+}
+
+void GICPAlignment::undo()
+{
+  pcl::copyPointCloud(*backup_cloud_, *aligned_cloud_);
+}
+
+void GICPAlignment::applyTFtoCloud(PointCloudRGB::Ptr cloud)
+{
+  pcl::transformPointCloud(*cloud, *aligned_cloud_, fine_tf_);
 }
 
 Eigen::Matrix4f GICPAlignment::getFineTransform()
@@ -54,111 +162,39 @@ void GICPAlignment::getAlignedCloud(PointCloudRGB::Ptr aligned_cloud)
 
 void GICPAlignment::getAlignedCloudROSMsg(sensor_msgs::PointCloud2& aligned_cloud_msg)
 {
-  pcl::toROSMsg(*aligned_cloud_, aligned_cloud_msg);
-  aligned_cloud_msg.header.frame_id = Utils::frame_id_;
-  aligned_cloud_msg.header.stamp = ros::Time::now();
+  Utils::cloudToROSMsg(aligned_cloud_, aligned_cloud_msg);
 }
 
-void GICPAlignment::configParameters()
+void GICPAlignment::setSourceCloud(PointCloudRGB::Ptr source_cloud)
 {
-  double target_res = Utils::computeCloudResolution(target_cloud_);
-  double source_res = Utils::computeCloudResolution(source_cloud_);
-
-  normal_radius_ = (target_res + source_res) * 2.0;     // 2 times higher
-  double threshold = (target_res + source_res) * 0.95;  // just below resolution
-
-  // setup Generalized-ICP
-  gicp_.setMaxCorrespondenceDistance(100 * threshold);
-  gicp_.setMaximumIterations(100);
-  gicp_.setEuclideanFitnessEpsilon(1);   // divergence criterion
-  gicp_.setTransformationEpsilon(1e-9);  // convergence criterion
-  gicp_.setRANSACOutlierRejectionThreshold(threshold);
+  source_cloud_ = source_cloud;
 }
 
-void GICPAlignment::getCovariances(PointCloudRGB::Ptr cloud, boost::shared_ptr<CovariancesVector> covs)
+void GICPAlignment::setTargetCloud(PointCloudRGB::Ptr target_cloud)
 {
-  pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-  // pcl::features::computeApproximateNormals(*cloud, mesh->polygons, *normals); // NOT WORKING
-  Utils::getNormals(cloud, normal_radius_, normals);
-  // filter NaN values
-  boost::shared_ptr<std::vector<int> > indices(new std::vector<int>);  // Interest points
-  pcl::removeNaNFromPointCloud(*cloud, *cloud, *indices);
-  pcl::removeNaNNormalsFromPointCloud(*normals, *normals, *indices);
-  Utils::indicesFilter(cloud, cloud, indices);
-
-  // get covariances
-  pcl::features::computeApproximateCovariances(*cloud, *normals, *covs);
-  bool success = normals->points.size() == covs->size() ? true : false;
+  target_cloud_ = target_cloud;
 }
 
-void GICPAlignment::fineAlignment(PointCloudRGB::Ptr source_cloud, PointCloudRGB::Ptr target_cloud)
+void GICPAlignment::setMaxIterations(int iterations)
 {
-  ROS_INFO("7. Extract covariances from clouds");
-  boost::shared_ptr<CovariancesVector> source_covariances(new CovariancesVector);
-  boost::shared_ptr<CovariancesVector> target_covariances(new CovariancesVector);
-
-  getCovariances(source_cloud, source_covariances);
-  getCovariances(target_cloud, target_covariances);
-
-  ROS_INFO("8. Perform GICP with %d iterations", gicp_.getMaximumIterations());
-  ros::Time begin = ros::Time::now();
-  gicp_.setInputSource(source_cloud);
-  gicp_.setInputTarget(target_cloud);
-  gicp_.setSourceCovariances(source_covariances);
-  gicp_.setTargetCovariances(target_covariances);
-  // run Alignment and get transformation
-  PointCloudRGB::Ptr aligned_cloud(new PointCloudRGB);
-  gicp_.align(*aligned_cloud);
-
-  ros::Duration exec_time = ros::Time::now() - begin;
-  ROS_INFO("GICP time: %lf s", exec_time.toSec());
-
-  if (gicp_.hasConverged())
-  {
-    ROS_INFO("Converged in %f", gicp_.getFitnessScore());
-    fine_tf_ = gicp_.getFinalTransformation();
-    ROS_INFO("9. Transform result of gicp: ");
-    transform_exists_ = true;
-    gicp_.setMaximumIterations(10);  // for future iterations
-  }
-  else
-  {
-    ROS_ERROR("NO CONVERGE");
-  }
+  max_iter_ = iterations;
+  configParameters();
 }
 
-void GICPAlignment::iterateFineAlignment(PointCloudRGB::Ptr cloud)
+void GICPAlignment::setTfEpsilon(double tf_epsilon)
 {
-  backUp(cloud);  // save a copy to restore in case iteration give wrong results
-
-  Eigen::Matrix4f temp_tf;
-  ROS_INFO("Computing iteration...");
-  gicp_.align(*cloud);
-
-  if (gicp_.hasConverged())
-  {
-    temp_tf = gicp_.getFinalTransformation();
-    fine_tf_ = temp_tf * fine_tf_;
-    // Utils::printTransform(fine_tf_);
-    ROS_INFO("Converged in %f", gicp_.getFitnessScore());
-  }
-  else
-  {
-    ROS_ERROR("no converge");
-  }
+  tf_epsilon_ = tf_epsilon;
+  configParameters();
 }
 
-void GICPAlignment::backUp(PointCloudRGB::Ptr cloud)
+void GICPAlignment::setMaxCorrespondenceDistance(int max_corresp_distance)
 {
-  pcl::copyPointCloud(*cloud, *backup_cloud_);
+  max_corresp_distance_ = max_corresp_distance;
+  configParameters();
 }
 
-void GICPAlignment::undo()
+void GICPAlignment::setRANSACOutlierTh(int ransac_threshold)
 {
-  pcl::copyPointCloud(*backup_cloud_, *aligned_cloud_);
-}
-
-void GICPAlignment::applyTFtoCloud(PointCloudRGB::Ptr cloud)
-{
-  pcl::transformPointCloud(*cloud, *aligned_cloud_, fine_tf_);
+  ransac_outlier_th_ = ransac_threshold;
+  configParameters();
 }

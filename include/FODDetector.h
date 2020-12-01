@@ -21,12 +21,6 @@
 
 #include <Utils.h>
 
-#include <stdlib.h>
-#include <string>
-#include <pcl/segmentation/extract_clusters.h>
-
-#endif
-
 class FODDetector
 {
   typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
@@ -34,11 +28,11 @@ class FODDetector
 
 public:
   /**
-   * @brief Construct a new FODDetector object with given resolution.
+   * @brief Construct a new FODDetector object with given tolerance and minimal fod points.
    *
-   * @param resolution
+   * @param tolerance
    */
-  FODDetector(double resolution);
+  FODDetector(PointCloudRGB::Ptr cloud, double cluster_tolerance, double min_fod_points);
 
   /**
    * @brief Destroy the FODDetector object
@@ -47,15 +41,36 @@ public:
   ~FODDetector(){};
 
   /**
+   * @brief Set the Cluster Tolerance object
+   * 
+   * @param tolerance 
+   */
+  void setClusterTolerance(double tolerance);
+
+  /**
+   * @brief Set the Min FOD points object
+   * 
+   * @param min_fod_points 
+   */
+  void setMinFODpoints(double min_fod_points);
+
+  /**
    * @brief Extract cluster indices from input cloud with resolution set. Each cluster is a possible FOD.
    *
    * @param[in] cloud
    * @param[out] cluster_indices
    */
-  void clusterPossibleFODs(PointCloudRGB::Ptr cloud, std::vector<pcl::PointIndices>& cluster_indices);
+  void clusterPossibleFODs();
 
   /**
-   * @brief Save each cluster (possible FOD) in a PointCloud2 msg. Return an array of all generated msgs.
+   * @brief Get the FOD indices computed in clusterPossibleFODs()
+   * 
+   * @param fod_indices 
+   */
+  void getFODIndices(std::vector<pcl::PointIndices>& fod_indices);
+
+  /**
+   * @brief Save each cluster (possible FOD) in a PointCloud2 msg. Give back an array of all generated msgs.
    *        \n Returns the number of possible FODs.
    *
    * @param[in] cluster_indices
@@ -63,10 +78,31 @@ public:
    * @param[out] cluster_msg_array
    * @return int number_of_fod
    */
-  int clusterIndicesToROSMsg(const std::vector<pcl::PointIndices>& cluster_indices, PointCloudRGB::Ptr cloud,
-                             std::vector<sensor_msgs::PointCloud2>& cluster_msg_array);
+  int fodIndicesToROSMsg(std::vector<sensor_msgs::PointCloud2>& cluster_msg_array);
+
+  /**
+   * @brief Save each cluster (possible FOD) in a pcl::PointCloudRGB. Give back an array of all generated clouds.
+   *        \n Returns the number of possible FODs.
+   *
+   * @param[in] cluster_indices
+   * @param[in] cloud
+   * @param[out] cluster_msg_array
+   * @return int number_of_fod
+   */
+  int fodIndicesToPointCloud(std::vector<PointCloudRGB::Ptr>& cloud_array);                        
 
 private:
-  /** @brief Resolution to set as cluster Tolerance. */
-  double voxel_resolution_;
+  /** @brief Tolerance to set as cluster tolerance. */
+  double cluster_tolerance_;
+
+  /** @brief Min number of points to identify a cluster */
+  double min_cluster_size_;
+
+  /** @brief Input cloud */
+  PointCloudRGB::Ptr cloud_;
+
+  /** @brief Cluster indices to be identified as FODs */
+  std::vector<pcl::PointIndices> cluster_indices_;
 };
+
+#endif

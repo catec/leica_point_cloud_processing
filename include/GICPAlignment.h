@@ -16,15 +16,11 @@
  */
 
 #pragma once
-#ifndef _GCIP_ALIGNMENT_H
-#define _GCIP_ALIGNMENT_H
+#ifndef _GICP_ALIGNMENT_H
+#define _GICP_ALIGNMENT_H
 
 #include <Utils.h>
-
-#include <pcl/features/from_meshes.h>
 #include <pcl/registration/gicp.h>
-
-#endif
 
 /**
  * @brief Perform a fine alignment from source to target cloud with Generalized Iterative Closest Point.
@@ -37,6 +33,7 @@ class GICPAlignment
 {
   typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
   typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
+  typedef pcl::PointCloud<pcl::Normal> PointCloudNormal;
   typedef std::vector<Eigen::Matrix3d, Eigen::aligned_allocator<Eigen::Matrix3d>> CovariancesVector;
 
 public:
@@ -45,8 +42,9 @@ public:
    *
    * @param[in] target_cloud
    * @param[in] source_cloud
+   * @param[in] use_covariances
    */
-  GICPAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRGB::Ptr source_cloud);
+  GICPAlignment(PointCloudRGB::Ptr target_cloud, PointCloudRGB::Ptr source_cloud, bool use_covariances);
 
   /**
    * @brief Destroy the GICPAlignment object
@@ -57,8 +55,6 @@ public:
   /** @brief If true, fine transformation is finished. */
   bool transform_exists_;
 
-  /** @brief GICP object. */
-  pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> gicp_;
 
   /**
    * @brief Perform GICP alignment
@@ -106,12 +102,71 @@ public:
    */
   void applyTFtoCloud(PointCloudRGB::Ptr cloud);
 
+  /**
+   * @brief Set the Source Cloud object
+   * 
+   * @param source_cloud 
+   */
+  void setSourceCloud(PointCloudRGB::Ptr source_cloud);
+
+  /**
+   * @brief Set the Target Cloud object
+   * 
+   * @param target_cloud 
+   */
+  void setTargetCloud(PointCloudRGB::Ptr target_cloud);
+
+  /**
+   * @brief Set the Max Iterations object
+   * 
+   * @param iterations 
+   */
+  void setMaxIterations(int iterations);
+
+  /**
+   * @brief Set the Tf Epsilon object
+   * 
+   * @param tf_epsilon 
+   */
+  void setTfEpsilon(double tf_epsilon);
+  
+  /**
+   * @brief Set the Max Correspondence Distance object
+   * 
+   * @param max_corresp_distance 
+   */
+  void setMaxCorrespondenceDistance(int max_corresp_distance);
+  
+  /**
+   * @brief Set the RANSAC Outlier threshold
+   * 
+   * @param ransac_threshold 
+   */
+  void setRANSACOutlierTh(int ransac_threshold);
+
 private:
+
+  /** @brief If true, perform GICP with convariances. */
+  bool covariances_;
+  
+  /** @brief GICP object. */
+  pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> gicp_;
+
   /** @brief Transformation matrix as result of GICP alignment. */
   Eigen::Matrix4f fine_tf_;
 
-  /** @brief Radius to compute normals. */
-  double normal_radius_;
+  
+  /** @brief Maximum number of GICP iterations */
+  int max_iter_;
+
+  /** @brief Value for TFEpsilon for GICP. Define the convergence criterion */
+  double tf_epsilon_;
+
+  /** @brief Value for Max CorrespondenceDistance for GICP */
+  double max_corresp_distance_;
+
+  /** @brief Value for RANSAC outlier threshold */
+  double ransac_outlier_th_;
 
   /** @brief Target pointcloud. */
   PointCloudRGB::Ptr target_cloud_;
@@ -126,18 +181,18 @@ private:
   PointCloudRGB::Ptr backup_cloud_;
 
   /**
-   * @brief Will set parameters to compute GICP alignment based on clouds data.
+   * @brief Set parameters to compute GICP alignment.
    *
    */
   void configParameters();
 
   /**
-   * @brief Apply covariances to perform fine alignment.
+   * @brief Apply GICP to perform fine alignment.
    *
    * @param[in] source_cloud
    * @param[in] target_cloud
    */
-  void fineAlignment(PointCloudRGB::Ptr source_cloud, PointCloudRGB::Ptr target_cloud);
+  void fineAlignment();
 
   /**
    * @brief Get the covariances from cloud
@@ -147,6 +202,12 @@ private:
    */
   void getCovariances(PointCloudRGB::Ptr cloud, boost::shared_ptr<CovariancesVector> covs);
 
+  /**
+   * @brief Apply the covariances before running GICP
+   * 
+   */
+  void applyCovariances();
+  
   /**
    * @brief Re-iterate GICP and save new aligned cloud.
    *
@@ -159,5 +220,7 @@ private:
    *
    * @param[in] cloud
    */
-  void backUp(PointCloudRGB::Ptr cloud);
+  void backUp(PointCloudRGB::Ptr cloud);  
 };
+
+#endif

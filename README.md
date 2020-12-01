@@ -1,8 +1,5 @@
 # LEICA POINT CLOUD PROCESSING #
 
-[![Build Status](https://travis-ci.com/fada-catec/leica_point_cloud_processing.svg?branch=master)](https://travis-ci.com/fada-catec/leica_point_cloud_processing)
-[![License](https://img.shields.io/badge/License-Apache%202-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-
 This package has been developed to help identifying [FODs](https://www.fodcontrol.com/what-is-fod/) in aeronautical structures. 
 
 Using point cloud analysis techniques, this software aims to compare the current state of the structure with its CAD to identify possible foreign objects. 

@@ -21,13 +21,8 @@
 
 #include <Utils.h>
 
-#include <sensor_msgs/PointCloud2.h>
 #include <pcl/io/vtk_lib_io.h>
-#include <vtkTriangleFilter.h>
-#include <vtkPolyDataMapper.h>
-#include <vtkTriangle.h>
 
-#endif
 
 /**
  * @brief This class is used to obtain pcl::PointCloud from CAD file.
@@ -43,25 +38,9 @@ public:
   /**
    * @brief Construct a new CADToPointCloud object
    *
+   * @param[in] cad_file_path Supported formats: .OBJ .PLY
    */
-  CADToPointCloud();
-
-  /**
-   * @brief Construct a new CADToPointCloud object
-   *
-   * @param[in] cad_path
-   * @param[in] cad_file Supported formats: .OBJ
-   * @param[out] cloud XYZ
-   */
-  CADToPointCloud(const std::string& cad_path, const std::string& cad_file, PointCloudXYZ::Ptr cloud);
-
-  /**
-   * @brief Construct a new CADToPointCloud object
-   *
-   * @param[in] cad_file_path Supported formats: .OBJ
-   * @param[out] cloud XYZRGB
-   */
-  CADToPointCloud(const std::string& cad_file_path, PointCloudRGB::Ptr cloud);
+  CADToPointCloud(const std::string& cad_file_path, int sample_points);
 
   /**
    * @brief Destroy the CADToPointCloud object
@@ -69,51 +48,24 @@ public:
    */
   ~CADToPointCloud(){};
 
-  /** @brief pcl::PolygonMesh to store mesh from CAD file. */
-  pcl::PolygonMesh::Ptr CAD_mesh_{ new pcl::PolygonMesh };
-
-  /** @brief pcl::Pointcloud to store XYZ cloud from CAD file. */
-  PointCloudXYZ::Ptr CAD_cloud_{ new PointCloudXYZ };
-
-  /** @brief PointCloud2 to store XYZ cloud from CAD file. Ready to be published. */
-  sensor_msgs::PointCloud2 CAD_cloud_msg_;
-
-  /** @brief Absolute path to pointcloud folder. */
-  std::string pc_path_;
-
   /**
-   * @brief Set path to pointcloud folder.
-   *
-   * @param path
+   * @brief convert cloud defined by path in construstor into cloud
+   * 
+   * @param[out] cloud to store cad converted to cloud
    */
-  void setPCpath(const std::string& path);
-
-  /**
-   * @brief Load specified file into CAD_mesh object.
-   *        Return -1 if error.
-   *
-   * @param cad_file_path Supported formats: .OBJ
-   * @return int
-   */
-  int CADToMesh(const std::string& cad_file_path);
-
-  /**
-   * @brief Convert mesh to CAD_cloud object.
-   *
-   * @param mesh
-   * @return int
-   */
-  int MeshToPointCloud(pcl::PolygonMesh::Ptr mesh);
-
-  /**
-   * @brief Convert mesh to CAD_cloud_msg object.
-   *
-   * @param mesh
-   * @return int
-   */
-  int MeshToROSPointCloud(pcl::PolygonMesh::Ptr mesh);
+  void convertCloud(PointCloudRGB::Ptr cloud);
 
 private:
+
+  /** @brief cad file path extension to check formats. */
+  std::string extension_;
+
+  /** @brief path to CAD file to be converted. */
+  std::string cad_file_path_;
+
+  /** @brief number of points to sample CAD mesh. */
+  int SAMPLE_POINTS_;
+  
   // Following methods are extracted from Point Cloud Library (PCL)
    //                --> pcl/tools/mesh_sampling.cpp
    //
@@ -153,7 +105,7 @@ private:
 
   /** @brief Extracted from Point Cloud Library (PCL)  --> pcl/tools/mesh_sampling.cpp
    *         \n Copyright (c) 2010-2011, Willow Garage, Inc. */
-  void uniform_sampling(vtkSmartPointer<vtkPolyData> polydata, size_t n_samples, PointCloudXYZ& cloud_out);
+  void uniformSampling(vtkSmartPointer<vtkPolyData> polydata, size_t n_samples, PointCloudRGB& cloud_out);
 
   /** @brief Extracted from Point Cloud Library (PCL)  --> pcl/tools/mesh_sampling.cpp
    *         \n Copyright (c) 2010-2011, Willow Garage, Inc. */
@@ -166,5 +118,7 @@ private:
 
   /** @brief Extracted from Point Cloud Library (PCL)  --> pcl/tools/mesh_sampling.cpp
    *         \n Copyright (c) 2010-2011, Willow Garage, Inc. */
-  double uniform_deviate(int seed);
+  double uniformDeviate(int seed);
 };
+
+#endif

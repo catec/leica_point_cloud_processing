@@ -17,13 +17,14 @@
 
 
 #include <Utils.h>
+#include <pcl/common/transforms.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/filters/extract_indices.h>
 
-void Utils::setPCpath(const std::string& pointcloud_folder_path)
-{
-  pc_path_ = pointcloud_folder_path;
-}
+const std::string TARGET_CLOUD_TOPIC = "/cad/cloud";
+const std::string SOURCE_CLOUD_TOPIC = "/scan/cloud";
 
-bool Utils::getNormals(PointCloudRGB::Ptr& cloud, double normal_radius, pcl::PointCloud<pcl::Normal>::Ptr& normals)
+bool Utils::getNormals(PointCloudRGB::Ptr& cloud, double normal_radius, PointCloudNormal::Ptr& normals)
 {
   ROS_INFO("Computing normals with radius: %f", normal_radius);
   pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> ne;
@@ -32,7 +33,7 @@ bool Utils::getNormals(PointCloudRGB::Ptr& cloud, double normal_radius, pcl::Poi
   pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
   ne.setSearchMethod(tree);
 
-  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
+  PointCloudNormal::Ptr cloud_normals(new PointCloudNormal);
   ne.setRadiusSearch(normal_radius);
   ne.compute(*normals);
 
@@ -44,20 +45,22 @@ bool Utils::getNormals(PointCloudRGB::Ptr& cloud, double normal_radius, pcl::Poi
 
 bool Utils::isValidCloud(PointCloudXYZ::Ptr cloud)
 {
-  if (cloud->size() <= 0)
-  {
-    return false;
-  }
-  return true;
+  return (cloud->size() > 1);
 }
 
 bool Utils::isValidCloud(PointCloudRGB::Ptr cloud)
 {
-  if (cloud->size() <= 0)
-  {
-    return false;
-  }
-  return true;
+  return (cloud->size() > 1);
+}
+
+bool Utils::isValidCloud(PointCloudNormal::Ptr normals)
+{
+  return (normals->size() > 1);
+}
+
+bool Utils::isValidMesh(pcl::PolygonMesh::Ptr mesh)
+{
+  return (mesh->cloud.row_step*mesh->cloud.height == 0);
 }
 
 bool Utils::isValidCloudMsg(const sensor_msgs::PointCloud2& cloud_msg)
@@ -67,6 +70,19 @@ bool Utils::isValidCloudMsg(const sensor_msgs::PointCloud2& cloud_msg)
   if (len == 0)
   {
     return false;
+  }
+  return true;
+}
+
+bool Utils::isValidTransform(Eigen::Matrix4f transform)
+{
+  for (int i=0; i<transform.rows(); i++)
+  {
+    for (int j=0; j<transform.cols(); j++)
+    {
+      if (std::isnan(transform(i,j)))
+        return false;
+    }
   }
   return true;
 }
@@ -87,10 +103,18 @@ void Utils::cloudToXYZRGB(PointCloudXYZ::Ptr cloud, PointCloudRGB::Ptr cloud_rgb
   colorizeCloud(cloud_rgb, R, G, B);
 }
 
-void Utils::cloudToROSMsg(PointCloudRGB::Ptr cloud, sensor_msgs::PointCloud2& cloud_msg)
+// TODO return sensor_msgs::PointCloud2
+void Utils::cloudToROSMsg(PointCloudRGB::Ptr cloud, sensor_msgs::PointCloud2& cloud_msg, const std::string& frameid)
 {
   pcl::toROSMsg(*cloud, cloud_msg);
-  cloud_msg.header.frame_id = frame_id_;
+  cloud_msg.header.frame_id = frameid;
+  cloud_msg.header.stamp = ros::Time::now();
+}
+
+void Utils::cloudToROSMsg(const pcl::PCLPointCloud2& cloud, sensor_msgs::PointCloud2& cloud_msg, const std::string& frameid)
+{
+  pcl_conversions::fromPCL(cloud, cloud_msg);
+  cloud_msg.header.frame_id = frameid;
   cloud_msg.header.stamp = ros::Time::now();
 }
 
@@ -162,17 +186,29 @@ void Utils::printTransform(const Eigen::Matrix4f& transform)
   std::cout << transform.format(CleanFmt) << std::endl;
 }
 
-void Utils::indicesFilter(PointCloudRGB::Ptr cloud_in, PointCloudRGB::Ptr cloud_out,
-                          boost::shared_ptr<std::vector<int> > indices)
+void Utils::printMatrix(const Eigen::Ref<const Eigen::MatrixXf>& matrix, const int size)
 {
-  pcl::ExtractIndices<pcl::PointXYZRGB> extract_indices_filter;
-  extract_indices_filter.setInputCloud(cloud_in);
-  extract_indices_filter.setIndices(indices);
-  extract_indices_filter.filter(*cloud_out);
+  Eigen::IOFormat CleanFmt(size, 0, ", ", "\n", "\t\t\t\t[", "]");
+  std::cout << matrix.format(CleanFmt) << std::endl;
 }
 
-void Utils::displaceCloud(PointCloudRGB::Ptr cloud_in, PointCloudRGB::Ptr cloud_out, double x_offset, double y_offset,
-                          double z_offset)
+void Utils::onePointCloud(PointCloudRGB::Ptr cloud, int size,
+                                     PointCloudRGB::Ptr one_point_cloud)
+{
+  // single point cloud
+  Eigen::Vector4f centroid;
+  pcl::compute3DCentroid(*cloud, centroid);
+  pcl::PointXYZRGB p;
+  p.x = centroid[0];
+  p.y = centroid[1];
+  p.z = centroid[2];
+  
+  for(int i=0; i<size; i++)
+    one_point_cloud->points.push_back(p);
+}              
+
+void Utils::translateCloud(PointCloudRGB::Ptr cloud_in, PointCloudRGB::Ptr cloud_out, 
+                          double x_offset, double y_offset, double z_offset)
 {
   pcl::copyPointCloud(*cloud_in, *cloud_out);
   for (size_t i = 0; i < cloud_out->points.size(); i++)
@@ -183,6 +219,114 @@ void Utils::displaceCloud(PointCloudRGB::Ptr cloud_in, PointCloudRGB::Ptr cloud_
   }
 }
 
-// Initialization
-std::string Utils::pc_path_ = "";
-std::string Utils::frame_id_ = "world";
+void Utils::rotateCloud(PointCloudRGB::Ptr cloud_in, PointCloudRGB::Ptr cloud_out, 
+                        double roll, double pitch, double yaw)
+{
+  Eigen::AngleAxisf rollAngle(roll, Eigen::Vector3f::UnitX());
+  Eigen::AngleAxisf pitchAngle(pitch, Eigen::Vector3f::UnitY());
+  Eigen::AngleAxisf yawAngle(yaw, Eigen::Vector3f::UnitZ());
+
+  Eigen::Quaternion<float> q = rollAngle * pitchAngle * yawAngle;
+  
+  Eigen::Matrix3f rotation = q.matrix();
+  
+  Eigen::Matrix4f T;
+  T.setIdentity();
+  T.block<3,3>(0,0) = rotation;
+  pcl::transformPointCloud(*cloud_in, *cloud_out, T);
+
+  Utils::printTransform(T);
+}
+
+void Utils::getVectorFromNormal(PointCloudNormal::Ptr normal, double idx,
+                                           Eigen::Vector3f& vector)
+{
+    double x = normal->points[idx].normal_x;
+    double y = normal->points[idx].normal_y;
+    double z = normal->points[idx].normal_z;
+
+    vector << x, y, z;
+    vector.normalize();
+}   
+
+bool Utils::searchForSameRows(Eigen::MatrixXd source_m, Eigen::MatrixXd target_m,
+                                         std::vector<int>& source_indx, std::vector<int>& target_indx)
+{
+  double th = 4e-2;
+  int s_row_size = source_m.row(0).size();
+  int t_row_size = target_m.row(0).size();
+  int size = s_row_size < t_row_size ? s_row_size : t_row_size;
+  
+  int count=0;
+  int s_row, t_row;
+  for(int i=0; i<size && count<2; i++)
+  {
+    s_row = i;
+    t_row = findOnMatrix(source_m.row(s_row), target_m, th);
+    if(t_row != -1)
+    {
+      // if row found in matrix, both rows are coincident 
+      source_indx.push_back(s_row);
+      target_indx.push_back(t_row);
+      count++;
+    }
+  }
+  
+  if(count<2) return false; 
+
+  return true;
+}
+
+bool Utils::areSameVectors(const Eigen::VectorXd v1, const Eigen::VectorXd v2, double threshold)
+{
+    if(v1.size() != v2.size())
+      return false;
+
+    if (v1.isApprox(v2, threshold))
+        return true;
+    
+    return false;
+}
+
+int Utils::findOnVector(double value, const Eigen::VectorXd v, double threshold)
+{
+    int index;
+
+    if (v.size()!=0 && (v.array() - value).abs().minCoeff(&index) <= threshold)
+        return index;
+    
+    return -1;
+}
+
+int Utils::findOnMatrix(const Eigen::VectorXd v, const Eigen::MatrixXd m,  double threshold)
+{
+    int index = -1;
+    
+    for(int i=0; i<v.size() && index==-1; i++)
+      if(areSameVectors(v, m.row(i), threshold)) index = i;
+    
+    return index;
+}
+
+void Utils::extractColFromMatrix(Eigen::MatrixXd& matrix, int col)
+{
+  int nrows = matrix.rows();
+  int ncols = matrix.cols()-1;
+  
+  if(col < ncols)
+      matrix.block(0,col,nrows,ncols-col) = matrix.rightCols(ncols-col);
+
+  matrix.conservativeResize(nrows,ncols);
+
+}
+
+void Utils::extractRowFromMatrix(Eigen::MatrixXd& matrix, int row)
+{
+  int nrows = matrix.rows()-1;
+  int ncols = matrix.cols();
+  
+  if(row < nrows)
+      matrix.block(row,0,nrows-row,ncols) = matrix.bottomRows(nrows-row);
+
+  matrix.conservativeResize(nrows,ncols);
+}

@@ -22,24 +22,18 @@
 
 #include <Utils.h>
 
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/crop_box.h>
-#include "pcl/common/angles.h"
-#include "pcl/segmentation/sac_segmentation.h"
-
-#endif
-
 class Filter
 {
   typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
   typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
-
+  typedef pcl::PointCloud<pcl::Normal> PointCloudNormal;
+  
 public:
   /**
    * @brief Construct a new Filter object.
    *
    */
-  Filter();
+  Filter(){};
 
   /**
    * @brief Construct a new Filter object.
@@ -53,38 +47,15 @@ public:
    *
    * @param leaf_size
    * @param noise_threshold
-   */
-  Filter(double leaf_size, double noise_threshold);
-
-  /**
-   * @brief Construct a new Filter object.
-   *
-   * @param leaf_size
-   * @param noise_threshold
    * @param floor_threshold
    */
   Filter(double leaf_size, double noise_threshold, double floor_threshold);
-
-  Filter(Eigen::Vector3f cloud_center, double leaf_size, double noise_threshold, double floor_threshold);
 
   /**
    * @brief Destroy the Filter object.
    *
    */
   ~Filter(){};
-
-  /** @brief pcl::VoxelGrid leaf size */
-  double leaf_size_;
-
-  /** @brief pcl::CropBox size */
-  double noise_filter_threshold_;
-
-  /** @brief pcl::SACSegmentation distance threshold */
-  double floor_filter_threshold_;
-
-  Eigen::Vector3f cloud_center_;
-
-  bool user_given_center_;
 
   /**
    * @brief Set the Leaf Size object.
@@ -94,7 +65,28 @@ public:
   void setLeafSize(double new_leaf_size);
 
   /**
-   * @brief Downsample cloud.
+   * @brief Set the Noise Threshold object
+   * 
+   * @param noise_th 
+   */
+  void setNoiseThreshold(double noise_th);
+
+  /**
+   * @brief Set the Floor Threshold object
+   * 
+   * @param floor_th 
+   */
+  void setFloorThreshold(double floor_th);
+  
+  /**
+   * @brief Set the Cloud Center object
+   * 
+   * @param cloud_center 
+   */
+  void setCloudCenter(Eigen::Vector3f cloud_center);
+
+  /**
+   * @brief Perform defined filter 
    *        \n If noise threshold is specified, filter noise in cloud.
    *        \n If floor threshold is specified, search the floor and remove it from cloud.
    *
@@ -103,9 +95,8 @@ public:
    */
   void run(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered);
 
-private:
   /**
-   * @brief Apply leaf_size_ to downsample input cloud.
+   * @brief Apply Leaf Size to downsample input cloud.
    *
    * @param[in] cloud
    * @param[out] cloud_downsampled
@@ -113,25 +104,92 @@ private:
   void downsampleCloud(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_downsampled);
 
   /**
-   * @brief Apply noise_filter_threshold_ to filter noise in cloud.
+   * @brief Apply Noise Threshold to filter noise in cloud.
    *        \n Everything out of a box with given size (threshold) is consider noise.
    *
-   * @param[in] threshold
    * @param[in] cloud
    * @param[out] cloud_filtered
    */
-  void filter_noise(double threshold, PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered);
-
-  void filter_noise(Eigen::Vector3f cloud_center, double threshold, PointCloudRGB::Ptr cloud,
-                    PointCloudRGB::Ptr cloud_filtered);
+  void filterNoise(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered);
 
   /**
-   * @brief Apply floor_filter_threshold_ to search floor in cloud and filter it.
+   * @brief Apply Floor Threshold to search floor in cloud and filter it.
    *        \n Floor is consider a plane perpendicular to z axis.
    *
-   * @param[in] threshold
    * @param[in] cloud
    * @param[out] cloud_filtered
    */
-  void filter_floor(double threshold, PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered);
+  void filterFloor(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered);
+
+  /**
+   * @brief TODO
+   *
+   * @param[in] cloud
+   * @param[out] cloud_filtered
+   */
+  void outlierRemove(PointCloudRGB::Ptr cloud, PointCloudRGB::Ptr cloud_filtered);
+
+  /**
+   * @brief Remove points in input_cloud based on substract_cloud. Similar to boolean difference. Store differences in cloud_filtered
+   * 
+   * @param[in] input_cloud 
+   * @param[in] substract_cloud 
+   * @param[in] threshold 
+   * @param[out] cloud_filtered 
+   */
+  static void removeFromCloud(PointCloudRGB::Ptr input_cloud, 
+                              PointCloudRGB::Ptr substract_cloud,
+                              double threshold, 
+                              PointCloudRGB::Ptr cloud_filtered);
+
+  /**
+   * @brief Get all points from cloud_in that does not appear in indices save them in cloud_out
+   * 
+   * @param[in] cloud_in 
+   * @param[in] cloud_out 
+   * @param[out] indices 
+   */
+  static void extractIndicesNegative(PointCloudRGB::Ptr cloud_in, 
+                                     PointCloudRGB::Ptr cloud_out,
+                                     pcl::IndicesPtr indices);
+
+  /**
+   * @brief Get indices from cloud_ind and save them in cloud_out
+   * 
+   * @param[in] cloud_in 
+   * @param[out] cloud_out 
+   * @param[in] indices 
+   */
+  static void extractIndices(PointCloudRGB::Ptr cloud_in,
+                             PointCloudRGB::Ptr cloud_out,
+                             pcl::IndicesPtr indices);
+  
+  /**
+   * @brief Get indices from normals cloud_ind and save them in cloud_out
+   * 
+   * @param[in] normals_in 
+   * @param[out] normals_out 
+   * @param[in] indices 
+   */
+  static void extractIndices(PointCloudNormal::Ptr normals_in, 
+                             PointCloudNormal::Ptr normals_out,
+                             pcl::IndicesPtr indices);           
+
+private:
+  /** @brief pcl::VoxelGrid leaf size */
+  double leaf_size_;
+
+  /** @brief pcl::CropBox size */
+  double noise_threshold_;
+
+  /** @brief point cloud center for Noise filter */
+  Eigen::Vector4f cloud_center_;
+
+  /** @brief set to true if specified center. If false, compute cloud centroid */
+  bool given_center_;
+
+  /** @brief pcl::SACSegmentation distance threshold */
+  double floor_threshold_;
 };
+
+#endif

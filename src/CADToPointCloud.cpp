@@ -17,135 +17,100 @@
 
 
 #include <CADToPointCloud.h>
+#include <vtkTriangleFilter.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkTriangle.h>
 
-CADToPointCloud::CADToPointCloud()
+CADToPointCloud::CADToPointCloud(const std::string& cad_file_path, int sample_points)
 {
+  cad_file_path_ = cad_file_path;
+  ROS_INFO("Converting file: %s", cad_file_path_.c_str());
+
+  extension_ = boost::filesystem::extension(cad_file_path);
+  ROS_INFO("File extension: %s", extension_.c_str());
+
+  SAMPLE_POINTS_ = sample_points;
 }
 
-CADToPointCloud::CADToPointCloud(const std::string& cad_path, const std::string& cad_file, PointCloudXYZ::Ptr cloud)
+void CADToPointCloud::convertCloud(PointCloudRGB::Ptr cloud)
 {
-  setPCpath(cad_path);
+  vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 
-  if (CADToMesh(cad_path + cad_file) == 0)  // here we get CAD_mesh_
+  if(extension_==".ply")
   {
-    if (MeshToPointCloud(CAD_mesh_) == 0)  // here we get CAD_cloud_
-    {
-      pcl::copyPointCloud(*CAD_cloud_, *cloud);
-      ROS_INFO("File converted");
-    }
+    pcl::PolygonMesh mesh;
+    pcl::io::loadPolygonFilePLY(cad_file_path_, mesh);
+    pcl::io::mesh2vtk(mesh, polydata);
   }
-}
-
-CADToPointCloud::CADToPointCloud(const std::string& cad_file_path, PointCloudRGB::Ptr cloud)
-{
-  ROS_INFO("Converting file: %s", cad_file_path.c_str());
-
-  if (CADToMesh(cad_file_path) == 0)  // here we get CAD_mesh_
+  else if(extension_==".obj")
   {
-    if (MeshToPointCloud(CAD_mesh_) == 0)  // here we get CAD_cloud_
-    {
-      pcl::copyPointCloud(*CAD_cloud_, *cloud);
-      ROS_INFO("File converted");
-    }
+    vtkSmartPointer<vtkOBJReader> readerQuery = vtkSmartPointer<vtkOBJReader>::New();
+    readerQuery->SetFileName(cad_file_path_.c_str());
+    readerQuery->Update();
+    polydata = readerQuery->GetOutput();
   }
-}
 
-int CADToPointCloud::CADToMesh(const std::string& cad_file_path)
-{
-  pcl::PolygonMesh mesh;
-  pcl::io::loadPolygonFile(cad_file_path, mesh);
+  PointCloudRGB::Ptr CAD_cloud(new PointCloudRGB);
+  uniformSampling(polydata, SAMPLE_POINTS_, *CAD_cloud);
 
-  int len = mesh.cloud.row_step * mesh.cloud.height;
-  if (len == 0)
-    return -1;
-
-  *CAD_mesh_ = mesh;
-
-  return 0;
-}
-
-int CADToPointCloud::MeshToPointCloud(pcl::PolygonMesh::Ptr mesh)
-{
-  int SAMPLE_POINTS_ = 500000;
-  float leaf_size = 0.01f;
-
-  vtkSmartPointer<vtkPolyData> polydata1 = vtkSmartPointer<vtkPolyData>::New();
-  pcl::io::mesh2vtk(*mesh, polydata1);
-
-  // vtkSmartPointer<vtkOBJReader> readerQuery = vtkSmartPointer<vtkOBJReader>::New();
-  // readerQuery->SetFileName(inputfile.c_str());
-  // readerQuery->Update();
-  // polydata1 = readerQuery->GetOutput();
-
-  // //make sure that the polygons are triangles!
-  // vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
-  // triangleFilter->SetInputData(polydata1);
-  // triangleFilter->Update();
-
-  // vtkSmartPointer<vtkPolyDataMapper> triangleMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-  // triangleMapper->SetInputConnection(triangleFilter->GetOutputPort());
-  // triangleMapper->Update();
-  // polydata1 = triangleMapper->GetInput();
-
-  uniform_sampling(polydata1, SAMPLE_POINTS_, *CAD_cloud_);
-
-  return 0;
-}
-
-int CADToPointCloud::MeshToROSPointCloud(pcl::PolygonMesh::Ptr mesh)
-{
-  pcl_conversions::fromPCL(mesh->cloud, CAD_cloud_msg_);
-  CAD_cloud_msg_.header.frame_id = Utils::frame_id_;
-  CAD_cloud_msg_.header.stamp = ros::Time::now();
-
-  return 0;
-}
-
-void CADToPointCloud::setPCpath(const std::string& path)
-{
-  pc_path_ = path;
+  if(Utils::isValidCloud(CAD_cloud))
+  {
+    pcl::copyPointCloud(*CAD_cloud, *cloud);
+  }
+  else
+    ROS_ERROR("Error converting CAD mesh to pointcloud");
 }
 
 // Following methods are extracted from Point Cloud Library (PCL)
-  //                --> pcl/tools/mesh_sampling.cpp
-  //
-  //  Software License Agreement (BSD License)
-  //
-  //  Point Cloud Library (PCL) - www.pointclouds.org
-  //  Copyright (c) 2010-2011, Willow Garage, Inc.
-  //  All rights reserved.
-  //
-  //  Redistribution and use in source and binary forms, with or without
-  //  modification, are permitted provided that the following conditions
-  //  are met:
-  //
-  //   * Redistributions of source code must retain the above copyright
-  //     notice, this list of conditions and the following disclaimer.
-  //   * Redistributions in binary form must reproduce the above
-  //     copyright notice, this list of conditions and the following
-  //     disclaimer in the documentation and/or other materials provided
-  //     with the distribution.
-  //   * Neither the name of the copyright holder(s) nor the names of its
-  //     contributors may be used to endorse or promote products derived
-  //     from this software without specific prior written permission.
-  //
-  //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-  //  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-  //  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-  //  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-  //  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-  //  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-  //  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-  //  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  //  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-  //  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-  //  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  //  POSSIBILITY OF SUCH DAMAGE.
-  //
+//                --> pcl/tools/mesh_sampling.cpp
+//
+//  Software License Agreement (BSD License)
+//
+//  Point Cloud Library (PCL) - www.pointclouds.org
+//  Copyright (c) 2010-2011, Willow Garage, Inc.
+//  All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions
+//  are met:
+//
+//   * Redistributions of source code must retain the above copyright
+//     notice, this list of conditions and the following disclaimer.
+//   * Redistributions in binary form must reproduce the above
+//     copyright notice, this list of conditions and the following
+//     disclaimer in the documentation and/or other materials provided
+//     with the distribution.
+//   * Neither the name of the copyright holder(s) nor the names of its
+//     contributors may be used to endorse or promote products derived
+//     from this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+//  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+//  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+//  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+//  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+//  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+//  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+//  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+//  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
+//
 
-void CADToPointCloud::uniform_sampling(vtkSmartPointer<vtkPolyData> polydata, size_t n_samples,
-                                       PointCloudXYZ& cloud_out)
+void CADToPointCloud::uniformSampling(vtkSmartPointer<vtkPolyData> polydata, size_t n_samples,
+                                       PointCloudRGB& cloud_out)
 {
+  //make sure that the polygons are triangles
+  vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
+  triangleFilter->SetInputData(polydata);
+  triangleFilter->Update();
+
+  vtkSmartPointer<vtkPolyDataMapper> triangleMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+  triangleMapper->SetInputConnection(triangleFilter->GetOutputPort());
+  triangleMapper->Update();
+  polydata = triangleMapper->GetInput();
+
   polydata->BuildCells();
   vtkSmartPointer<vtkCellArray> cells = polydata->GetPolys();
 
@@ -179,7 +144,7 @@ void CADToPointCloud::uniform_sampling(vtkSmartPointer<vtkPolyData> polydata, si
 void CADToPointCloud::randPSurface(vtkPolyData* polydata, std::vector<double>* cumulativeAreas, double totalArea,
                                    Eigen::Vector4f& p)
 {
-  float r = static_cast<float>(uniform_deviate(rand()) * totalArea);
+  float r = static_cast<float>(uniformDeviate(rand()) * totalArea);
 
   std::vector<double>::iterator low = std::lower_bound(cumulativeAreas->begin(), cumulativeAreas->end(), r);
   vtkIdType el = vtkIdType(low - cumulativeAreas->begin());
@@ -195,7 +160,7 @@ void CADToPointCloud::randPSurface(vtkPolyData* polydata, std::vector<double>* c
                       float(C[1]), float(C[2]), p);
 }
 
-double CADToPointCloud::uniform_deviate(int seed)
+double CADToPointCloud::uniformDeviate(int seed)
 {
   double ran = seed * (1.0 / (RAND_MAX + 1.0));
   return ran;
@@ -204,8 +169,8 @@ double CADToPointCloud::uniform_deviate(int seed)
 void CADToPointCloud::randomPointTriangle(float a1, float a2, float a3, float b1, float b2, float b3, float c1,
                                           float c2, float c3, Eigen::Vector4f& p)
 {
-  float r1 = static_cast<float>(uniform_deviate(rand()));
-  float r2 = static_cast<float>(uniform_deviate(rand()));
+  float r1 = static_cast<float>(uniformDeviate(rand()));
+  float r2 = static_cast<float>(uniformDeviate(rand()));
   float r1sqr = sqrtf(r1);
   float OneMinR1Sqr = (1 - r1sqr);
   float OneMinR2 = (1 - r2);

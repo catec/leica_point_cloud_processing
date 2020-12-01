@@ -21,16 +21,6 @@
 #define _INITIAL_ALIGNMENT_H
 
 #include <Utils.h>
-#include <Viewer.h>
-
-#include <pcl/features/fpfh.h>
-#include <pcl/features/multiscale_feature_persistence.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/registration/correspondence_estimation.h>
-#include <pcl/registration/correspondence_rejection_sample_consensus.h>
-#include <pcl/registration/transformation_estimation_svd.h>
-
-#endif
 
 /**
  * @brief Perform a rigid alignment from source to target cloud.
@@ -49,10 +39,30 @@
  * 5. Then, apply GICP to refine transformation (pcl::GeneralizedIterativeClosestPoint)
  *
  */
+
+namespace AlignmentMethods  
+{
+  /**
+   * @brief Define possible Alignment methods
+   * 
+   */
+  enum AlignmentMethod
+  {
+    HARRIS,
+    BOUNDARY,
+    MULTISCALE,
+    NORMALS,
+    NONE
+  };
+}
+typedef AlignmentMethods::AlignmentMethod AlignmentMethod;
+
 class InitialAlignment
 {
   typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
   typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
+  typedef pcl::PointCloud<pcl::Normal> PointCloudNormal;
+  typedef pcl::PointCloud<pcl::FPFHSignature33> PointCloudFPFH;
 
 public:
   /**
@@ -102,9 +112,31 @@ public:
   /**
    * @brief Once initial alignment is finished, apply rigid transformation to given cloud.
    *
-   * @param[in] cloud
+   * @param[out] cloud
    */
   void applyTFtoCloud(PointCloudRGB::Ptr cloud);
+
+  /**
+   * @brief Apply given tf to cloud
+   * 
+   * @param[out] cloud 
+   * @param[in] tf 
+   */
+  void applyTFtoCloud(PointCloudRGB::Ptr cloud, Eigen::Matrix4f tf);
+
+  /**
+   * @brief Set the AlignmentMethod object
+   * 
+   * @param method 
+   */
+  void setMethod(AlignmentMethod method);
+
+  /**
+   * @brief Set the Radius Factor object
+   * 
+   * @param align_factor 
+   */
+  void setRadiusFactor(double align_factor);
 
 private:
   /** @brief Transformation matrix as result of initial alignment. */
@@ -113,11 +145,8 @@ private:
   /** @brief Radius to compute normals. */
   double normal_radius_;
 
-  /** @brief Radius to compute feature. */
-  double feature_radius_;
-
-  /** @brief Threshold to compute correspondences. */
-  double inlier_threshold_;
+  /** @brief Factor to apply to radius for computations. */
+  double radius_factor_;
 
   /** @brief Target pointcloud. */
   PointCloudRGB::Ptr target_cloud_;
@@ -128,66 +157,252 @@ private:
   /** @brief Source pointcloud aligned with target cloud. */
   PointCloudRGB::Ptr aligned_cloud_;
 
-  /**
-   * @brief Will set parameters to compute initial alignment based on clouds data.
-   *
-   */
-  void configParameters();
+  /** @brief Source normals. */
+  PointCloudNormal::Ptr source_normals_;
 
-  /**
-   * @brief Get the scale values for given cloud to obtain features.
-   *
-   * @param[in] cloud
-   * @return std::vector<float>
-   */
-  std::vector<float> getScaleValues(PointCloudRGB::Ptr cloud);
+  /** @brief Target normals. */
+  PointCloudNormal::Ptr target_normals_;
 
-  /**
-   * @brief Print on console the scale values in vector format.
-   *
-   * @param scale_values
-   */
-  void printScaleValues(const std::vector<float>& scale_values);
+  /** @brief Source dominant normals. Just used int NORMALS method*/
+  PointCloudNormal::Ptr source_dominant_normals_;
 
-  /**
-   * @brief Compute the cloud normals with given radius. Return false if error
-   *
-   * @param[in] cloud
-   * @param[in] normal_radius
-   * @param[out] normals
-   * @return true
-   * @return false
-   */
-  bool getNormals(PointCloudRGB::Ptr& cloud, double normal_radius, pcl::PointCloud<pcl::Normal>::Ptr& normals);
+  /** @brief Target dominant normals. Just used int NORMALS method */
+  PointCloudNormal::Ptr target_dominant_normals_;
 
-  /**
-   * @brief Get keypoints and features for cloud.
-   *
-   * @param[in] cloud
-   * @param[in] normals
-   * @param[out] keypoints_cloud
-   * @param[out] features
-   */
-  void getKeypointsAndFeatures(PointCloudRGB::Ptr cloud, pcl::PointCloud<pcl::Normal>::Ptr normals,
-                               PointCloudRGB::Ptr keypoints_cloud, pcl::PointCloud<pcl::FPFHSignature33>::Ptr features);
+  /** @brief Target keypoints. */
+  PointCloudRGB::Ptr target_keypoints_;
+  
+  /** @brief Source keypoints. */
+  PointCloudRGB::Ptr source_keypoints_;
 
-  /**
-   * @brief Estimate correspondences to perform initial alignment.
-   *
-   * @param[in] source_features
-   * @param[in] target_features
-   * @param[in] source_keypoints
-   * @param[in] target_keypoints
-   * @param[out] correspondences
-   */
-  void performInitialAlingment(pcl::PointCloud<pcl::FPFHSignature33>::Ptr source_features,
-                               pcl::PointCloud<pcl::FPFHSignature33>::Ptr target_features,
-                               PointCloudRGB::Ptr source_keypoints, PointCloudRGB::Ptr target_keypoints,
-                               pcl::CorrespondencesPtr correspondences);
+  /** @brief Target features. */
+  PointCloudFPFH::Ptr target_features_;
+
+  /** @brief Source features. */
+  PointCloudFPFH::Ptr source_features_;
+
+  /** @brief Correspondences between source and target. */
+  pcl::CorrespondencesPtr correspondences_;
+
+  /** @brief The alignment method. */
+  AlignmentMethod method_;
+
+  /** @brief Source centroid computed. */
+  Eigen::Vector4f source_centroid_;
+
+  /** @brief Target centroid computed. */
+  Eigen::Vector4f target_centroid_;
 
   /**
    * @brief Once initial alignment is finished, apply rigid transformation to source cloud.
    *
    */
   void applyTFtoCloud();
+
+  /**
+   * @brief If set method is NORMALS run algorithm. Cluster normals and found correspondences between dominant normals. Get transform between clouds 
+   * 
+   */
+  void runNormalsBasedAlgorithm();
+
+  /**
+   * @brief Run keypoints based algorithm. Compute keypoints and features, found correspondences and get transform.
+   * 
+   */
+  void runKeypointsBasedAlgorithm();
+
+  /**
+   * @brief Cluster clouds normals. 
+   * 
+   * @param[in] cloud 
+   * @param[in] normals 
+   * @param[out] cluster_indices 
+   */
+  void obtainNormalsCluster(PointCloudRGB::Ptr cloud,
+                            PointCloudNormal::Ptr normals,
+                            std::vector<pcl::PointIndices>& cluster_indices);
+
+  /**
+   * @brief Obtain dominant normal in given cluster
+   * 
+   * @param[in] normals 
+   * @param[in] cluster_indices 
+   * @param[out] dominant_normals 
+   */
+  void obtainDominantNormals(PointCloudNormal::Ptr normals,
+                             std::vector<pcl::PointIndices> cluster_indices,
+                             PointCloudNormal::Ptr dominant_normals);                 
+
+  /**
+   * @brief Found correspondences between dominant normals.
+   * 
+   * @param[in] source_dominant_normal 
+   * @param[in] target_dominant_normal 
+   * @param[out] source_idx 
+   * @param[out] target_idx 
+   * @return true 
+   * @return false 
+   */
+  bool normalsCorrespondences(PointCloudNormal::Ptr source_dominant_normal,
+                              PointCloudNormal::Ptr target_dominant_normal,
+                              std::vector<int>& source_idx, std::vector<int>& target_idx);
+
+  /**
+   * @brief Get transformation between cloud based on normals correspondences
+   * 
+   * @param[in] source_normals 
+   * @param[in] target_normals 
+   */
+  void getTransformationFromNormals(PointCloudNormal::Ptr source_normals,
+                                    PointCloudNormal::Ptr target_normals);
+
+  /**
+   * @brief Function to get index for Source matrix value in Target matrix.
+   * 
+   * @param[in] source_m source matrix form by angle between normals
+   * @param[in] target_m target matrix form by angle between normals
+   * @param[in] source_idx_m source matrix form by index of source_m
+   * @param[in] target_idx_m target matrix form by index of target_m
+   * @param[out] source_indx source indexes that correspond with target indexes
+   * @param[out] target_indx source indexes that correspond with target indexes
+   * @return true 
+   * @return false 
+   */
+  bool findIdx(Eigen::MatrixXd source_m, Eigen::MatrixXd target_m,
+               Eigen::MatrixXi source_idx_m, Eigen::MatrixXi target_idx_m,
+               std::vector<int>& source_indx, std::vector<int>& target_indx);
+
+  /**
+   * @brief Create coordinate system from corresponden normals
+   * 
+   * @param normals 
+   * @param index 
+   * @return Eigen::Matrix3f 
+   */
+  Eigen::Matrix3f getCoordinateSystem(PointCloudNormal::Ptr normals, 
+                                      std::vector<int>& index);
+
+  /**
+   * @brief Construct matrix based on angles between normals
+   * 
+   * @param[in] normal 
+   * @param[in] size 
+   * @param[out] matrix 
+   * @param[out] index_matrix 
+   */
+  void matrixFromAngles(PointCloudNormal::Ptr normal,
+                        size_t size,
+                        Eigen::MatrixXd& matrix,
+                        Eigen::MatrixXi& index_matrix);                                                                                                   
+  
+  /**
+   * @brief Get next matrix vector with extracted current col and row
+   * 
+   * @param matrix 
+   * @param current_col 
+   * @param current_row 
+   * @return Eigen::VectorXd 
+   */
+  Eigen::VectorXd nextVector(Eigen::MatrixXd matrix,
+                             int current_col, int current_row);
+
+  /**
+   * @brief Obtain cloud keypoints based on harris method
+   * 
+   * @param cloud 
+   * @param normals 
+   * @param keypoints_cloud 
+   * @param keypoints_indices 
+   * @return int 
+   */
+  int obtainHarrisKeypoints(PointCloudRGB::Ptr cloud,
+                            PointCloudNormal::Ptr normals,
+                            PointCloudRGB::Ptr keypoints_cloud,
+                            pcl::IndicesPtr keypoints_indices);  
+
+  /**
+   * @brief Obtain cloud keypoints based on boundary method
+   * 
+   * @param[in] cloud 
+   * @param[in] normals 
+   * @param[out] keypoints_cloud 
+   * @param[out] keypoints_indices 
+   * @param[out] non_keypoints_indices 
+   * @return int 
+   */
+  int obtainBoundaryKeypoints(PointCloudRGB::Ptr cloud,
+                              PointCloudNormal::Ptr normals,
+                              PointCloudRGB::Ptr keypoints_cloud,
+                              pcl::IndicesPtr keypoints_indices,
+                              pcl::IndicesPtr non_keypoints_indices);
+
+  /**
+   * @brief Obtain cloud keypoints based on multiscale method
+   * 
+   * @param[in] cloud 
+   * @param[in] normals 
+   * @param[out] keypoints_cloud 
+   * @param[out] keypoints_indices 
+   * @param[out] features 
+   * @return int 
+   */
+  int obtainMultiScaleKeypointsAndFeatures(PointCloudRGB::Ptr cloud,
+                                           PointCloudNormal::Ptr normals,
+                                           PointCloudRGB::Ptr keypoints_cloud,
+                                           pcl::IndicesPtr keypoints_indices,
+                                           PointCloudFPFH::Ptr features);
+
+  /**
+   * @brief Obtain cloud features based on given keypoints
+   * 
+   * @param[in] cloud 
+   * @param[in] normals 
+   * @param[in] keypoints_indices 
+   * @param[out] features 
+   * @return int 
+   */
+  int obtainFeatures(PointCloudRGB::Ptr cloud,
+                     PointCloudNormal::Ptr normals,
+                     pcl::IndicesPtr keypoints_indices,
+                     PointCloudFPFH::Ptr features);                                                                                               
+
+  /**
+   * @brief Obtain keypoints and features based on set method
+   * 
+   * @param cloud 
+   * @param normals 
+   * @param keypoints_cloud 
+   * @param features_cloud 
+   * @return int 
+   */
+  int obtainKeypointsAndFeatures(PointCloudRGB::Ptr cloud, 
+                                 PointCloudNormal::Ptr normals,
+                                 PointCloudRGB::Ptr keypoints_cloud,
+                                 PointCloudFPFH::Ptr features_cloud);
+
+  /**
+   * @brief Get correspondences between clouds from computed features
+   * 
+   */
+  void obtainCorrespondences();
+
+  /**
+   * @brief Reject computed correspondences
+   * 
+   */
+  void rejectCorrespondences();
+
+  /**
+   * @brief Reject computed correspondences
+   * 
+   */
+  void rejectOneToOneCorrespondences();
+
+  /**
+   * @brief Get transform from computed correspondences
+   * 
+   */
+  void estimateTransform();                                                                              
 };
+
+#endif

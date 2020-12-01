@@ -1,0 +1,22 @@
+<launch>
+
+    <arg name="align_method"  default="1"/> 
+    <arg name="using_CAD"     default="false"/> 
+
+    <!-- Part parameters to apply on filter -->
+    <param name="leaf_size_factor"          value="10"/> 
+    <param name="radius_factor"             value="10"/> 
+    <param name="align_method"              value="$(arg align_method)"/> 
+    <param name="floor_height"              value="0.0"/> <!-- 0.35 Maximum height to search for floor -->
+    <param name="part_max_size"             value="4.1"/> <!-- Larger side of the part -->
+    <param name="part_center_x"             value="1.7"/> <!-- Recomended: coordinates from LeicaScanstation frame -->
+    <param name="part_center_y"             value="2.9"/> <!-- Recomended: coordinates from LeicaScanstation frame -->
+    <param name="part_center_z"             value="2.8"/> <!-- Recomended: coordinates from LeicaScanstation frame -->
+    <param name="using_CAD"                 value="$(arg using_CAD)"/> 
+    <param name="voxelize_factor"           value="0.1"/> 
+    <param name="gicp_with_covariances"     value="false"/> 
+    <param name="min_fod_points"            value="50"/> 
+
+    <node name="node" pkg="leica_point_cloud_processing" type="node" output="screen"/>
+
+</launch>
