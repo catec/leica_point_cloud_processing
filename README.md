@@ -34,9 +34,17 @@ Make sure pointcloud files are on the correct folder, specified in ROS param ser
 
 Supported formats: `.obj` and `.ply` for CAD files and `.pcd` for scanned files.
 
-**node** is the main node that perform alignment and FOD detection. It opens subscribers to clouds topics and start process. It's procedure is based on a Finite State Machine with the states that are shown in next figure.
+**node** is the main node that perform alignment and FOD detection. It opens subscribers to clouds topics and start process. It's procedure is based on a Finite State Machine with the states that are shown the [package wiki](http://wiki.ros.org/leica_point_cloud_processing#Workflow).
 
-![fsm](fsm.png)
+## Pre Alignment process ##
+
+The process of detecting FODs is based on comparing two pointclouds. Thus, the first step is to get both clouds registered [PCL Registration API](https://pointclouds.org/documentation/tutorials/registration_api.html). This is achieved by a pre alignment process and an iterative algorithm called GICP. The pre alignment step reduces the GICP process time but may vary it's effectiveness depending on the input clouds. In this package, four different methods of alignment are presented. The prefered method must be set on launch before starting inspection procedure. 
+
+- **HARRIS**. This method is focused on finding corners and set them as keypoints.
+- **BOUNDARY**. This method detects all parts edges and set them as keypoints.
+- **MULTISCALE**. This method is able to find keypoints that keeps relevance on different scales. It is recommended when compairing cloud with a previous scan.
+- **NORMALS**. This is an in-house method based on relation between point clouds normals. It finds correspondences from orientation of dominant normals. 
+- **NONE**. It is possible to avoid pre alignment process if both clouds are close enough and start inmediatly GICP.
 
 ## Usage ##
 
@@ -47,11 +55,11 @@ Supported formats: `.obj` and `.ply` for CAD files and `.pcd` for scanned files.
         rosservice call /publish_clouds "source_cloud_file: 'scan_fods.pcd'
         target_cloud_file: 'cad.ply'" 
 
-2. Launch the state machine node. Inspection process starts if both clouds are available in ROS topics: `/cad/cloud` and `/scan/cloud`
+2. Launch the state machine node. Inspection process starts if both clouds are available in ROS topics: `/cad/cloud` and `/scan/cloud`. As the target cloud indicated in example above comes from a CAD file, set param `using_CAD` to true.
 
-        roslaunch leica_point_cloud_processing leica_point_cloud_processing.launch
+        roslaunch leica_point_cloud_processing leica_point_cloud_processing.launch using_CAD:=true
 
-3. When FOD detection process end, results clouds are available in ROS topics. You can visualize detected FODs as pointclouds in RViz.
+3. When FOD detection process ends, results clouds are available in ROS topics. You can visualize detected FODs as pointclouds in RViz.
 
 ## Dependencies ##
 
