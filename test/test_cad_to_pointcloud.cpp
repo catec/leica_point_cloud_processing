@@ -1,7 +1,5 @@
-// Bring in my package's API, which is what I'm testing
 #include "CADToPointCloud.h"
 #include "leica_scanstation_utils/LeicaUtils.h"
-// Bring in gtest
 #include <gtest/gtest.h>
 
 

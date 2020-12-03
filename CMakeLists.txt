@@ -58,14 +58,14 @@ add_executable(load_clouds src/load_and_publish_clouds.cpp)
 target_link_libraries(load_clouds ${PROJECT_NAME})
 
 # Testing
-catkin_add_gtest(test_utils test/test_utils.cpp)
-target_link_libraries(test_utils ${PROJECT_NAME})
-
 # catkin_add_gtest(test_cad_to_pointcloud test/test_cad_to_pointcloud.cpp)
 # target_link_libraries(test_cad_to_pointcloud ${PROJECT_NAME})
 
-# catkin_add_gtest(test_initial_alignment test/test_initial_alignment.cpp)
-# target_link_libraries(test_initial_alignment ${PROJECT_NAME})
+catkin_add_gtest(test_utils test/test_utils.cpp)
+target_link_libraries(test_utils ${PROJECT_NAME})
+
+catkin_add_gtest(test_initial_alignment test/test_initial_alignment.cpp)
+target_link_libraries(test_initial_alignment ${PROJECT_NAME})
 
 catkin_add_gtest(test_gicp_alignment test/test_gicp_alignment.cpp)
 target_link_libraries(test_gicp_alignment ${PROJECT_NAME})
@@ -76,11 +76,13 @@ target_link_libraries(test_fod_detector ${PROJECT_NAME})
 catkin_add_gtest(test_filter test/test_filter.cpp)
 target_link_libraries(test_filter ${PROJECT_NAME})
 
-# catkin_add_gtest(test_state_machine test/test_state_machine.cpp)
-# target_link_libraries(test_state_machine StateMachine)
-
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
+
   add_rostest_gtest(test_publish_clouds test/test_publish_clouds.test test/test_publish_clouds.cpp)
   target_link_libraries(test_publish_clouds ${PROJECT_NAME})
+
+  add_rostest_gtest(test_state_machine test/test_state_machine.test test/test_state_machine.cpp)
+  target_link_libraries(test_state_machine StateMachine)
+
 endif()

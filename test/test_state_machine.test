@@ -1,0 +1,15 @@
+<launch>
+
+    <!-- Part parameters to apply on filter -->
+    <param name="leaf_size_factor"          value="5"/> 
+    <param name="radius_factor"             value="10"/> 
+    <param name="align_method"              value="1"/> 
+    <param name="floor_height"              value="0"/> <!-- 0.35 Maximum height to search for floor -->
+    <param name="part_max_size"             value="0"/> <!-- Larger side of the part -->
+    <param name="using_CAD"                 value="false"/> 
+    <param name="gicp_with_covariances"     value="false"/> 
+    <param name="min_fod_points"            value="50"/> 
+
+  <test test-name="test_state_machine" pkg="leica_point_cloud_processing" type="test_state_machine"/>
+  
+</launch>

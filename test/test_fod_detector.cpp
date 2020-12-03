@@ -1,7 +1,5 @@
-// Bring in my package's API, which is what I'm testing
 #include "FODDetector.h"
 #include "Utils.h"
-// Bring in gtest
 #include <gtest/gtest.h>
 #include <exception>
 #include <Viewer.h>

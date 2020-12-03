@@ -12,7 +12,7 @@ protected:
     PointCloudRGB::Ptr cloudRGB {new PointCloudRGB};
 
     TestStateMachine(){
-        cubePointCloud(cloudRGB, 1, 5000);
+        cubePointCloud(cloudRGB, 1, 10000);
     }
 
     void cubePointCloud(PointCloudRGB::Ptr cloud, float dim, int nsamples){
