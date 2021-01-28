@@ -10,6 +10,6 @@
     <param name="gicp_with_covariances"     value="false"/> 
     <param name="min_fod_points"            value="50"/> 
 
-  <test test-name="test_state_machine" pkg="leica_point_cloud_processing" type="test_state_machine"/>
+    <test test-name="test_state_machine" pkg="leica_point_cloud_processing" type="test_state_machine"/>
   
 </launch>

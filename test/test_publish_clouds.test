@@ -1,7 +1,7 @@
 <launch>
 
-  <node name="load_clouds" pkg="leica_point_cloud_processing" type="load_clouds" output="screen"/>
+    <node name="load_clouds" pkg="leica_point_cloud_processing" type="load_clouds" output="screen"/>
 
-  <test test-name="test_publish_clouds" pkg="leica_point_cloud_processing" type="test_publish_clouds"/>
+    <test test-name="test_publish_clouds" pkg="leica_point_cloud_processing" type="test_publish_clouds"/>
   
 </launch>

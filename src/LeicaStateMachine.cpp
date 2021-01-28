@@ -193,10 +193,8 @@ FODDetectionState::FODDetectionState(my_context ctx) : my_base(ctx)
         substracted_cloud = nullptr;
         fods_cloud_array.push_back(substracted_cloud);
     }
-    ROS_INFO("detected %d fods", num_of_fods);
+    ROS_INFO("Detected %d fods", num_of_fods);
     post_event(ValidFODEvent(num_of_fods, fods_cloud_array));  
-
-    // post_event(NoValidEvent()); TODO
 } 
 
 

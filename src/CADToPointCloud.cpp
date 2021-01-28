@@ -23,42 +23,42 @@
 
 CADToPointCloud::CADToPointCloud(const std::string& cad_file_path, int sample_points)
 {
-  cad_file_path_ = cad_file_path;
-  ROS_INFO("Converting file: %s", cad_file_path_.c_str());
+    cad_file_path_ = cad_file_path;
+    ROS_INFO("Converting file: %s", cad_file_path_.c_str());
 
-  extension_ = boost::filesystem::extension(cad_file_path);
-  ROS_INFO("File extension: %s", extension_.c_str());
+    extension_ = boost::filesystem::extension(cad_file_path);
+    ROS_INFO("File extension: %s", extension_.c_str());
 
-  SAMPLE_POINTS_ = sample_points;
+    SAMPLE_POINTS_ = sample_points;
 }
 
 void CADToPointCloud::convertCloud(PointCloudRGB::Ptr cloud)
 {
-  vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+    vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 
-  if(extension_==".ply")
-  {
-    pcl::PolygonMesh mesh;
-    pcl::io::loadPolygonFilePLY(cad_file_path_, mesh);
-    pcl::io::mesh2vtk(mesh, polydata);
-  }
-  else if(extension_==".obj")
-  {
-    vtkSmartPointer<vtkOBJReader> readerQuery = vtkSmartPointer<vtkOBJReader>::New();
-    readerQuery->SetFileName(cad_file_path_.c_str());
-    readerQuery->Update();
-    polydata = readerQuery->GetOutput();
-  }
+    if(extension_==".ply")
+    {
+        pcl::PolygonMesh mesh;
+        pcl::io::loadPolygonFilePLY(cad_file_path_, mesh);
+        pcl::io::mesh2vtk(mesh, polydata);
+    }
+    else if(extension_==".obj")
+    {
+        vtkSmartPointer<vtkOBJReader> readerQuery = vtkSmartPointer<vtkOBJReader>::New();
+        readerQuery->SetFileName(cad_file_path_.c_str());
+        readerQuery->Update();
+        polydata = readerQuery->GetOutput();
+    }
 
-  PointCloudRGB::Ptr CAD_cloud(new PointCloudRGB);
-  uniformSampling(polydata, SAMPLE_POINTS_, *CAD_cloud);
+    PointCloudRGB::Ptr CAD_cloud(new PointCloudRGB);
+    uniformSampling(polydata, SAMPLE_POINTS_, *CAD_cloud);
 
-  if(Utils::isValidCloud(CAD_cloud))
-  {
-    pcl::copyPointCloud(*CAD_cloud, *cloud);
-  }
-  else
-    ROS_ERROR("Error converting CAD mesh to pointcloud");
+    if(Utils::isValidCloud(CAD_cloud))
+    {
+        pcl::copyPointCloud(*CAD_cloud, *cloud);
+    }
+    else
+        ROS_ERROR("Error converting CAD mesh to pointcloud");
 }
 
 // Following methods are extracted from Point Cloud Library (PCL)
@@ -101,90 +101,90 @@ void CADToPointCloud::convertCloud(PointCloudRGB::Ptr cloud)
 void CADToPointCloud::uniformSampling(vtkSmartPointer<vtkPolyData> polydata, size_t n_samples,
                                        PointCloudRGB& cloud_out)
 {
-  //make sure that the polygons are triangles
-  vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
-  triangleFilter->SetInputData(polydata);
-  triangleFilter->Update();
+    //make sure that the polygons are triangles
+    vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
+    triangleFilter->SetInputData(polydata);
+    triangleFilter->Update();
 
-  vtkSmartPointer<vtkPolyDataMapper> triangleMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-  triangleMapper->SetInputConnection(triangleFilter->GetOutputPort());
-  triangleMapper->Update();
-  polydata = triangleMapper->GetInput();
+    vtkSmartPointer<vtkPolyDataMapper> triangleMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    triangleMapper->SetInputConnection(triangleFilter->GetOutputPort());
+    triangleMapper->Update();
+    polydata = triangleMapper->GetInput();
 
-  polydata->BuildCells();
-  vtkSmartPointer<vtkCellArray> cells = polydata->GetPolys();
+    polydata->BuildCells();
+    vtkSmartPointer<vtkCellArray> cells = polydata->GetPolys();
 
-  double p1[3], p2[3], p3[3], totalArea = 0;
-  std::vector<double> cumulativeAreas(cells->GetNumberOfCells(), 0);
-  size_t i = 0;
-  vtkIdType npts = 0, *ptIds = NULL;
-  for (cells->InitTraversal(); cells->GetNextCell(npts, ptIds); i++)
-  {
-    polydata->GetPoint(ptIds[0], p1);
-    polydata->GetPoint(ptIds[1], p2);
-    polydata->GetPoint(ptIds[2], p3);
-    totalArea += vtkTriangle::TriangleArea(p1, p2, p3);
-    cumulativeAreas[i] = totalArea;
-  }
+    double p1[3], p2[3], p3[3], totalArea = 0;
+    std::vector<double> cumulativeAreas(cells->GetNumberOfCells(), 0);
+    size_t i = 0;
+    vtkIdType npts = 0, *ptIds = NULL;
+    for (cells->InitTraversal(); cells->GetNextCell(npts, ptIds); i++)
+    {
+        polydata->GetPoint(ptIds[0], p1);
+        polydata->GetPoint(ptIds[1], p2);
+        polydata->GetPoint(ptIds[2], p3);
+        totalArea += vtkTriangle::TriangleArea(p1, p2, p3);
+        cumulativeAreas[i] = totalArea;
+    }
 
-  cloud_out.points.resize(n_samples);
-  cloud_out.width = static_cast<pcl::uint32_t>(n_samples);
-  cloud_out.height = 1;
+    cloud_out.points.resize(n_samples);
+    cloud_out.width = static_cast<pcl::uint32_t>(n_samples);
+    cloud_out.height = 1;
 
-  for (i = 0; i < n_samples; i++)
-  {
-    Eigen::Vector4f p;
-    randPSurface(polydata, &cumulativeAreas, totalArea, p);
-    cloud_out.points[i].x = p[0];
-    cloud_out.points[i].y = p[1];
-    cloud_out.points[i].z = p[2];
-  }
+    for (i = 0; i < n_samples; i++)
+    {
+        Eigen::Vector4f p;
+        randPSurface(polydata, &cumulativeAreas, totalArea, p);
+        cloud_out.points[i].x = p[0];
+        cloud_out.points[i].y = p[1];
+        cloud_out.points[i].z = p[2];
+    }
 }
 
 void CADToPointCloud::randPSurface(vtkPolyData* polydata, std::vector<double>* cumulativeAreas, double totalArea,
                                    Eigen::Vector4f& p)
 {
-  float r = static_cast<float>(uniformDeviate(rand()) * totalArea);
+    float r = static_cast<float>(uniformDeviate(rand()) * totalArea);
 
-  std::vector<double>::iterator low = std::lower_bound(cumulativeAreas->begin(), cumulativeAreas->end(), r);
-  vtkIdType el = vtkIdType(low - cumulativeAreas->begin());
+    std::vector<double>::iterator low = std::lower_bound(cumulativeAreas->begin(), cumulativeAreas->end(), r);
+    vtkIdType el = vtkIdType(low - cumulativeAreas->begin());
 
-  double A[3], B[3], C[3];
-  vtkIdType npts = 0;
-  vtkIdType* ptIds = NULL;
-  polydata->GetCellPoints(el, npts, ptIds);
-  polydata->GetPoint(ptIds[0], A);
-  polydata->GetPoint(ptIds[1], B);
-  polydata->GetPoint(ptIds[2], C);
-  randomPointTriangle(float(A[0]), float(A[1]), float(A[2]), float(B[0]), float(B[1]), float(B[2]), float(C[0]),
-                      float(C[1]), float(C[2]), p);
+    double A[3], B[3], C[3];
+    vtkIdType npts = 0;
+    vtkIdType* ptIds = NULL;
+    polydata->GetCellPoints(el, npts, ptIds);
+    polydata->GetPoint(ptIds[0], A);
+    polydata->GetPoint(ptIds[1], B);
+    polydata->GetPoint(ptIds[2], C);
+    randomPointTriangle(float(A[0]), float(A[1]), float(A[2]), float(B[0]), float(B[1]), float(B[2]), float(C[0]),
+                        float(C[1]), float(C[2]), p);
 }
 
 double CADToPointCloud::uniformDeviate(int seed)
 {
-  double ran = seed * (1.0 / (RAND_MAX + 1.0));
-  return ran;
+    double ran = seed * (1.0 / (RAND_MAX + 1.0));
+    return ran;
 }
 
 void CADToPointCloud::randomPointTriangle(float a1, float a2, float a3, float b1, float b2, float b3, float c1,
                                           float c2, float c3, Eigen::Vector4f& p)
 {
-  float r1 = static_cast<float>(uniformDeviate(rand()));
-  float r2 = static_cast<float>(uniformDeviate(rand()));
-  float r1sqr = sqrtf(r1);
-  float OneMinR1Sqr = (1 - r1sqr);
-  float OneMinR2 = (1 - r2);
-  a1 *= OneMinR1Sqr;
-  a2 *= OneMinR1Sqr;
-  a3 *= OneMinR1Sqr;
-  b1 *= OneMinR2;
-  b2 *= OneMinR2;
-  b3 *= OneMinR2;
-  c1 = r1sqr * (r2 * c1 + b1) + a1;
-  c2 = r1sqr * (r2 * c2 + b2) + a2;
-  c3 = r1sqr * (r2 * c3 + b3) + a3;
-  p[0] = c1;
-  p[1] = c2;
-  p[2] = c3;
-  p[3] = 0;
+    float r1 = static_cast<float>(uniformDeviate(rand()));
+    float r2 = static_cast<float>(uniformDeviate(rand()));
+    float r1sqr = sqrtf(r1);
+    float OneMinR1Sqr = (1 - r1sqr);
+    float OneMinR2 = (1 - r2);
+    a1 *= OneMinR1Sqr;
+    a2 *= OneMinR1Sqr;
+    a3 *= OneMinR1Sqr;
+    b1 *= OneMinR2;
+    b2 *= OneMinR2;
+    b3 *= OneMinR2;
+    c1 = r1sqr * (r2 * c1 + b1) + a1;
+    c2 = r1sqr * (r2 * c2 + b2) + a2;
+    c3 = r1sqr * (r2 * c3 + b3) + a3;
+    p[0] = c1;
+    p[1] = c2;
+    p[2] = c3;
+    p[3] = 0;
 }

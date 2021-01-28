@@ -23,12 +23,6 @@ typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
 const float FREQ = 0.1;   // Hz
 
-/**
- * POINTCLOUDS:
-    - target pointcloud: directly obtain from downsampling a part's cad
-    - source pointcloud: result from scanning the same cad part in Gazebo with leica c5 simulator
-**/
-
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "statemachine");
