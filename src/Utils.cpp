@@ -21,8 +21,8 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl/filters/extract_indices.h>
 
-const std::string TARGET_CLOUD_TOPIC = "/cad/cloud";
-const std::string SOURCE_CLOUD_TOPIC = "/scan/cloud";
+const std::string TARGET_CLOUD_TOPIC = "/target/cloud";
+const std::string SOURCE_CLOUD_TOPIC = "/source/cloud";
 
 bool Utils::getNormals(PointCloudRGB::Ptr& cloud, double normal_radius, PointCloudNormal::Ptr& normals)
 {

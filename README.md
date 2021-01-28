@@ -28,7 +28,7 @@ NOTE: the following release is an alpha experimental release corresponding to Mi
 
 ## Nodes ##
 
-**load_clouds** node will load both scanned and CAD clouds into ROS topics: `/cad/cloud` and `/scan/cloud`. This is done after calling rosservice `/publish_clouds`.
+**load_clouds** node will load both scanned and CAD clouds into ROS topics: `/target/cloud` and `/source/cloud`. This is done after calling rosservice `/publish_clouds`.
 
 Make sure pointcloud files are on the correct folder, specified in ROS param server as `/pointcloud_folder` (default: package leica_scanstation_utils/pointclouds).
 
@@ -55,7 +55,7 @@ The process of detecting FODs is based on comparing two pointclouds. Thus, the f
         rosservice call /publish_clouds "source_cloud_file: 'scan_fods.pcd'
         target_cloud_file: 'cad.ply'" 
 
-2. Launch the state machine node. Inspection process starts if both clouds are available in ROS topics: `/cad/cloud` and `/scan/cloud`. As the target cloud indicated in example above comes from a CAD file, set param `using_CAD` to true.
+2. Launch the state machine node. Inspection process starts if both clouds are available in ROS topics: `/target/cloud` and `/source/cloud`. As the target cloud indicated in example above comes from a CAD file, set param `using_CAD` to true.
 
         roslaunch leica_point_cloud_processing leica_point_cloud_processing.launch using_CAD:=true
 

@@ -112,8 +112,8 @@ int main(int argc, char** argv)
 
     ros::ServiceServer service = nh.advertiseService("publish_clouds", 
                                                      &CloudLoader::serviceCb, &cl);
-    ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("scan/cloud", 1);
-    ros::Publisher cad_pub = nh.advertise<sensor_msgs::PointCloud2>("cad/cloud", 1);
+    ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("source/cloud", 1);
+    ros::Publisher tar_pub = nh.advertise<sensor_msgs::PointCloud2>("target/cloud", 1);
 
     ROS_INFO("Service waiting for call to /publish_clouds");
 
@@ -125,7 +125,7 @@ int main(int argc, char** argv)
         {
             pub.publish(cl.source_cloud_msg_);
             r.sleep();  
-            cad_pub.publish(cl.target_cloud_msg_);
+            tar_pub.publish(cl.target_cloud_msg_);
         }
         ros::spinOnce();
         r.sleep();

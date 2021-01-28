@@ -14,10 +14,10 @@ StateMachine::StateMachine(PointCloudRGB::Ptr source_cloud, PointCloudRGB::Ptr t
           source_cloud_filtered_(new PointCloudRGB), 
           target_cloud_filtered_(new PointCloudRGB) 
 {
-    source_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/scan/cloud_aligned", 1);
-    target_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/cad/cloud_filtered", 1);
-    fods_pub_   = nh_.advertise<sensor_msgs::PointCloud2>("/scan/fods_detected", 1);
-    n_fods_pub_ = nh_.advertise<std_msgs::Int16>("/scan/num_of_fods_detected", 1);
+    source_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/source/cloud_aligned", 1);
+    target_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("/target/cloud_filtered", 1);
+    fods_pub_   = nh_.advertise<sensor_msgs::PointCloud2>("/source/fods_detected", 1);
+    n_fods_pub_ = nh_.advertise<std_msgs::Int16>("/source/num_of_fods_detected", 1);
     cloud_transform_ = Eigen::Matrix4f::Identity();
 }
 
@@ -25,8 +25,8 @@ FilterState::FilterState(my_context ctx) : my_base(ctx)
 {
     ROS_INFO("Into FilterState");
 
-    PointCloudRGB::Ptr scan_cloud = context<StateMachine>().getSourceCloud();
-    PointCloudRGB::Ptr cad_cloud = context<StateMachine>().getTargetCloud();
+    PointCloudRGB::Ptr source_cloud = context<StateMachine>().getSourceCloud();
+    PointCloudRGB::Ptr target_cloud = context<StateMachine>().getTargetCloud();
 
     // set params
     double part_max_size = 4; // Larger side of the part
@@ -43,43 +43,43 @@ FilterState::FilterState(my_context ctx) : my_base(ctx)
 
     double leaf_size_factor = 10;
     ros::param::get("/leaf_size_factor", leaf_size_factor);
-    double cad_res = Utils::computeCloudResolution(cad_cloud);
-    double scan_res = Utils::computeCloudResolution(scan_cloud);
-    double leaf_size = leaf_size_factor * std::max(cad_res, scan_res);
+    double target_res = Utils::computeCloudResolution(target_cloud);
+    double source_res = Utils::computeCloudResolution(source_cloud);
+    double leaf_size = leaf_size_factor * std::max(target_res, source_res);
 
     bool using_cad = false;    
     ros::param::get("/using_CAD", using_cad);
 
     // filter
-    PointCloudRGB::Ptr scan_cloud_filtered(new PointCloudRGB);
-    PointCloudRGB::Ptr cad_cloud_filtered(new PointCloudRGB);
-    PointCloudRGB::Ptr scan_cloud_downsampled(new PointCloudRGB);
-    PointCloudRGB::Ptr cad_cloud_downsampled(new PointCloudRGB);
+    PointCloudRGB::Ptr source_cloud_filtered(new PointCloudRGB);
+    PointCloudRGB::Ptr target_cloud_filtered(new PointCloudRGB);
+    PointCloudRGB::Ptr source_cloud_downsampled(new PointCloudRGB);
+    PointCloudRGB::Ptr target_cloud_downsampled(new PointCloudRGB);
 
-    Filter scan_cloud_filter(leaf_size, part_max_size, floor_height);
+    Filter source_cloud_filter(leaf_size, part_max_size, floor_height);
     if(part_center[0]!=INF && part_center[1]!=INF && part_center[2]!=INF)
-        scan_cloud_filter.setCloudCenter(part_center);
-    scan_cloud_filter.run(scan_cloud, scan_cloud_filtered);
-    scan_cloud_filter.downsampleCloud(scan_cloud_filtered, scan_cloud_downsampled);
+        source_cloud_filter.setCloudCenter(part_center);
+    source_cloud_filter.run(source_cloud, source_cloud_filtered);
+    source_cloud_filter.downsampleCloud(source_cloud_filtered, source_cloud_downsampled);
 
-    if(!using_cad) // source and target are scans
+    if(!using_cad) // source and target are sources
     {
-        scan_cloud_filter.run(cad_cloud, cad_cloud_filtered);
-        scan_cloud_filter.downsampleCloud(cad_cloud_filtered, cad_cloud_downsampled);
+        source_cloud_filter.run(target_cloud, target_cloud_filtered);
+        source_cloud_filter.downsampleCloud(target_cloud_filtered, target_cloud_downsampled);
     }
     else  // target is CAD
     {
-        Filter cad_cloud_filter(leaf_size);
-        cad_cloud_filter.run(cad_cloud, cad_cloud_filtered);
-        cad_cloud_filter.downsampleCloud(cad_cloud, cad_cloud_downsampled);
+        Filter target_cloud_filter(leaf_size);
+        target_cloud_filter.run(target_cloud, target_cloud_filtered);
+        target_cloud_filter.downsampleCloud(target_cloud, target_cloud_downsampled);
     }
     
     // store on machine filtered and downsampled clouds
-    context<StateMachine>().setTargetCloudFiltered(cad_cloud_filtered);
-    context<StateMachine>().setSourceCloudFiltered(scan_cloud_filtered);
+    context<StateMachine>().setTargetCloudFiltered(target_cloud_filtered);
+    context<StateMachine>().setSourceCloudFiltered(source_cloud_filtered);
 
-    if (Utils::isValidCloud(scan_cloud_downsampled) && Utils::isValidCloud(cad_cloud_downsampled))
-        post_event(ValidEvent(scan_cloud_downsampled, cad_cloud_downsampled));
+    if (Utils::isValidCloud(source_cloud_downsampled) && Utils::isValidCloud(target_cloud_downsampled))
+        post_event(ValidEvent(source_cloud_downsampled, target_cloud_downsampled));
     else
         post_event(NoValidEvent()); 
 }
@@ -88,8 +88,8 @@ AlignState::AlignState(my_context ctx) : my_base(ctx)
 {
     ROS_INFO("Into AlignState");
 
-    PointCloudRGB::Ptr scan_cloud = context<StateMachine>().getSourceCloud();
-    PointCloudRGB::Ptr cad_cloud = context<StateMachine>().getTargetCloud();
+    PointCloudRGB::Ptr source_cloud = context<StateMachine>().getSourceCloud();
+    PointCloudRGB::Ptr target_cloud = context<StateMachine>().getTargetCloud();
     PointCloudRGB::Ptr aligned_cloud(new PointCloudRGB);
 
     double radius_factor = 1.4;    
@@ -99,7 +99,7 @@ AlignState::AlignState(my_context ctx) : my_base(ctx)
     ros::param::get("/align_method", align_method);
 
     // Perform initial alignment
-    InitialAlignment initial_alignment(cad_cloud, scan_cloud);
+    InitialAlignment initial_alignment(target_cloud, source_cloud);
     
     initial_alignment.setMethod((AlignmentMethod)align_method);
     initial_alignment.setRadiusFactor(radius_factor);
@@ -122,14 +122,14 @@ GICPState::GICPState(my_context ctx) : my_base(ctx)
 {
     ROS_INFO("Into GICPState");
 
-    PointCloudRGB::Ptr scan_cloud = context<StateMachine>().getSourceCloud();
-    PointCloudRGB::Ptr cad_cloud = context<StateMachine>().getTargetCloud();
+    PointCloudRGB::Ptr source_cloud = context<StateMachine>().getSourceCloud();
+    PointCloudRGB::Ptr target_cloud = context<StateMachine>().getTargetCloud();
     PointCloudRGB::Ptr aligned_cloud(new PointCloudRGB);
 
     bool compute_cov = false;    
     ros::param::get("/gicp_with_covariances", compute_cov);
 
-    GICPAlignment gicp_alignment(cad_cloud, scan_cloud, compute_cov);
+    GICPAlignment gicp_alignment(target_cloud, source_cloud, compute_cov);
     gicp_alignment.run();
     gicp_alignment.getAlignedCloud(aligned_cloud);
 
@@ -155,21 +155,21 @@ GICPState::GICPState(my_context ctx) : my_base(ctx)
 
 FODDetectionState::FODDetectionState(my_context ctx) : my_base(ctx)
 {
-    PointCloudRGB::Ptr scan_cloud = context<StateMachine>().getSourceCloudFiltered();
-    PointCloudRGB::Ptr cad_cloud = context<StateMachine>().getTargetCloudFiltered();
+    PointCloudRGB::Ptr source_cloud = context<StateMachine>().getSourceCloudFiltered();
+    PointCloudRGB::Ptr target_cloud = context<StateMachine>().getTargetCloudFiltered();
     PointCloudRGB::Ptr substracted_cloud(new PointCloudRGB);
 
     // apply tf to source orig cloud
     Eigen::Matrix4f final_transform = context<StateMachine>().getCloudTransform();
     Utils::printTransform(final_transform);
-    pcl::transformPointCloud(*scan_cloud, *scan_cloud, final_transform);
+    pcl::transformPointCloud(*source_cloud, *source_cloud, final_transform);
 
     double voxelize_factor = 3;
     ros::param::get("/voxelize_factor", voxelize_factor);
     ROS_INFO("Received from launch voxelize factor: %f", voxelize_factor);
 
     double th = 4e-3 * voxelize_factor;
-    Filter::removeFromCloud(scan_cloud, cad_cloud, th, substracted_cloud);
+    Filter::removeFromCloud(source_cloud, target_cloud, th, substracted_cloud);
     
     double min_fod_points = 3;
     ros::param::get("/min_fod_points", min_fod_points);
@@ -180,7 +180,8 @@ FODDetectionState::FODDetectionState(my_context ctx) : my_base(ctx)
     if (Utils::isValidCloud(substracted_cloud))
     {   
         // Viewer::visualizePointCloud<pcl::PointXYZRGB>(substracted_cloud);
-        FODDetector fod_detector(substracted_cloud, th*100, min_fod_points);
+        double cluster_tolerance = th * 100;
+        FODDetector fod_detector(substracted_cloud, cluster_tolerance, min_fod_points);
         fod_detector.clusterPossibleFODs();
 
         // create a pointcloud for each cluster
@@ -189,7 +190,7 @@ FODDetectionState::FODDetectionState(my_context ctx) : my_base(ctx)
     else
     {
         // an empty substracted cloud means no fods on piece
-        ROS_INFO("No difference between scan and CAD cloud");
+        ROS_INFO("No difference between source and target cloud");
         substracted_cloud = nullptr;
         fods_cloud_array.push_back(substracted_cloud);
     }
@@ -200,23 +201,20 @@ FODDetectionState::FODDetectionState(my_context ctx) : my_base(ctx)
 
 PublishState::PublishState(my_context ctx) : my_base(ctx) 
 {
-    sensor_msgs::PointCloud2 cad_cloud_msg, scan_cloud_msg;
+    sensor_msgs::PointCloud2 target_cloud_msg, source_cloud_msg;
     
-    // PointCloudRGB::Ptr scan_cloud = context<StateMachine>().getSourceCloud();
-    // PointCloudRGB::Ptr cad_cloud = context<StateMachine>().getTargetCloud();
-    PointCloudRGB::Ptr scan_cloud = context<StateMachine>().getSourceCloudFiltered();
-    PointCloudRGB::Ptr cad_cloud = context<StateMachine>().getTargetCloudFiltered();
+    PointCloudRGB::Ptr source_cloud = context<StateMachine>().getSourceCloudFiltered();
+    PointCloudRGB::Ptr target_cloud = context<StateMachine>().getTargetCloudFiltered();
 
-    // Convert cad cloud and aligned cloud to ROS data type
-    Utils::cloudToROSMsg(scan_cloud, scan_cloud_msg);
-    Utils::cloudToROSMsg(cad_cloud, cad_cloud_msg);
+    // Convert target cloud and aligned cloud to ROS data type
+    Utils::cloudToROSMsg(source_cloud, source_cloud_msg);
+    Utils::cloudToROSMsg(target_cloud, target_cloud_msg);
 
     // Publish clouds
-    ROS_INFO("Publishing");
-    context<StateMachine>().target_pub_.publish(cad_cloud_msg); 
-    context<StateMachine>().source_pub_.publish(scan_cloud_msg);
+    context<StateMachine>().target_pub_.publish(target_cloud_msg); 
+    context<StateMachine>().source_pub_.publish(source_cloud_msg);
 
-    // If detected fods on scan cloud store them
+    // If detected fods on source cloud store them
     int n_fods = context<StateMachine>().getNFODs();
     if (n_fods>0)
     {
