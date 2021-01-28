@@ -429,10 +429,6 @@ int InitialAlignment::obtainBoundaryKeypoints(PointCloudRGB::Ptr cloud,
                                               pcl::IndicesPtr keypoints_indices,
                                               pcl::IndicesPtr non_keypoints_indices)
 {
-    double cloud_res = Utils::computeCloudResolution(cloud);
-    double keypoint_radius = cloud_res * radius_factor_;
-    ROS_INFO("obtainBoundaryKeypoints:  cloud_res %f, keypoint_radius %f", cloud_res, keypoint_radius);
-
     pcl::PointCloud<pcl::Boundary> boundaries;
     pcl::BoundaryEstimation<pcl::PointXYZRGB, pcl::Normal, pcl::Boundary> detector;
     detector.setInputCloud(cloud);
@@ -494,7 +490,8 @@ int InitialAlignment::obtainFeatures(PointCloudRGB::Ptr cloud,
                                      PointCloudFPFH::Ptr features)
 {
     double cloud_res = Utils::computeCloudResolution(cloud);
-
+    double feature_radius = cloud_res * radius_factor_;
+    
     pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
     pcl::FPFHEstimation<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33>::Ptr fest(
       new pcl::FPFHEstimation<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33>);
@@ -502,7 +499,7 @@ int InitialAlignment::obtainFeatures(PointCloudRGB::Ptr cloud,
     fest->setInputNormals(normals);
     fest->setIndices(keypoints_indices);
     fest->setSearchMethod(tree);  
-    fest->setRadiusSearch(10*cloud_res);
+    fest->setRadiusSearch(feature_radius);
     fest->compute(*features);
 
     if (features->size() == 0) return -1;

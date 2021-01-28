@@ -60,18 +60,12 @@ bool Utils::isValidCloud(PointCloudNormal::Ptr normals)
 
 bool Utils::isValidMesh(pcl::PolygonMesh::Ptr mesh)
 {
-    return (mesh->cloud.row_step*mesh->cloud.height == 0);
+    return ((mesh->cloud.row_step*mesh->cloud.height) != 0);
 }
 
 bool Utils::isValidCloudMsg(const sensor_msgs::PointCloud2& cloud_msg)
 {
-    // int len = sizeof(cloud_msg.data)/sizeof(cloud_msg.data[0]);  // not working
-    int len = cloud_msg.row_step * cloud_msg.height;
-    if (len == 0)
-    {
-        return false;
-    }
-    return true;
+    return ((cloud_msg.row_step*cloud_msg.height) != 0);
 }
 
 bool Utils::isValidTransform(Eigen::Matrix4f transform)
