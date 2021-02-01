@@ -1,5 +1,9 @@
 # LEICA POINT CLOUD PROCESSING #
 
+[![License](https://img.shields.io/badge/License-Apache%202-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build Status](https://travis-ci.com/fada-catec/leica_point_cloud_processing.svg?branch=master)](https://travis-ci.com/fada-catec/leica_point_cloud_processing)
+[![codecov](https://codecov.io/gh/fada-catec/leica_point_cloud_processing/branch/master/graph/badge.svg?token=CKF4OU74PZ)](https://codecov.io/gh/fada-catec/leica_point_cloud_processing)
+
 This package has been developed to help identifying [FODs](https://www.fodcontrol.com/what-is-fod/) in aeronautical structures. 
 
 Using point cloud analysis techniques, this software aims to compare the current state of the structure with previous state to identify possible foreign objects. It opens up the posibility of applying a pre-scan in which it is guaranteed to be free of FODs or a CAD of the structure that is ideal and free of fods. 
@@ -7,8 +11,6 @@ Using point cloud analysis techniques, this software aims to compare the current
 It has been designed to be used in combination with the [leica_scanstation](https://github.com/fada-catec/leica_scanstation) package, which allows to control the scanstation to make a scan of an aeronautical part. When the scan is finished, you get the point cloud that proceeds to be analyzed. In order to reproduce this behaviour if the device is not available, we created a [simulator](https://github.com/fada-catec/leica_gazebo_simulator).
 
 It is involved in the ROSIN project [Large_3D_inspection](http://wiki.ros.org/large_3d_inspection)
-
-NOTE: the following release is an alpha experimental release corresponding to Milestone 2 of the ROSIN project.
 
 ## Set up ##
 1. Create a workspace and clone *leica_scanstation* (for listed dependencies)
@@ -34,7 +36,7 @@ Make sure pointcloud files are on the correct folder, specified in ROS param ser
 
 Supported formats: `.obj` and `.ply` for CAD files and `.pcd` for scanned files.
 
-**node** is the main node that perform alignment and FOD detection. It opens subscribers to clouds topics and start process. It's procedure is based on a Finite State Machine with the states that are shown the [package wiki](http://wiki.ros.org/leica_point_cloud_processing#Workflow).
+**node** is the main node that perform alignment and FOD detection. It opens subscribers to clouds topics and start process. It's procedure is based on a Finite State Machine with the states that are shown in the [package wiki](http://wiki.ros.org/leica_point_cloud_processing#Workflow).
 
 ## Pre Alignment process ##
 
@@ -52,8 +54,7 @@ The process of detecting FODs is based on comparing two pointclouds. Thus, the f
 
         rosrun leica_point_cloud_processing load_clouds
 
-        rosservice call /publish_clouds "source_cloud_file: 'scan_fods.pcd'
-        target_cloud_file: 'cad.ply'" 
+        rosservice call /publish_clouds "source_cloud_file: 'scan_fods.pcd' target_cloud_file: 'cad.ply'" 
 
 2. Launch the state machine node. Inspection process starts if both clouds are available in ROS topics: `/target/cloud` and `/source/cloud`. As the target cloud indicated in example above comes from a CAD file, set param `using_CAD` to true.
 
