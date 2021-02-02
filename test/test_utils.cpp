@@ -1,6 +1,21 @@
-// Bring in my package's API, which is what I'm testing
+/**
+ * @file test_utils.cpp
+ * @copyright Copyright (c) 2020, FADA-CATEC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */ 
+
 #include "Utils.h"
-// Bring in gtest
 #include <gtest/gtest.h>
 #include <exception>
 
@@ -121,11 +136,6 @@ TEST_F(TestUtils, testCloudTranslate)
 //     Utils::rotateCloud(cloud_in, cloud_out, 5, 0, 0);
 //     ASSERT_NE(*cloud_orig, *cloud_in);
 // }
-
-
-// getNormals
-// printTransform complicado probarla en este test ? (se usa en initial_alignment.getRigidTransform)
-// indicesFilter complicado probarla en este test ? (se usa en align.cpp)
 
 
 // Run all the tests that were declared with TEST()
