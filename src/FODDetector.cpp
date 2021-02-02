@@ -22,7 +22,7 @@ FODDetector::FODDetector(PointCloudRGB::Ptr cloud, double cluster_tolerance, dou
     : cloud_(cloud)
 {
     setClusterTolerance(cluster_tolerance);
-    min_cluster_size_ = min_fod_points;
+    setMinFODpoints(min_fod_points);
 }
 
 void FODDetector::setClusterTolerance(double tolerance)

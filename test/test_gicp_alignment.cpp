@@ -81,6 +81,11 @@ TEST_F(TestGICPAlignment, testRun)
     Eigen::Matrix4f tf = gicp_alignment.getFineTransform();
     ASSERT_EQ(tf, Eigen::Matrix4f::Identity());  // constructor works well
 
+    gicp_alignment.setMaxIterations(100);
+    gicp_alignment.setMaxCorrespondenceDistance(5);
+    gicp_alignment.setRANSACOutlierTh(5e-2);
+    gicp_alignment.setTfEpsilon(5e-4);
+
     try
     {
         ros::Time::init(); // because need of ros::Time::now()
@@ -90,6 +95,33 @@ TEST_F(TestGICPAlignment, testRun)
         PointCloudRGB::Ptr aligned_cloud {new PointCloudRGB};
         gicp_alignment.getAlignedCloud(aligned_cloud);
 
+        EXPECT_TRUE(gicp_alignment.transform_exists_);
+    }
+    catch(std::exception& e)
+    {
+        ADD_FAILURE()<< e.what();
+    }
+}
+
+TEST_F(TestGICPAlignment, testRunWithCov)
+{
+    GICPAlignment gicp_alignment(targetRGB, sourceRGB, true);
+    
+    Eigen::Matrix4f tf = gicp_alignment.getFineTransform();
+    ASSERT_EQ(tf, Eigen::Matrix4f::Identity());  // constructor works well
+
+    try
+    {
+        ros::Time::init(); // because need of ros::Time::now()
+        
+        gicp_alignment.run();
+
+        PointCloudRGB::Ptr aligned_cloud {new PointCloudRGB};
+        gicp_alignment.getAlignedCloud(aligned_cloud);
+
+        EXPECT_TRUE(gicp_alignment.transform_exists_);
+
+        gicp_alignment.iterate();
         EXPECT_TRUE(gicp_alignment.transform_exists_);
     }
     catch(std::exception& e)

@@ -25,6 +25,7 @@
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
+typedef pcl::PointCloud<pcl::Normal> PointCloudNormal;
 
 class Viewer
 {

@@ -19,6 +19,7 @@
 #include <Utils.h>
 #include <gtest/gtest.h>
 #include <exception>
+#include <pcl/filters/filter.h>
 
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
@@ -72,6 +73,7 @@ TEST_F(TestFilter, testDownsample)
     PointCloudRGB::Ptr cloudRGBfiltered {new PointCloudRGB};
 
     Filter cloud_filter(leaf_size);
+    cloud_filter.setLeafSize(leaf_size);
     cloud_filter.downsampleCloud(cloudRGB, cloudRGBfiltered);
     
     double end_res = Utils::computeCloudResolution(cloudRGBfiltered);
@@ -88,6 +90,7 @@ TEST_F(TestFilter, testBox)
 
     Filter cloud_filter;
     cloud_filter.setNoiseThreshold(noise_th);
+    cloud_filter.setCloudCenter(Eigen::Vector3f(0,0,0));
     cloud_filter.filterNoise(cloudRGB, cloudRGBfiltered);
 
     double end_res = Utils::computeCloudResolution(cloudRGBfiltered);
@@ -124,6 +127,27 @@ TEST_F(TestFilter, testFloor)
 
     EXPECT_GT(source_cloud->size(), cloudRGBfiltered->size());
     ASSERT_TRUE(Utils::isValidCloud(cloudRGBfiltered));
+}
+
+TEST_F(TestFilter, testExtractIndices)
+{
+    PointCloudNormal::Ptr normals{new PointCloudNormal};
+    Utils::getNormals(cloudRGB, 0.01, normals);
+
+    pcl::IndicesPtr indices(new std::vector<int>);
+    pcl::removeNaNFromPointCloud(*cloudRGB, *cloudRGB, *indices);
+    Filter::extractIndices(cloudRGB, cloudRGB, indices);
+    pcl::removeNaNNormalsFromPointCloud(*normals, *normals, *indices);
+    Filter::extractIndices(normals, normals, indices);
+}
+
+TEST_F(TestFilter, testOutlierRemove)
+{
+    PointCloudRGB::Ptr cloudRGBfiltered{new PointCloudRGB};
+
+    Filter cloud_filter;
+    cloud_filter.outlierRemove(cloudRGB, cloudRGBfiltered);
+    EXPECT_GT(cloudRGB->size(), cloudRGBfiltered->size());
 }
 
 int main(int argc, char **argv){

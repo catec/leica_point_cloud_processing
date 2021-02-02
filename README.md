@@ -90,7 +90,7 @@ The process of detecting FODs is based on comparing two pointclouds. Thus, the f
 
 5. PCL-ROS
 
-        sudo apt-get install ros-kinetic-pcl-*
+        sudo apt-get install ros-$ROS_DISTRO-pcl-*
         sudo apt-get install pcl-tools
 
 6. PYTHON-PCL

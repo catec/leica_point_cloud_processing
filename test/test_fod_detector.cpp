@@ -57,9 +57,6 @@ TEST_F(TestFODDetector, testFODClustering)
     cubesPointCloud(cloudRGB, 10, 3, 0.1);
     cubesPointCloud(cloudRGB, 20, 3, 0.1);
 
-    // Viewer v;
-    // v.addPCToViewer<pcl::PointXYZRGB>(cloudRGB, "cloudRGB");
-
     int min_fod_points = 3;
     double voxelize_factor = 3;
     double th = 4e-3 * voxelize_factor;
@@ -70,7 +67,6 @@ TEST_F(TestFODDetector, testFODClustering)
     std::vector<PointCloudRGB::Ptr> fods_cloud_array;
     int num_of_fods = fod_detector.fodIndicesToPointCloud(fods_cloud_array);
 
-    // std::cout << num_of_fods << std::endl;
     ASSERT_EQ(num_of_fods,3);
     ASSERT_EQ(fods_cloud_array.size(),3);
 }
@@ -90,7 +86,6 @@ TEST_F(TestFODDetector, testEmptyCloud)
     std::vector<PointCloudRGB::Ptr> fods_cloud_array;
     int num_of_fods = fod_detector.fodIndicesToPointCloud(fods_cloud_array);
 
-    // std::cout << num_of_fods << std::endl;
     ASSERT_EQ(num_of_fods, 0);
     ASSERT_EQ(fods_cloud_array.size(), 0);
 }
@@ -116,7 +111,6 @@ TEST_F(TestFODDetector, testFODmsg)
     std::vector<sensor_msgs::PointCloud2> cluster_msg_array;
     int num_of_fods = fod_detector.fodIndicesToROSMsg(cluster_msg_array);
 
-    // std::cout << num_of_fods << std::endl;
     ASSERT_EQ(num_of_fods, 3);
     ASSERT_EQ(cluster_msg_array.size(), 3);
 }
